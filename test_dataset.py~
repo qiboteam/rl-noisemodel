@@ -1,0 +1,13 @@
+from dataset import Dataset
+
+nqubits = 1
+ngates = 10
+ncirc = 5
+
+# create dataset
+dataset = Dataset(
+    n_circuits=ncirc,
+    n_gates=ngates,
+    n_qubits=nqubits,
+    val_split=0.2
+)
