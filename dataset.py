@@ -7,13 +7,13 @@ from qibo.models import Circuit
 
 class Dataset(object):
 
-    def __init__(self, n_circuits, n_gates, n_qubits, val_split=0.2, noise_model=None):
-        self.noise_model = noise_model
+    def __init__(self, n_circuits, n_gates, n_qubits):
+        self.n_gates=n_gates
+        self.n_qubits=n_qubits
         self.circuits = [
             self.generate_random_circuit(nqubits=n_qubits, ngates=n_gates)
             for i in range(n_circuits)
         ]
-        self.train_val_split(val_split)
 
     def __len__(self):
         return len(self.circuits)
@@ -21,10 +21,54 @@ class Dataset(object):
     def __getitem__(self, i):
         return self.circuits[i]
 
-    def train_val_split(self, split=0.2):
+    def noisy_shots(self, n_shots=1024, add_measurements=True):
+        if add_measurements:
+            for i in range(len(self.circuits)):
+                self.noisy_circuits[i].add(gates.M(*range(self.n_qubits)))
+        shots_register_raw = [   
+            self.noisy_circuits[i](nshots=n_shots).frequencies(binary=False)
+            for i in range(len(self.circuits))
+        ]
+        shots_register=[]
+        for i in range(len(self.circuits)):
+            single_register=tuple(int(shots_register_raw[i][key]) for key in range(2**self.n_qubits))
+            shots_register.append(single_register)
+        return shots_register
+
+    def train_val_split(self, split=0.2, noise=False):
         idx = random.sample(range(len(self.circuits)), int(split*len(self.circuits)))
-        self.val_circuits = [ c for i, c in enumerate(self.circuits) if i in idx ]
-        self.train_circuits = [ c for i, c in enumerate(self.circuits) if i not in idx ]
+        if not noise:
+            self.val_circuits = [ c for i, c in enumerate(self.circuits) if i in idx ]
+            self.train_circuits = [ c for i, c in enumerate(self.circuits) if i not in idx ]
+        else:
+            self.val_circuits = [ c for i, c in enumerate(self.noisy_circuits) if i in idx ]
+            self.train_circuits = [ c for i, c in enumerate(self.noisy_circuits) if i not in idx ]
+
+    def add_noise(self, noise_model='depolarising', noisy_gates=['rx'], noise_params=0.01):
+        if noise_model=='depolarising':
+            self.noisy_circuits = [
+                self.add_dep_on_circuit(self.__getitem__(i), noisy_gates, noise_params)
+                for i in range(len(self.circuits))
+            ]
+
+    def add_dep_on_circuit(self, circuit, noisy_gates, depolarizing_error):
+        noisy_circ = Circuit(circuit.nqubits, density_matrix=True)
+        time_steps = max(circuit.queue.moment_index)
+        for t in range(time_steps):
+            for qubit in range(circuit.nqubits):
+                gate = circuit.queue.moments[t][qubit]
+                if circuit.queue.moments[t][qubit] == None:
+                    pass
+                elif gate.name in noisy_gates:
+                    noisy_circ.add(circuit.queue.moments[t][qubit])
+                    noisy_circ.add(
+                        gates.DepolarizingChannel(
+                            circuit.queue.moments[t][qubit].qubits, depolarizing_error
+                        )
+                    )
+                else:
+                    noisy_circ.add(circuit.queue.moments[t][qubit])
+        return noisy_circ
 
     @staticmethod
     def generate_random_circuit(nqubits, ngates):
@@ -58,6 +102,12 @@ class Dataset(object):
 
     def get_val_loader(self):
         return (c for c in self.val_circuits)
+
+    def get_noisy_circuits(self):
+        return (c for c in self.noisy_circuits)
+
+    def get_circuits(self):
+        return (c for c in self.circuits)
     
     def save_circuits(self, filename):
         circ_dict = {}

@@ -1,22 +1,12 @@
 {
   "0": [
     {
-      "name": "RZ",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 4.03844556300946,
-        "trainable": true
-      }
-    },
-    {
       "name": "RX",
       "qubit": [
         0
       ],
       "kwargs": {
-        "theta": 3.4513930877070256,
+        "theta": 3.740411460375329,
         "trainable": true
       }
     },
@@ -26,7 +16,7 @@
         0
       ],
       "kwargs": {
-        "theta": 5.132517089413819,
+        "theta": 0.957014137614417,
         "trainable": true
       }
     },
@@ -36,7 +26,7 @@
         0
       ],
       "kwargs": {
-        "theta": 5.94472874601006,
+        "theta": 5.116888247557197,
         "trainable": true
       }
     },
@@ -46,7 +36,7 @@
         0
       ],
       "kwargs": {
-        "theta": 0.7488107305229922,
+        "theta": 1.3990292294418365,
         "trainable": true
       }
     },
@@ -56,7 +46,7 @@
         0
       ],
       "kwargs": {
-        "theta": 3.3583825141127024,
+        "theta": 2.1108063701811997,
         "trainable": true
       }
     },
@@ -66,17 +56,7 @@
         0
       ],
       "kwargs": {
-        "theta": 0.9874971370167351,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 2.0350010775638325,
+        "theta": 2.1590590292830503,
         "trainable": true
       }
     },
@@ -86,7 +66,17 @@
         0
       ],
       "kwargs": {
-        "theta": 5.715920958766532,
+        "theta": 1.5971382161242265,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.468313966974777,
         "trainable": true
       }
     },
@@ -96,19 +86,29 @@
         0
       ],
       "kwargs": {
-        "theta": 0.4677466741292106,
+        "theta": 3.211959098188645,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.675524758965101,
         "trainable": true
       }
     }
   ],
   "1": [
     {
-      "name": "RX",
+      "name": "RZ",
       "qubit": [
         0
       ],
       "kwargs": {
-        "theta": 1.0141272129198495,
+        "theta": 2.632516513480891,
         "trainable": true
       }
     },
@@ -118,7 +118,47 @@
         0
       ],
       "kwargs": {
-        "theta": 5.799553211076509,
+        "theta": 4.158349622980021,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.378735835241596,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.27542518161169,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.15371505130685,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.8367817579419192,
         "trainable": true
       }
     },
@@ -128,7 +168,7 @@
         0
       ],
       "kwargs": {
-        "theta": 2.7069496919274654,
+        "theta": 2.159984092294413,
         "trainable": true
       }
     },
@@ -138,17 +178,7 @@
         0
       ],
       "kwargs": {
-        "theta": 4.436296236606263,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 6.129177228252689,
+        "theta": 0.5512479944070905,
         "trainable": true
       }
     },
@@ -158,7 +188,7 @@
         0
       ],
       "kwargs": {
-        "theta": 1.3773935473681251,
+        "theta": 0.20787280761582924,
         "trainable": true
       }
     },
@@ -168,37 +198,7 @@
         0
       ],
       "kwargs": {
-        "theta": 1.8190230646600722,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 2.440820723917858,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 1.2582166903526404,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 0.6137731185125591,
+        "theta": 1.7041625938869613,
         "trainable": true
       }
     }
@@ -210,7 +210,7 @@
         0
       ],
       "kwargs": {
-        "theta": 0.7456072992912046,
+        "theta": 4.641263947610065,
         "trainable": true
       }
     },
@@ -220,7 +220,7 @@
         0
       ],
       "kwargs": {
-        "theta": 2.016490706365061,
+        "theta": 1.660832293420535,
         "trainable": true
       }
     },
@@ -230,7 +230,7 @@
         0
       ],
       "kwargs": {
-        "theta": 1.1002890985324405,
+        "theta": 6.169590676736735,
         "trainable": true
       }
     },
@@ -240,27 +240,7 @@
         0
       ],
       "kwargs": {
-        "theta": 5.309582315531088,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 0.3279771541912417,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 1.7360073472729511,
+        "theta": 0.3767963951975782,
         "trainable": true
       }
     },
@@ -270,7 +250,17 @@
         0
       ],
       "kwargs": {
-        "theta": 0.9693821385116276,
+        "theta": 5.007064260842362,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.528469688138325,
         "trainable": true
       }
     },
@@ -280,7 +270,17 @@
         0
       ],
       "kwargs": {
-        "theta": 4.979841963413363,
+        "theta": 3.377991889801625,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.165392700386625,
         "trainable": true
       }
     },
@@ -290,17 +290,17 @@
         0
       ],
       "kwargs": {
-        "theta": 4.920657784379702,
+        "theta": 1.265453312539452,
         "trainable": true
       }
     },
     {
-      "name": "RZ",
+      "name": "RX",
       "qubit": [
         0
       ],
       "kwargs": {
-        "theta": 6.271252935454962,
+        "theta": 1.1985286401445687,
         "trainable": true
       }
     }
@@ -312,7 +312,37 @@
         0
       ],
       "kwargs": {
-        "theta": 0.9630969626630309,
+        "theta": 5.444629265977381,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.4724458491893357,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 6.194786993941996,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 6.05676951078374,
         "trainable": true
       }
     },
@@ -322,7 +352,7 @@
         0
       ],
       "kwargs": {
-        "theta": 1.3204027931583484,
+        "theta": 0.317504812852961,
         "trainable": true
       }
     },
@@ -332,7 +362,7 @@
         0
       ],
       "kwargs": {
-        "theta": 3.8813555806323374,
+        "theta": 4.813145466872463,
         "trainable": true
       }
     },
@@ -342,7 +372,7 @@
         0
       ],
       "kwargs": {
-        "theta": 2.454075211781594,
+        "theta": 0.5166732160662244,
         "trainable": true
       }
     },
@@ -352,37 +382,7 @@
         0
       ],
       "kwargs": {
-        "theta": 4.117048417357321,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RZ",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 1.3410218335996975,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RZ",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 5.552626915191406,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RZ",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 5.308372475387481,
+        "theta": 1.074923888306547,
         "trainable": true
       }
     },
@@ -392,17 +392,17 @@
         0
       ],
       "kwargs": {
-        "theta": 4.471400909739791,
+        "theta": 0.9018964445279124,
         "trainable": true
       }
     },
     {
-      "name": "RZ",
+      "name": "RX",
       "qubit": [
         0
       ],
       "kwargs": {
-        "theta": 4.561566606068478,
+        "theta": 1.1954105632703769,
         "trainable": true
       }
     }
@@ -414,17 +414,7 @@
         0
       ],
       "kwargs": {
-        "theta": 3.9140970266332404,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 0.22921364759219953,
+        "theta": 4.80224023136105,
         "trainable": true
       }
     },
@@ -434,7 +424,7 @@
         0
       ],
       "kwargs": {
-        "theta": 2.9218603360044257,
+        "theta": 0.1526455903927021,
         "trainable": true
       }
     },
@@ -444,7 +434,7 @@
         0
       ],
       "kwargs": {
-        "theta": 2.8922841279925486,
+        "theta": 0.970188609665754,
         "trainable": true
       }
     },
@@ -454,27 +444,7 @@
         0
       ],
       "kwargs": {
-        "theta": 0.26058535922221254,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 3.4526405013208614,
-        "trainable": true
-      }
-    },
-    {
-      "name": "RX",
-      "qubit": [
-        0
-      ],
-      "kwargs": {
-        "theta": 1.7791766922615389,
+        "theta": 1.933053270009412,
         "trainable": true
       }
     },
@@ -484,7 +454,7 @@
         0
       ],
       "kwargs": {
-        "theta": 2.52121086847721,
+        "theta": 5.5687009429143,
         "trainable": true
       }
     },
@@ -494,7 +464,7 @@
         0
       ],
       "kwargs": {
-        "theta": 3.2399779197855496,
+        "theta": 2.1299166365699893,
         "trainable": true
       }
     },
@@ -504,7 +474,37 @@
         0
       ],
       "kwargs": {
-        "theta": 1.2706829132037922,
+        "theta": 4.223493462080783,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.2532694858984589,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.9767798635804423,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.921899814713594,
         "trainable": true
       }
     }
