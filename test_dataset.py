@@ -1,6 +1,6 @@
 from dataset import Dataset
 
-nqubits = 1
+nqubits = 2
 ngates = 10
 ncirc = 5
 
@@ -23,8 +23,8 @@ for c in dataset.get_val_loader():
 print('-------------------------------------')
 
 print('Saving Circuits to dataset.json')
-dataset.save_circuits('dataset.json')
-dataset.load_circuits('dataset.json')
+dataset.save_circuits('data/dataset2q.json')
+dataset.load_circuits('data/dataset2q.json')
 print('Loading Circuits from dataset.json\n')
 
 

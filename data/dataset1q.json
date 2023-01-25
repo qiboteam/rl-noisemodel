@@ -1,0 +1,512 @@
+{
+  "0": [
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.03844556300946,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.4513930877070256,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.132517089413819,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.94472874601006,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.7488107305229922,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.3583825141127024,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.9874971370167351,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.0350010775638325,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.715920958766532,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.4677466741292106,
+        "trainable": true
+      }
+    }
+  ],
+  "1": [
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.0141272129198495,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.799553211076509,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.7069496919274654,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.436296236606263,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 6.129177228252689,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.3773935473681251,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.8190230646600722,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.440820723917858,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.2582166903526404,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.6137731185125591,
+        "trainable": true
+      }
+    }
+  ],
+  "2": [
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.7456072992912046,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.016490706365061,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.1002890985324405,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.309582315531088,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.3279771541912417,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.7360073472729511,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.9693821385116276,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.979841963413363,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.920657784379702,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 6.271252935454962,
+        "trainable": true
+      }
+    }
+  ],
+  "3": [
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.9630969626630309,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.3204027931583484,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.8813555806323374,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.454075211781594,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.117048417357321,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.3410218335996975,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.552626915191406,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 5.308372475387481,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.471400909739791,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 4.561566606068478,
+        "trainable": true
+      }
+    }
+  ],
+  "4": [
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.9140970266332404,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.22921364759219953,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.9218603360044257,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.8922841279925486,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 0.26058535922221254,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.4526405013208614,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RX",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.7791766922615389,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 2.52121086847721,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 3.2399779197855496,
+        "trainable": true
+      }
+    },
+    {
+      "name": "RZ",
+      "qubit": [
+        0
+      ],
+      "kwargs": {
+        "theta": 1.2706829132037922,
+        "trainable": true
+      }
+    }
+  ]
+}

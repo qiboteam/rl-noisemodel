@@ -64,11 +64,18 @@ class Dataset(object):
         for i, circ in enumerate(self.circuits):
             gate_list = []
             for gate in circ.queue:
-                gate_list.append({
-                    'name': gate.name.upper(), 
-                    'qubit': gate.qubits,
-                    'kwargs': gate.init_kwargs
-                })
+                if len(gate.qubits)==1:
+                    gate_list.append({
+                        'name': gate.name.upper(), 
+                        'qubit': gate.qubits,
+                        'kwargs': gate.init_kwargs
+                    })
+                else:
+                    gate_list.append({
+                        'name': gate.name.upper(), 
+                        'qubit': (int(gate.qubits[0]), int(gate.qubits[1])),
+                        'kwargs': gate.init_kwargs
+                    })
             circ_dict[i] = gate_list
         with open(filename, 'w') as f:
             json.dump(circ_dict, f, indent=2)
@@ -81,7 +88,10 @@ class Dataset(object):
             nqubits = len(set(itertools.chain(*[g['qubit'] for g in gate_list])))
             circ = Circuit(nqubits)
             for g in gate_list:
-                circ.add(getattr(gates, g['name'])(g['qubit'][0], **g['kwargs']))
+                if len(g['qubit']) == 1:
+                    circ.add(getattr(gates, g['name'])(g['qubit'][0], **g['kwargs']))
+                else:
+                    circ.add(getattr(gates, g['name'])(g['qubit'][0], g['qubit'][1], **g['kwargs']))
             self.circuits.append(circ)
 
 
