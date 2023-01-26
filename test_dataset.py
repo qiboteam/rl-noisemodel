@@ -1,6 +1,7 @@
 from dataset import Dataset
+import numpy as np
 
-nqubits = 2
+nqubits = 1
 ngates = 10
 ncirc = 2
 val_split=0.2
@@ -25,6 +26,13 @@ print('-------------------------------------')
 print('Shots')
 shots=dataset.noisy_shots(n_shots=2048)
 print(shots)
+np.save('data/noisy_shots_1q.npy', repr)
+
+print('-------------------------------------')
+print('Representation')
+repr=dataset.generate_dataset_representation()
+print(repr)
+np.save('data/circuits_repr_1q.npy', repr)
 
 '''
 dataset.train_val_split()

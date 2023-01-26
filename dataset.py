@@ -8,12 +8,36 @@ from qibo.models import Circuit
 class Dataset(object):
 
     def __init__(self, n_circuits, n_gates, n_qubits):
+        '''Generate dataset for the training of RL-algorithm
+
+        Args:
+            n_circuits (int): number of random circuits generated
+            n_gates (int): number of gates in each circuit
+            n_qubits (int): number of qubits in each circuit
+        '''  
+
         self.n_gates=n_gates
         self.n_qubits=n_qubits
         self.circuits = [
             self.generate_random_circuit(nqubits=n_qubits, ngates=n_gates)
             for i in range(n_circuits)
         ]
+
+    def get_train_loader(self):
+        ''' Returns training set circuits'''
+        return (c for c in self.train_circuits)
+
+    def get_val_loader(self):
+        ''' Returns validation set circuits'''
+        return (c for c in self.val_circuits)
+
+    def get_noisy_circuits(self):
+        ''' Returns all noisy circuits'''
+        return (c for c in self.noisy_circuits)
+
+    def get_circuits(self):
+        ''' Returns all circuits'''
+        return (c for c in self.circuits)
 
     def __len__(self):
         return len(self.circuits)
@@ -22,6 +46,17 @@ class Dataset(object):
         return self.circuits[i]
 
     def noisy_shots(self, n_shots=1024, add_measurements=True):
+        '''Computes shots on noisy circuits
+
+        Args:
+            n_shots (int): number of shots executed
+            add_measurements (bool): add measurement gates at the end of noisy circuits, 
+                necessary when this function is executed the first time
+
+        Returns:
+            shots_regiter (numpy.ndarray): number of shot counts for each circuit in 
+                computational basis (order: 000; 001; 010 ...)
+        '''
         if add_measurements:
             for i in range(len(self.circuits)):
                 self.noisy_circuits[i].add(gates.M(*range(self.n_qubits)))
@@ -33,9 +68,11 @@ class Dataset(object):
         for i in range(len(self.circuits)):
             single_register=tuple(int(shots_register_raw[i][key]) for key in range(2**self.n_qubits))
             shots_register.append(single_register)
-        return shots_register
+        return np.asarray(shots_register)
 
     def train_val_split(self, split=0.2, noise=False):
+        '''Split dataset into train ad validation sets'''
+
         idx = random.sample(range(len(self.circuits)), int(split*len(self.circuits)))
         if not noise:
             self.val_circuits = [ c for i, c in enumerate(self.circuits) if i in idx ]
@@ -45,13 +82,22 @@ class Dataset(object):
             self.train_circuits = [ c for i, c in enumerate(self.noisy_circuits) if i not in idx ]
 
     def add_noise(self, noise_model='depolarising', noisy_gates=['rx'], noise_params=0.01):
+        '''Add noise model to circuits
+
+        Args:
+            noise_model (str): noise model ("depolarising")
+            noisy_gates (list): gates after which noise channels are added 
+            noise_params (float): depolarising error parameter
+        '''
         if noise_model=='depolarising':
             self.noisy_circuits = [
-                self.add_dep_on_circuit(self.__getitem__(i), noisy_gates, noise_params)
+                self.add_dep_on_circuit(self.circuits[i], noisy_gates, noise_params)
                 for i in range(len(self.circuits))
             ]
 
     def add_dep_on_circuit(self, circuit, noisy_gates, depolarizing_error):
+        '''Add noise model on a single circuit'''
+
         noisy_circ = Circuit(circuit.nqubits, density_matrix=True)
         time_steps = max(circuit.queue.moment_index)
         for t in range(time_steps):
@@ -70,9 +116,55 @@ class Dataset(object):
                     noisy_circ.add(circuit.queue.moments[t][qubit])
         return noisy_circ
 
+    def generate_dataset_representation(self):
+        '''Generate dataset with features representing the circuit to be used as input
+            for the RL algorithm. For 1q circuits the feature representation is of dim (n_circuits, n_gates, 2).
+            For 2q circuits the feature representation is of dim (n_circuits, circuit_moments, n_qubits, 3).
+
+        Returns:
+            self.representation (numpy.ndarray): circuits representation as a feature vector
+        '''
+        self.representation = np.asarray([
+                self.generate_circuit_representation(self.__getitem__(i))
+                for i in range(len(self.circuits))
+            ])
+        return self.representation
+
+    def generate_circuit_representation(self, circuit):
+        '''Generate feature representation vector for a single circuit'''
+
+        time_steps = max(circuit.queue.moment_index)
+        if circuit.nqubits == 1:
+            circuit_repr=np.zeros((time_steps, 2), dtype=float)
+            for t in range(time_steps):
+                gate = circuit.queue.moments[t][0]
+                if gate.name == 'rx':
+                    circuit_repr[t,0]=1
+                    circuit_repr[t,1]=gate.parameters[0]
+                else:
+                    circuit_repr[t,1]=gate.parameters[0]
+        else:
+            circuit_repr=np.zeros((time_steps, circuit.nqubits, 3), dtype=float)
+            for t in range(time_steps):
+                for qubit in range(circuit.nqubits):
+                    gate = circuit.queue.moments[t][qubit]
+                    if gate == None:
+                        pass
+                    elif len(gate.qubits) == 1:
+                        circuit_repr[t,qubit,0]=1
+                        if gate.name == 'rx':
+                            circuit_repr[t,qubit,1]=1
+                            circuit_repr[t,qubit,2]=gate.parameters[0]
+                        else:
+                            circuit_repr[t,qubit,2]=gate.parameters[0]
+                    else:
+                        circuit_repr[t,qubit,0]=-1
+        return np.asarray(circuit_repr)
+
     @staticmethod
     def generate_random_circuit(nqubits, ngates):
-        """Generate random circuits one-qubit rotations and CZ gates."""
+        """Generate a random circuit with RX, RZ and CZ gates."""
+
         pairs = list(itertools.combinations(range(nqubits), 2))
 
         one_qubit_gates = [gates.RX, gates.RZ]
@@ -96,20 +188,9 @@ class Dataset(object):
             else:
                 circuit.add(gate(*q))
         return circuit
-
-    def get_train_loader(self):
-        return (c for c in self.train_circuits)
-
-    def get_val_loader(self):
-        return (c for c in self.val_circuits)
-
-    def get_noisy_circuits(self):
-        return (c for c in self.noisy_circuits)
-
-    def get_circuits(self):
-        return (c for c in self.circuits)
     
     def save_circuits(self, filename):
+        '''Save circuits in json file'''
         circ_dict = {}
         for i, circ in enumerate(self.circuits):
             gate_list = []
@@ -131,6 +212,7 @@ class Dataset(object):
             json.dump(circ_dict, f, indent=2)
 
     def load_circuits(self, filename):
+        '''Load circuits from json file'''
         self.circuits = []
         with open(filename, 'r') as f:
             circuits = json.load(f)
