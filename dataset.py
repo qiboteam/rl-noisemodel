@@ -189,6 +189,7 @@ class Dataset(object):
                         else:
                             circuit_repr[t,qubit,2]=gate.parameters[0]/(2*np.pi)
                     else:
+                        # TODO: find 2 qubit gates matching for circuits with more than 3q
                         circuit_repr[t,qubit,0]=-1
         return np.asarray(circuit_repr)
 
