@@ -45,17 +45,16 @@ class Dataset(object):
     def __getitem__(self, i):
         return self.circuits[i]
 
-    def noisy_shots(self, n_shots=1024, add_measurements=True):
+    def noisy_shots(self, n_shots=1024, add_measurements=True, probabilities=False):
         '''Computes shots on noisy circuits
 
         Args:
             n_shots (int): number of shots executed
-            add_measurements (bool): add measurement gates at the end of noisy circuits, 
-                necessary when this function is executed the first time
+            add_measurements (bool): add measurement gates at the end of noisy circuits, necessary when this function is executed the first time
+            probabilities (bool): normalize shot counts to obtain brobabilities
 
         Returns:
-            shots_regiter (numpy.ndarray): number of shot counts for each circuit in 
-                computational basis (order: 000; 001; 010 ...)
+            shots_regiter (numpy.ndarray): number of shot counts/probabilities for each circuit in computational basis (order: 000; 001; 010 ...)
         '''
         if add_measurements:
             for i in range(len(self.circuits)):
@@ -68,7 +67,10 @@ class Dataset(object):
         for i in range(len(self.circuits)):
             single_register=tuple(int(shots_register_raw[i][key]) for key in range(2**self.n_qubits))
             shots_register.append(single_register)
-        return np.asarray(shots_register)
+        if probabilities:
+            return np.asarray(shots_register, dtype=float)/float(n_shots)
+        else:
+            return np.asarray(shots_register)
 
     def train_val_split(self, split=0.2, noise=False):
         '''Split dataset into train ad validation sets'''
@@ -85,7 +87,7 @@ class Dataset(object):
         '''Add noise model to circuits
 
         Args:
-            noise_model (str): noise model ("depolarising")
+            noise_model (str): noise model ("depolarising" or "depolarising_prop")
             noisy_gates (list): gates after which noise channels are added 
             noise_params (float): depolarising error parameter
         '''
@@ -94,57 +96,86 @@ class Dataset(object):
                 self.add_dep_on_circuit(self.circuits[i], noisy_gates, noise_params)
                 for i in range(len(self.circuits))
             ]
+        # Depolarising parameter is proportional to rotation angle
+        if noise_model=='depolarising_prop':
+            self.noisy_circuits = [
+                self.add_dep_on_circuit(self.circuits[i], noisy_gates, noise_params, prop=True)
+                for i in range(len(self.circuits))
+            ]
 
-    def add_dep_on_circuit(self, circuit, noisy_gates, depolarizing_error):
+    def add_dep_on_circuit(self, circuit, noisy_gates, depolarizing_error, prop=False):
         '''Add noise model on a single circuit'''
 
         noisy_circ = Circuit(circuit.nqubits, density_matrix=True)
-        time_steps = max(circuit.queue.moment_index)
+        time_steps = self.circuit_depth(circuit)
         for t in range(time_steps):
             for qubit in range(circuit.nqubits):
                 gate = circuit.queue.moments[t][qubit]
-                if circuit.queue.moments[t][qubit] == None:
+                if gate == None:
                     pass
                 elif gate.name in noisy_gates:
                     noisy_circ.add(circuit.queue.moments[t][qubit])
-                    noisy_circ.add(
-                        gates.DepolarizingChannel(
-                            circuit.queue.moments[t][qubit].qubits, depolarizing_error
+                    if not prop:
+                        noisy_circ.add(
+                            gates.DepolarizingChannel(
+                                circuit.queue.moments[t][qubit].qubits, depolarizing_error
+                            )
                         )
-                    )
+                    else:
+                        noisy_circ.add(
+                            gates.DepolarizingChannel(
+                                circuit.queue.moments[t][qubit].qubits, depolarizing_error*gate.parameters[0]
+                            )
+                        )
                 else:
                     noisy_circ.add(circuit.queue.moments[t][qubit])
         return noisy_circ
 
     def generate_dataset_representation(self):
-        '''Generate dataset with features representing the circuit to be used as input
-            for the RL algorithm. For 1q circuits the feature representation is of dim (n_circuits, n_gates, 2).
-            For 2q circuits the feature representation is of dim (n_circuits, circuit_moments, n_qubits, 3).
+        '''Generate dataset with features representing the circuit to be used as input for the RL algorithm. 
+            For 1q circuits the feature representation is of dim (n_circuits, n_gates, 2).
+            For multi qubit circuits the feature representation is of dim (n_circuits, max_circuit_moments, n_qubits, 3).
+            More info in generate_circuit_representation.
 
         Returns:
             self.representation (numpy.ndarray): circuits representation as a feature vector
         '''
+
+        # This variable is useful to have circuit representations of the same size for multi qubit circuits
+        max_depth = max([
+                self.circuit_depth(self.__getitem__(i))
+                for i in range(len(self.circuits))
+            ])
         self.representation = np.asarray([
-                self.generate_circuit_representation(self.__getitem__(i))
+                self.generate_circuit_representation(self.__getitem__(i), max_depth)
                 for i in range(len(self.circuits))
             ])
         return self.representation
 
-    def generate_circuit_representation(self, circuit):
-        '''Generate feature representation vector for a single circuit'''
+    def generate_circuit_representation(self, circuit, max_depth):
+        '''Generate feature representation vector for a single circuit.
+            Features are organised as follows.
+            1q circuits: 
+                circuit_repr[t,0] gate name (1=rx; 0=rz)
+                circuit_repr[t,1] rotation angle normalized
+            multi qubit circuits:
+                circuit_repr[t,qubit,0] gate type (1=1q; -1=2q; 0=no_gate)
+                circuit_repr[t,qubit,1] gate name (1=rx; 0=rz)
+                circuit_repr[t,qubit,2] rotatoin angle nomalized
+        '''
 
-        time_steps = max(circuit.queue.moment_index)
+        time_steps = self.circuit_depth(circuit)
         if circuit.nqubits == 1:
             circuit_repr=np.zeros((time_steps, 2), dtype=float)
             for t in range(time_steps):
                 gate = circuit.queue.moments[t][0]
                 if gate.name == 'rx':
                     circuit_repr[t,0]=1
-                    circuit_repr[t,1]=gate.parameters[0]
+                    circuit_repr[t,1]=gate.parameters[0]/(2*np.pi)
                 else:
-                    circuit_repr[t,1]=gate.parameters[0]
+                    circuit_repr[t,1]=gate.parameters[0]/(2*np.pi)
         else:
-            circuit_repr=np.zeros((time_steps, circuit.nqubits, 3), dtype=float)
+            circuit_repr=np.zeros((max_depth, circuit.nqubits, 3), dtype=float)
             for t in range(time_steps):
                 for qubit in range(circuit.nqubits):
                     gate = circuit.queue.moments[t][qubit]
@@ -154,19 +185,20 @@ class Dataset(object):
                         circuit_repr[t,qubit,0]=1
                         if gate.name == 'rx':
                             circuit_repr[t,qubit,1]=1
-                            circuit_repr[t,qubit,2]=gate.parameters[0]
+                            circuit_repr[t,qubit,2]=gate.parameters[0]/(2*np.pi)
                         else:
-                            circuit_repr[t,qubit,2]=gate.parameters[0]
+                            circuit_repr[t,qubit,2]=gate.parameters[0]/(2*np.pi)
                     else:
                         circuit_repr[t,qubit,0]=-1
         return np.asarray(circuit_repr)
 
+    def circuit_depth(self, circuit):
+        """Returns the depth of a circuit (number of circuit moments)"""
+        return max(circuit.queue.moment_index)
+
     @staticmethod
     def generate_random_circuit(nqubits, ngates):
         """Generate a random circuit with RX, RZ and CZ gates."""
-
-        pairs = list(itertools.combinations(range(nqubits), 2))
-
         one_qubit_gates = [gates.RX, gates.RZ]
         two_qubit_gates = [gates.CZ]
         n1, n2 = len(one_qubit_gates), len(two_qubit_gates)

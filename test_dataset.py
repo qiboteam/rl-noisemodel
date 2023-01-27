@@ -3,7 +3,7 @@ import numpy as np
 
 nqubits = 1
 ngates = 10
-ncirc = 2
+ncirc = 1
 val_split=0.2
 
 # create dataset
@@ -16,6 +16,7 @@ print('Circuits')
 for c in dataset.get_circuits():
     print(c.draw())
     
+
 print('-------------------------------------')
 print('Noisy circuits')
 dataset.add_noise(noisy_gates=['rx'])
@@ -24,14 +25,15 @@ for c in dataset.get_noisy_circuits():
 
 print('-------------------------------------')
 print('Shots')
-shots=dataset.noisy_shots(n_shots=2048)
+shots=dataset.noisy_shots(n_shots=2048, probabilities=True)
 print(shots)
 np.save('data/noisy_shots_1q.npy', repr)
+
 
 print('-------------------------------------')
 print('Representation')
 repr=dataset.generate_dataset_representation()
-print(repr)
+print(repr.shape)
 np.save('data/circuits_repr_1q.npy', repr)
 
 '''
