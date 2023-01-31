@@ -45,17 +45,37 @@ class Dataset(object):
     def __getitem__(self, i):
         return self.circuits[i]
 
-    def noisy_shots(self, n_shots=1024, add_measurements=True, probabilities=False):
+    def pauli_probabilities(self, n_shots=100, n_rounds=100):
+        '''Computes the probability distibutions of Pauli observables for 1q noisy circuits
+
+        Args:
+            n_shots (int): number of shots executed for one observable estimation
+            n_rounds (int): number of estimations of one observable
+
+        Returns:
+            observables (dict):
+        '''
+
+        #Z distribution
+        z_register=np.ndarray((len(self.circuits), n_rounds), dtype=float)
+        for i in range(n_rounds):
+            probs=self.noisy_shots(n_shots=n_shots, probabilities=True)
+            z_register[:,i]=probs[:,0]-probs[:,1]
+
+
+    def noisy_shots(self, n_shots=1024, add_measurements=True, probabilities=False, observable='Z'):
         '''Computes shots on noisy circuits
 
         Args:
             n_shots (int): number of shots executed
             add_measurements (bool): add measurement gates at the end of noisy circuits, necessary when this function is executed the first time
-            probabilities (bool): normalize shot counts to obtain brobabilities
+            probabilities (bool): normalize shot counts to obtain probabilities
+            observable (string): Pauli observable to be measured ('Z' for computational basis)
 
         Returns:
             shots_regiter (numpy.ndarray): number of shot counts/probabilities for each circuit in computational basis (order: 000; 001; 010 ...)
         '''
+
         if add_measurements:
             for i in range(len(self.circuits)):
                 self.noisy_circuits[i].add(gates.M(*range(self.n_qubits)))
