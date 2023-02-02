@@ -11,7 +11,7 @@ class CircuitEnv(dm_env.Environment):
         self.circuit = circuit
         self.position = 0
         self.noisy_channels = np.zeros((len(circuit)))
-        self.observation_space = np.zeros((len(circuit), 4), dtype=np.float)
+        self.observation_space = np.zeros((len(circuit), 4), dtype=np.float32)
         self._reset_next_step = True
 
     def reset(self) -> dm_env.TimeStep:
@@ -51,7 +51,10 @@ class CircuitEnv(dm_env.Environment):
     def action_spec(self) -> specs.DiscreteArray:
         """Returns the action spec."""
         return specs.DiscreteArray(
-            dtype=int, num_values=len(self.actions), name="action")
+            dtype=int, 
+            num_values=len(self.actions), 
+            name="action"
+        )
 
     def _observation(self) -> np.ndarray:
         self.observation_space[:,3].fill(0.)
