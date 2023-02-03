@@ -36,34 +36,36 @@ class CircuitsEnv(dm_env.Environment):
         # Check for termination.
         if self.position == (self.len-1):
             # Compute reward here
-            reward = 1
+            reward = self.compute_reward(self.labels[self.sample], n_shots=100)
             self._reset_next_step = True
             return dm_env.termination(reward=reward, observation=self._observation())
         else:
             self.position+=1
             return dm_env.transition(reward=0., observation=self._observation())
 
-    def compute_reward(self):
-      generated_circuit = self.generate_circuit()
-      observables = np.ndarray((3,2), dtype=float)
-      index=0
-      for obs in ["Z", "Y", "X"]:
-        moments=self.pauli_probabilities(generated_circuit, obs)
-        observables[index, :]=moments
-        index+=1
-      print("Obtained moments", observables)
-      print("True moments", self.labels[self.sample])
+    def compute_reward(self, label, n_shots=100):
+        reward=0.
+        generated_circuit = self.generate_circuit()
+        observables = np.ndarray((3,2), dtype=float)
+        index=0
+        for obs in ["Z", "Y", "X"]:
+            moments=self.pauli_probabilities(generated_circuit, obs, n_shots=n_shots)
+            observables[index, :]=moments
+            index+=1
+        # Compute 1/MSE(obtained Mean, Real Mean)+1/(n_shots*MSE(obtained Var, Real Var))
+        for i in range(3):
+            reward+=(1/(observables[i,0]-label[i,0])**2+1/(n_shots*(observables[i,0]-label[i,0])**2))
+        return reward
 
-    def generate_circuit(self, dep_error=0.01):
+    def generate_circuit(self, dep_error=0.05):
       qibo_circuit = Circuit(1, density_matrix=True)
       for i in range(self.len):
         if self.circuit[i,0]==0:
-          qibo_circuit.add(gates.RZ(0, theta=self.circuit[i,1], trainable=False))
+          qibo_circuit.add(gates.RZ(0, theta=self.circuit[i,1]*2*np.pi, trainable=False))
         else:
-          qibo_circuit.add(gates.RX(0, theta=self.circuit[i,1], trainable=False))
-        #if self.noisy_channels[i]==1:
-        #  qibo_circuit.add(gates.DepolarizingChannel((0,), lam=dep_error))
-      print(qibo_circuit.draw())
+          qibo_circuit.add(gates.RX(0, theta=self.circuit[i,1]*2*np.pi, trainable=False))
+        if self.noisy_channels[i]==1:
+          qibo_circuit.add(gates.DepolarizingChannel((0,), lam=dep_error))
       return qibo_circuit
 
     def pauli_probabilities(self, circuit, observable, n_shots=100, n_rounds=100):

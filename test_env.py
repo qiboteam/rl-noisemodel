@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 nqubits = 1
 ngates = 5
-ncirc = 2
+ncirc = 1
 val_split=0.2
 
 # create dataset
@@ -19,7 +19,7 @@ print('Circuits')
 for c in dataset.get_circuits():
     print(c.draw())
 circuits_repr=dataset.generate_dataset_representation()
-dataset.add_noise(noise_params=0.0000001)
+dataset.add_noise(noise_params=0.05)
 labels=dataset.generate_labels()
 print(labels)
 
@@ -31,4 +31,5 @@ for _ in range(ngates):
     circuit_env.step(action)
     circuit_env.get_info()
 
-circuit_env.compute_reward()
+reward=circuit_env.compute_reward(labels[0])
+print(reward)
