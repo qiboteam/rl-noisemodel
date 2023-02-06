@@ -124,4 +124,5 @@ class CircuitsAcme(dm_env.Environment):
         print("Action number: ", self.position)
       print("Last action: ", self.last_action)
       #print(self.observation_spec)
+      print("Observation: ", self.last_action)
       print(self._observation())
