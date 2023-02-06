@@ -55,7 +55,7 @@ class Dataset(object):
             n_rounds (int): number of estimations of one observable
 
         Returns:
-            observables (dict):
+            register (np.ndarray): average observable value obtained at each measurement round
         '''
 
         circuits = deepcopy(self.noisy_circuits)
@@ -66,6 +66,24 @@ class Dataset(object):
             register[:,i]=probs[:,0]-probs[:,1]
         return register
 
+    def generate_labels(self, n_shots=100, n_rounds=100):
+        '''Generate the labels, containing the first two moments of distributions, necessary for training
+        Args:
+            oservable (string): pauli observable
+            n_shots (int): number of shots executed for one observable estimation
+            n_rounds (int): number of estimations of one observable
+
+        Returns:
+            moments (np.ndarray): array containing the first two moments of the distribution for each observable
+        '''
+        moments=np.ndarray((len(self.circuits), 3, 2), dtype=float)
+        n_obs=0
+        for obs in ['Z', 'Y', 'X']:
+            register=self.pauli_probabilities(observable=obs, n_shots=n_shots, n_rounds=n_rounds)
+            moments[:,n_obs,0]=np.mean(register, axis=1)
+            moments[:,n_obs,1]=np.var(register, axis=1)
+            n_obs+=1
+        return moments
     
     def add_masurement_gates(self, circuits, observable='Z'):
         '''Add measurement gates at the end of circuits dataset, necessary when circuits are executed the first time
@@ -253,7 +271,7 @@ class Dataset(object):
                 gate = one_qubit_gates[igate]
             if issubclass(gate, gates.ParametrizedGate):
                 theta = 2 * np.pi * np.random.random()
-                circuit.add(gate(*q, theta=theta))
+                circuit.add(gate(*q, theta=theta, trainable=False))
             else:
                 circuit.add(gate(*q))
         return circuit
