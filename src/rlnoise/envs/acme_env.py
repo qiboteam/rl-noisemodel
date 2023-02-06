@@ -6,7 +6,7 @@ from qibo.models import Circuit
 from copy import deepcopy
 
 
-class CircuitsEnv(dm_env.Environment):
+class CircuitsAcme(dm_env.Environment):
 
     def __init__(self, circuits_repr, labels):
         self.actions=(0,1)

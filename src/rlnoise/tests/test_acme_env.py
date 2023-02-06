@@ -1,7 +1,6 @@
-from dataset import Dataset
+from rlnoise.dataset import Dataset
 import numpy as np
-from acme_env import CircuitsEnv
-import matplotlib.pyplot as plt
+from rlnoise.envs.acme_env import CircuitsAcme
 
 nqubits = 1
 ngates = 5
@@ -24,7 +23,7 @@ labels=dataset.generate_labels()
 print(labels)
 
 
-circuit_env=CircuitsEnv(circuits_repr, labels)
+circuit_env=CircuitsAcme(circuits_repr, labels)
 circuit_env.reset()
 for _ in range(ngates):
     action=np.random.randint(0,2)
@@ -32,4 +31,4 @@ for _ in range(ngates):
     circuit_env.get_info()
 
 reward=circuit_env.compute_reward(labels[0])
-print(reward)
+print("REWARD: ", reward)

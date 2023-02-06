@@ -4,7 +4,16 @@ from qibo import gates
 from qibo.backends import NumpyBackend
 from qibo.models import Circuit
 from copy import deepcopy
+import os
 
+def dataset_folder():
+    folder = os.path.join(os.getcwd(), "dataset")
+    return folder
+
+def figures_folder():
+    print(os.getcwd())
+    folder = os.path.join(os.getcwd(), "figures")
+    return folder
 
 class Dataset(object):
 
