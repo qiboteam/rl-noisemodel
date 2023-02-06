@@ -1,47 +1,80 @@
-import dm_env
-from dm_env import specs
 import numpy as np
+import gymnasium as gym
+from gymnasium import spaces
 from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
 
 
-class CircuitsEnv(dm_env.Environment):
+class CircuitsGym(gym.Env):
 
-    def __init__(self, circuits_repr, labels):
+    def __init__(self, circuits_repr, labels,):
+
         self.actions=(0,1)
         self.labels=labels
         self.len = len(circuits_repr[0])
         self.shape = np.shape(circuits_repr[0])
         self.circuits_repr = circuits_repr
-        self._reset_next_step = True
 
-    def reset(self) -> dm_env.TimeStep:
+        self.observation_space = spaces.Box(low=0, high=1, shape=(self.len, 4), dtype=float)
+        self.action_space = spaces.Discrete(2)
+
+    def reset(self, seed=42, verbose=False):
+
+        super().reset(seed=seed)
         self.position = 0
+        self.last_action = None
         self.sample = np.random.randint(low=0, high=len(self.circuits_repr))
         self.circuit = self.circuits_repr[self.sample]
         self.noisy_channels = np.zeros((self.len))
         self.observation_space = np.zeros((self.len, 4), dtype=np.float32)
         self.observation_space[:,0:2] = self.circuit
-        self._reset_next_step = False
-        return dm_env.restart(self._observation())
+        if verbose:
+            print("EPISODE STARTED")
+            self._get_info()
+        return self._get_obs()
 
-    def step(self, action: int) -> dm_env.TimeStep:
+    def step(self, action, verbose=False):
         self.last_action=action
-        if self._reset_next_step:
-            return self.reset()
-        # place noisy gate
         if action == 1:
             self.noisy_channels[self.position]=1.
         # Check for termination.
         if self.position == (self.len-1):
-            # Compute reward here
+            # Compute reward
             reward = self.compute_reward(self.labels[self.sample], n_shots=100)
-            self._reset_next_step = True
-            return dm_env.termination(reward=reward, observation=self._observation())
+            observation=self._get_obs()
+            if verbose:
+                self._get_info(last_step=True)
+                print("REWARD: ", reward)
+            return observation, reward, True
         else:
+            reward=0
             self.position+=1
-            return dm_env.transition(reward=0., observation=self._observation())
+            observation=self._get_obs()
+            if verbose:
+                self._get_info()
+            return observation, reward, False
+    
+    def _get_obs(self):
+
+        self.observation_space[:,3].fill(0.)
+        self.observation_space[self.position,3] = 1.
+        self.observation_space[:,2] = self.noisy_channels
+        return self.observation_space.copy()
+
+    def _get_info(self, last_step=False):
+        print("Circuit number: ", self.sample)
+        if last_step:
+            print("EPISODE ENDED")
+        else:
+            print("Action number: ", self.position)
+        print("Last action: ", self.last_action)
+        print("Observation:")
+        print(self._get_obs())
+
+    """---------------------------------------"""
+    """--------COMPUTE REWARD-----------------"""
+    """---------------------------------------"""    
 
     def compute_reward(self, label, n_shots=100):
         reward=0.
@@ -91,37 +124,3 @@ class CircuitsEnv(dm_env.Environment):
         shots_register_raw = circuit(nshots=n_shots).frequencies(binary=False)
         shots_register=tuple(int(shots_register_raw[key]) for key in range(2))
         return np.asarray(shots_register, dtype=float)/float(n_shots)
-
-    def observation_spec(self) -> specs.BoundedArray:
-        """Returns the observation spec."""
-        return specs.BoundedArray(
-            shape=self.observation_space.shape,
-            dtype=self.observation_space.dtype,
-            name="observation_space",
-            minimum=0,
-            maximum=1,
-        )
-
-    def action_spec(self) -> specs.DiscreteArray:
-        """Returns the action spec."""
-        return specs.DiscreteArray(
-            dtype=int, 
-            num_values=len(self.actions), 
-            name="action"
-        )
-
-    def _observation(self) -> np.ndarray:
-        self.observation_space[:,3].fill(0.)
-        self.observation_space[self.position,3] = 1.
-        self.observation_space[:,2] = self.noisy_channels
-        return self.observation_space.copy()
-
-    def get_info(self):
-      print("Circuit number: ", self.sample)
-      if self._reset_next_step:
-        print("Episode ended")
-      else:
-        print("Action number: ", self.position)
-      print("Last action: ", self.last_action)
-      #print(self.observation_spec)
-      print(self._observation())
