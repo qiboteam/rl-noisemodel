@@ -8,7 +8,7 @@ def kld(m1, m2, v1, v2):
     Args:
         m1, m2 (float): mean values
         v1, v2 (float): variance values'''
-    return 0.5*((m1-m2)**2+(v1+v2))*(1/(v1)+1/(v2))-2
+    return 0.5*((m1-m2)**2+(v1+v2))*(1/v1+1/v2)-2
 
 def neg_kld_reward(m1, m2, v1, v2):
     '''Negative Symmetric KL divergence to be used as reward
@@ -32,7 +32,7 @@ def truncated_kld_reward(m1, m2, v1, v2, truncate=10):
         return 0.
 
 def plot_results(values, title=''): 
-      
+
     display.clear_output(wait=True)
     f, ax = plt.subplots(nrows=1, ncols=2, figsize=(12,5))
     f.suptitle(title)
@@ -49,7 +49,6 @@ def plot_results(values, title=''):
         ax[0].plot(x,p(x),"--", label='trend')
     except:
         print('')
-    
     # Plot the histogram of results
     ax[1].hist(values[-50:])
     ax[1].axvline(195, c='red', label='goal')

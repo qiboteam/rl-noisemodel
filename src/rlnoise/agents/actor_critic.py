@@ -2,6 +2,7 @@ from collections import deque
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+import matplotlib.pyplot as plt
 
 from rlnoise.dataset import Dataset
 from rlnoise.envs.gym_env import CircuitsGym
@@ -10,7 +11,7 @@ from rlnoise.utils import plot_results
 # create dataset
 nqubits = 1
 ngates = 5
-ncirc = 2
+ncirc = 20
 dataset = Dataset(
     n_circuits=ncirc,
     n_gates=ngates,
@@ -28,7 +29,7 @@ print(labels)
 env=CircuitsGym(circuits_repr, labels)
 
 # AC agent
-episodes = 5
+episodes = 100
 results = []
 num_inputs = env.observation_space.shape
 num_actions = env.action_space.n
@@ -48,21 +49,22 @@ model.summary()
 optimizer = keras.optimizers.Adam(learning_rate=0.01)
 # Loss with an inermediate behaviour between MAE and MSE (MSE around zero, MAE at lager values)
 huber_loss = keras.losses.Huber() 
-eps = np.finfo(np.float32).eps.item() 
 
 # useful containers
 action_probs_history = []
 critic_value_history = []
-reward = 0.
-running_reward = 0
+reward_history = []
+final_observation_history = []
 episode_count = 0
 results = []
 results_rr = []
 
-for _ in range(episodes): 
+for episode in range(episodes):
+    if ((episode+1)%10)==0:
+        print("episode: %d, reward %f" % (episode+1, reward))
     # initialize the environement
     state = env.reset() 
-    episode_reward = 0.
+    done = False
     with tf.GradientTape() as tape:
         while not done:
             state = tf.convert_to_tensor(state)
@@ -77,57 +79,45 @@ for _ in range(episodes):
             # applies the new action
             state, reward, done = env.step(action)
 
-        # computes the epected value for the reward 
-        # - At each timestep what was the total reward received after that timestep
-        # - Rewards in the past are discounted by multiplying them with gamma
-        # - These are the labels for the critic
-
-        # normalization
-        returns = np.array(rewards_history)
-        returns = (returns - np.mean(returns)) / (np.std(returns) + eps)
-        returns = returns.tolist()
-
         # compute of the loss for the actor and critic 
-        history = zip(action_probs_history, critic_value_history, returns)
+        history = zip(action_probs_history, critic_value_history)
         actor_losses = []
         critic_losses = []
-        for log_prob, value, ret in history:
-    
+        for log_prob, value in history:
             # for each value in the history the critic had estimated to have in the future a total reward of "value"
             # we have taken a given action with log(prob) = log_prob and we have received the reward "ret"
-
             # according to this we need to update the actor so that he will predict with higher probability an action 
-            # that will bring higher rewqard with respect to the one estimated by the critic 
-            diff = ret - value
+            # that will bring higher reward with respect to the one estimated by the critic 
+            diff = reward - value
             actor_losses.append(-log_prob * diff)  # actor loss
-
             # and we need to update the critic so that it will predict a better estimate of the total future rewards
             critic_losses.append(
-                huber_loss(tf.expand_dims(value, 0), tf.expand_dims(ret, 0))
+                huber_loss(tf.expand_dims(value, 0), tf.expand_dims(reward, 0))
             )
-
         # Backpropagation
         loss_value = sum(actor_losses) + sum(critic_losses)
         grads = tape.gradient(loss_value, model.trainable_variables)
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
-
         # Clear the loss and reward history
         action_probs_history.clear()
         critic_value_history.clear()
-        rewards_history.clear()
-
     # saves details to monitor trainign and produce useful printout
-    episode_count += 1
-    results_rr.append(running_reward)
-    results.append(episode_reward)
+    reward_history.append(reward)
+    final_observation_history.append(state)
+
+for i in range(0, episodes, 20):
+    print(final_observation_history[i])
+plt.plot(reward_history)
+plt.show()
+
+
+
+'''
     plot_results(results,title='GP Actor-Critic Strategy')
     
     if running_reward > 195:  # Condition for which the task is considered solved
         print("Solved at episode {}!".format(episode_count))
         break
-
-
-
 #printout of resuts
 for episodio in range(episode_count):
     if episodio % 10 == 0:
@@ -154,3 +144,4 @@ for episode in range(episodes):
     print("Reward: ", reward) 
     results.append(total)
     env.close()
+    '''

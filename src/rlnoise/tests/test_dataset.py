@@ -26,7 +26,7 @@ for c in dataset.get_noisy_circuits():
 
 print('-------------------------------------')
 print('Z observable')
-z=dataset.pauli_probabilities(observable='Z', n_shots=100, n_rounds=10)
+z=dataset.pauli_probabilities(observable='Z', n_shots=100, n_rounds=1000)
 plt.hist(z[0], density=True)
 
 plt.savefig(figures_folder() + '/z_obs.png')
