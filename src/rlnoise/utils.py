@@ -1,7 +1,11 @@
 import matplotlib.pyplot as plt
 from IPython import display
 import numpy as np
+import os
 
+def models_folder():
+    folder = os.path.join(os.getcwd(), "models")
+    return folder
 
 def kld(m1, m2, v1, v2):
     '''Symmetric KL divergence of two Gaussians, not a reward

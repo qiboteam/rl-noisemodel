@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 nqubits = 1
 ngates = 2
 ncirc = 1
-val_split=0.2
 
 # create dataset
 dataset = Dataset(
