@@ -4,6 +4,7 @@ import numpy as np
 from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
+from rlnoise.utils import kld
 
 
 class CircuitsAcme(dm_env.Environment):
@@ -52,9 +53,8 @@ class CircuitsAcme(dm_env.Environment):
             moments=self.pauli_probabilities(generated_circuit, obs, n_shots=n_shots)
             observables[index, :]=moments
             index+=1
-        # Compute 1/MSE(obtained Mean, Real Mean)+1/(n_shots*MSE(obtained Var, Real Var))
         for i in range(3):
-            reward+=(1/(observables[i,0]-label[i,0])**2+1/(n_shots*(observables[i,0]-label[i,0])**2))
+            reward+=kld(m1=observables[i,0], m2=label[i,0], v1=observables[i,1], v2=label[i,1])
         return reward
 
     def generate_circuit(self, dep_error=0.05):
