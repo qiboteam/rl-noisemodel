@@ -7,11 +7,52 @@ def models_folder():
     folder = os.path.join(os.getcwd(), "models")
     return folder
 
+def dataset_folder():
+    folder = os.path.join(os.getcwd(), "dataset")
+    return folder
+
+def figures_folder():
+    folder = os.path.join(os.getcwd(), "figures")
+    return folder
+
+def moments_matching(m1, m2, v1, v2, alpha=100.):
+    '''Moments matching with one hyperparameter, not a reward
+    Args:
+        m1, m2 (float): mean values
+        v1, v2 (float): variance values
+        alpha (float): hyperparameter
+    '''
+    return (m1-m2)**2+alpha*(v1-v2)**2
+
+def neg_moments_matching(m1, m2, v1, v2, alpha=100.):
+    '''Moments matching with one hyperparameter (reward)
+    Args:
+        m1, m2 (float): mean values
+        v1, v2 (float): variance values
+        alpha (float): hyperparameter
+    '''
+    return -moments_matching(m1, m2, v1, v2, alpha=alpha)
+
+def truncated_moments_matching(m1, m2, v1, v2, alpha=100., truncate=0.02):
+    '''Positive moments matching truncated
+    Args:
+        m1, m2 (float): mean values
+        v1, v2 (float): variance values
+        alpha (float): hyperparameter
+        truncate (float): maximum value of moments matching
+    '''
+    result=moments_matching(m1, m2, v1, v2, alpha=alpha)
+    if result < truncate:
+        return truncate-result
+    else:
+        return 0.
+
 def kld(m1, m2, v1, v2):
     '''Symmetric KL divergence of two Gaussians, not a reward
     Args:
         m1, m2 (float): mean values
-        v1, v2 (float): variance values'''
+        v1, v2 (float): variance values
+        '''
     return 0.5*((m1-m2)**2+(v1+v2))*(1/v1+1/v2)-2
 
 def neg_kld_reward(m1, m2, v1, v2):
@@ -35,28 +76,16 @@ def truncated_kld_reward(m1, m2, v1, v2, truncate=10):
     else:
         return 0.
 
-def plot_results(values, title=''): 
+def plot_results(train_history, val_history, n_steps=20, filename="train_info.png"): 
+    tot_steps=len(train_history)
+    train_reward_history=[]
+    for index in range(0, tot_steps, n_steps):
+        avg_reward=0
+        for j in range(index, index+n_steps):
+            avg_reward+=train_history[j]["reward"]
+        train_reward_history.append(avg_reward/n_steps)
 
-    display.clear_output(wait=True)
-    f, ax = plt.subplots(nrows=1, ncols=2, figsize=(12,5))
-    f.suptitle(title)
-    ax[0].plot(values, label='score per run')
-    ax[0].axhline(195, c='red',ls='--', label='goal')
-    ax[0].set_xlabel('Episodes')
-    ax[0].set_ylabel('Reward')
-    x = range(len(values))
-    ax[0].legend()
-    # Calculate the trend
-    try:
-        z = np.polyfit(x, values, 1)
-        p = np.poly1d(z)
-        ax[0].plot(x,p(x),"--", label='trend')
-    except:
-        print('')
-    # Plot the histogram of results
-    ax[1].hist(values[-50:])
-    ax[1].axvline(195, c='red', label='goal')
-    ax[1].set_xlabel('Scores per Last 50 Episodes')
-    ax[1].set_ylabel('Frequency')
-    ax[1].legend()
+    plot=plt.plot(train_reward_history, c='red')
+    plot=plt.plot(val_history, c='blue')
     plt.show()
+    plt.savefig(figures_folder()+filename)
