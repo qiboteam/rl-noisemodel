@@ -105,6 +105,7 @@ class AC_agent(object):
                     avg_reward+=train_history[i]["reward"]
                 print("episode: %d, avg_reward %f" % (episode+1, avg_reward/10.))
             if self.do_val and ((episode+1)%self.val_steps)==0:
+                print("Validation...")
                 val_reward=self.validation_step()
                 val_history.append(val_reward)
                 print("episode: %d, val_reward %f" % (episode+1, val_reward))
