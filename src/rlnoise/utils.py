@@ -33,17 +33,21 @@ def neg_moments_matching(m1, m2, v1, v2, alpha=100.):
     '''
     return -moments_matching(m1, m2, v1, v2, alpha=alpha)
 
-def truncated_moments_matching(m1, m2, v1, v2, alpha=100., truncate=0.02):
+def truncated_moments_matching(m1, m2, v1, v2, alpha=20., truncate=0.001, normalize=True):
     '''Positive moments matching truncated
     Args:
         m1, m2 (float): mean values
         v1, v2 (float): variance values
         alpha (float): hyperparameter
         truncate (float): maximum value of moments matching
+        normalize (bool): normalize reward in [0;1]
     '''
     result=moments_matching(m1, m2, v1, v2, alpha=alpha)
     if result < truncate:
-        return truncate-result
+        if normalize:
+            return (truncate-result)/truncate
+        else:
+            return truncate-result
     else:
         return 0.
 
@@ -85,7 +89,8 @@ def plot_results(train_history, val_history, n_steps=20, filename="train_info.pn
             avg_reward+=train_history[j]["reward"]
         train_reward_history.append(avg_reward/n_steps)
 
-    plot=plt.plot(train_reward_history, c='red')
-    plot=plt.plot(val_history, c='blue')
+    plt.plot(train_reward_history, c='red', label='train_reward')
+    plt.plot(val_history, c='blue', label='validation_reward')
+    plt.legend()
     plt.show()
-    plt.savefig(figures_folder()+filename)
+    plt.savefig(figures_folder()+ '/' +filename)
