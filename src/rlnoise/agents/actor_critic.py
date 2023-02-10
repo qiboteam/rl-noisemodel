@@ -28,10 +28,12 @@ class AC_agent(object):
         cr_val=circuits_repr[n_split:]
         labels_val=labels[n_split:]
         reward_func=self.env.get_reward_func()
-        self.env=CircuitsGym(cr_train,labels_train, reward_func=reward_func)
-        self.val_env=CircuitsGym(cr_val,labels_val, reward_func=reward_func)
+        reward_method=self.env.get_reward_method()
+        self.env=CircuitsGym(cr_train,labels_train, reward_func=reward_func, reward_method=reward_method)
+        self.val_env=CircuitsGym(cr_val,labels_val, reward_func=reward_func, reward_method=reward_method)
         print("Train set elements: ", n_split)
         print("Validation set elements: ", tot-n_split)
+        
 
     def validation_options(self, do_validation=True, val_steps=10, greedy_policy=True):
         '''Define options for validation

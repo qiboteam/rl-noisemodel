@@ -4,7 +4,6 @@ from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
 
-
 class Dataset(object):
 
     def __init__(self, n_circuits, n_gates, n_qubits):
@@ -45,6 +44,17 @@ class Dataset(object):
     def __getitem__(self, i):
         return self.circuits[i]
 
+    def density_matrix(self, index):
+        '''Return the density matrix of a noisy circuit'''
+        return np.asarray(self.noisy_circuits[index]().state())
+
+    def generate_dm_labels(self):
+        '''Return numpy ndarray containing density matrices of noisy circuits'''
+        return np.asarray([
+            self.density_matrix(i)
+            for i in range(len(self.circuits))
+        ])
+        
     def pauli_probabilities(self, observable='Z', n_shots=100, n_rounds=100):
         '''Computes the probability distibutions of Pauli observables for 1q noisy circuits
 

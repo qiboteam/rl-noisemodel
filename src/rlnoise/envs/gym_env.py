@@ -5,11 +5,12 @@ from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
 from rlnoise.utils import truncated_moments_matching
+from rlnoise.rewards.observables_reward import obs_reward
 
 
 class CircuitsGym(gym.Env):
 
-    def __init__(self, circuits_repr, labels, reward_func=truncated_moments_matching):
+    def __init__(self, circuits_repr, labels, reward_func=truncated_moments_matching, reward_method=obs_reward):
 
         self.actions=(0,1)
         self.labels=labels
@@ -17,6 +18,7 @@ class CircuitsGym(gym.Env):
         self.shape = np.shape(circuits_repr[0])
         self.circuits_repr = circuits_repr
         self.set_reward_func(reward_func=reward_func)
+        self.set_reward_method(reward_method=reward_method)
 
         self.observation_space = spaces.Box(low=0, high=1, shape=(self.len, 4), dtype=float)
         self.action_space = spaces.Discrete(2)
@@ -32,6 +34,15 @@ class CircuitsGym(gym.Env):
 
     def get_reward_func(self):
         return self.reward_func
+
+    def get_reward_method(self):
+        return self.reward_method
+
+    def set_reward_func(self, reward_func):
+        self.reward_func=reward_func  
+
+    def set_reward_method(self, reward_method):
+        self.reward_method=reward_method
 
     def reset(self, seed=42, verbose=False, sample=None):
 
@@ -61,7 +72,12 @@ class CircuitsGym(gym.Env):
         # Check for termination.
         if self.position == (self.len-1):
             # Compute reward
-            reward = self.compute_reward(self.labels[self.sample], n_shots=100)
+            reward = self.reward_method(
+                circuit=self.circuits_repr[self.sample],
+                noisy_channels=self.noisy_channels,
+                label=self.labels[self.sample], 
+                reward_func=self.reward_func
+                )
             observation=self._get_obs()
             if verbose:
                 self._get_info(last_step=True)
@@ -91,58 +107,3 @@ class CircuitsGym(gym.Env):
         print("Last action: ", self.last_action)
         print("Observation:")
         print(self._get_obs())
-
-    """---------------------------------------"""
-    """--------COMPUTE REWARD-----------------"""
-    """---------------------------------------"""
-
-    def set_reward_func(self, reward_func):
-        self.reward_func=reward_func  
-
-    def compute_reward(self, label, n_shots=100):
-        reward=0.
-        generated_circuit = self.generate_circuit()
-        observables = np.ndarray((3,2), dtype=float)
-        index=0
-        for obs in ["Z", "Y", "X"]:
-            moments=self.pauli_probabilities(generated_circuit, obs, n_shots=n_shots)
-            observables[index, :]=moments
-            index+=1
-        for i in range(3):
-            reward+=self.reward_func(m1=observables[i,0], m2=label[i,0], v1=observables[i,1], v2=label[i,1])
-        return reward
-
-    def generate_circuit(self, dep_error=0.05):
-      qibo_circuit = Circuit(1, density_matrix=True)
-      for i in range(self.len):
-        if self.circuit[i,0]==0:
-          qibo_circuit.add(gates.RZ(0, theta=self.circuit[i,1]*2*np.pi, trainable=False))
-        else:
-          qibo_circuit.add(gates.RX(0, theta=self.circuit[i,1]*2*np.pi, trainable=False))
-        if self.noisy_channels[i]==1:
-          qibo_circuit.add(gates.DepolarizingChannel((0,), lam=dep_error))
-      return qibo_circuit
-
-    def pauli_probabilities(self, circuit, observable, n_shots=100, n_rounds=100):
-        measured_circuit = deepcopy(circuit)
-        self.add_masurement_gates(measured_circuit, observable=observable)
-        register=np.ndarray((n_rounds,), dtype=float)
-        moments=np.ndarray((2,), dtype=float)
-        for i in range(n_rounds):
-            probs=self.compute_shots(measured_circuit, n_shots=n_shots)
-            register[i]=probs[0]-probs[1]
-        moments[0]=np.mean(register)
-        moments[1]=np.var(register)
-        return moments
-
-    def add_masurement_gates(self, circuit, observable):
-        if observable=='X' or observable=='Y':
-            circuit.add(gates.H(0))
-        if observable=='Y':
-            circuit.add(gates.SDG(0))
-        circuit.add(gates.M(0))
-        
-    def compute_shots(self, circuit, n_shots):
-        shots_register_raw = circuit(nshots=n_shots).frequencies(binary=False)
-        shots_register=tuple(int(shots_register_raw[key]) for key in range(2))
-        return np.asarray(shots_register, dtype=float)/float(n_shots)
