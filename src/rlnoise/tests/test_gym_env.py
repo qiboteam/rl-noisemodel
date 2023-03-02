@@ -1,6 +1,9 @@
-from rlnoise.dataset import Dataset
+import sys
+sys.path.append('../')
+sys.path.append('../envs/')
+from dataset import Dataset
 import numpy as np
-from rlnoise.envs.gym_env import CircuitsGym
+from gym_env import CircuitsGym
 
 nqubits = 1
 ngates = 5
@@ -24,6 +27,7 @@ print(labels)
 
 
 circuit_env=CircuitsGym(circuits_repr, labels)
+
 circuit_env.reset(verbose=True)
 for _ in range(ngates):
     action=np.random.randint(0,2)

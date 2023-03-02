@@ -1,15 +1,16 @@
 import numpy as np
-import gymnasium as gym
-from gymnasium import spaces
+import gym
+from gym import spaces
 from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
-from rlnoise.utils import truncated_moments_matching
+from utils import truncated_moments_matching
 
 
 class CircuitsGym(gym.Env):
 
     def __init__(self, circuits_repr, labels, reward_func=truncated_moments_matching):
+        super(CircuitsGym, self).__init__()
 
         self.actions=(0,1)
         self.labels=labels
@@ -33,9 +34,9 @@ class CircuitsGym(gym.Env):
     def get_reward_func(self):
         return self.reward_func
 
-    def reset(self, seed=42, verbose=False, sample=None):
+    def reset(self, verbose=False, sample=None):
 
-        super().reset(seed=seed)
+        #super().reset(seed=seed)
         self.position = 0
         self.last_action = None
         if sample==None:
