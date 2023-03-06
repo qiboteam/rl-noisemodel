@@ -67,14 +67,14 @@ class CircuitsGym(gym.Env):
             if verbose:
                 self._get_info(last_step=True)
                 print("REWARD: ", reward)
-            return observation, reward, True
+            return observation, reward, True, self._get_info()
         else:
             reward=0
             self.position+=1
             observation=self._get_obs()
             if verbose:
                 self._get_info()
-            return observation, reward, False
+            return observation, reward, False, self._get_info()
     
     def _get_obs(self):
 
@@ -84,15 +84,18 @@ class CircuitsGym(gym.Env):
         return self.observation_space.copy()
 
     def _get_info(self, last_step=False):
-        print("Circuit number: ", self.sample)
+        #print("Circuit number: ", self.sample)
         if last_step:
             print("EPISODE ENDED")
         else:
-            print("Action number: ", self.position)
+            pass
+            #print("Action number: ", self.position)
         print("Last action: ", self.last_action)
-        print("Observation:")
-        print(self._get_obs())
-
+        #print("Observation:")
+        info = {'episode': self.sample, 'observation': self._get_obs()}
+        #print(info['observation'])
+        return info
+        
     """---------------------------------------"""
     """--------COMPUTE REWARD-----------------"""
     """---------------------------------------"""
