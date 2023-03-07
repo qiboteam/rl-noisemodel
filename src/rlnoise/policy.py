@@ -21,26 +21,30 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         # Compute shape by doing one forward pass
         with torch.no_grad():
             shape = conv1(sample).shape
-
-        conv2 = torch.nn.Conv2d(n_filters, n_filters, (max(1, int(shape[1]/2)), shape[2]))
+            
+        conv2 = torch.nn.Conv2d(n_filters, n_filters, (max(int(shape[2]/2), 1), shape[3]))
         
         self.cnn = torch.nn.Sequential(
             conv1,
-            torch.nn.ReLU(),
+            torch.nn.ReLU(), # Relu might not be great if we have negative angles
             conv2,
             torch.nn.ReLU(),
-            torch.nn.Flatten(0,-1),
+            torch.nn.Flatten(1,-1),
         )
         
         # Compute shape by doing one forward pass
         with torch.no_grad():
-            hdim = self.cnn(sample).shape[0]
+            hdim = self.cnn(sample).shape[-1]
 
-        assert hdim > features_dim
+        if hdim < features_dim:
+            print(f'Warning, using features_dim ({features_dim}) greater than hidden dim ({hdim}).')
 
         self.linear = torch.nn.Sequential(torch.nn.Linear(hdim, features_dim), torch.nn.ReLU())
 
     def forward(self, x):
-        return self.linear(self.cnn(x))
+        #print(x.shape)
+        x = self.cnn(x)
+        #print(x.shape)
+        return self.linear(x)
 
 

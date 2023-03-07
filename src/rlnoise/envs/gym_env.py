@@ -1,6 +1,7 @@
 import numpy as np
-import gym
+import gym, random
 from gym import spaces
+from gym.spaces import Dict, Box, Discrete, MultiBinary
 from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
@@ -16,10 +17,18 @@ class CircuitsGym(gym.Env):
         self.labels=labels
         self.len = len(circuits_repr[0])
         self.shape = np.shape(circuits_repr[0])
-        self.circuits_repr = circuits_repr
+        self.circuits_repr = circuits_repr.reshape(
+            len(circuits_repr), 1, self.shape[0], self.shape[1]
+        )
         self.set_reward_func(reward_func=reward_func)
 
-        self.observation_space = spaces.Box(low=0, high=1, shape=(self.len, 4), dtype=float)
+        self.observation_space = spaces.Box(
+            low=0,
+            high=1,
+            shape=(1, self.shape[0], self.shape[1] + 2),
+            dtype=float
+        )
+        print(self.observation_space)
         self.action_space = spaces.Discrete(2)
 
     def n_elements(self):
@@ -39,12 +48,12 @@ class CircuitsGym(gym.Env):
         #super().reset(seed=seed)
         self.position = 0
         self.last_action = None
-        if sample==None:
+        if sample == None:
             self.sample = np.random.randint(low=0, high=len(self.circuits_repr))
         else:
-            self.sample=sample
+            self.sample = sample
         self.circuit = self.circuits_repr[self.sample]
-        self.noisy_channels = np.zeros((self.len))
+        self.noisy_channels = np.zeros(self.len)
         self.observation_space = np.zeros((self.len, 4), dtype=np.float32)
         self.observation_space[:,0:2] = self.circuit
         if verbose:
@@ -56,22 +65,22 @@ class CircuitsGym(gym.Env):
         return self.sample
 
     def step(self, action, verbose=False):
-        self.last_action=action
+        self.last_action = action
         if action == 1:
-            self.noisy_channels[self.position]=1.
+            self.noisy_channels[self.position] = 1.
         # Check for termination.
         if self.position == (self.len-1):
             # Compute reward
             reward = self.compute_reward(self.labels[self.sample], n_shots=100)
-            observation=self._get_obs()
+            observation = self._get_obs()
             if verbose:
                 self._get_info(last_step=True)
                 print("REWARD: ", reward)
             return observation, reward, True, self._get_info()
         else:
-            reward=0
-            self.position+=1
-            observation=self._get_obs()
+            reward = 0
+            self.position += 1
+            observation = self._get_obs()
             if verbose:
                 self._get_info()
             return observation, reward, False, self._get_info()
@@ -90,9 +99,9 @@ class CircuitsGym(gym.Env):
         else:
             pass
             #print("Action number: ", self.position)
-        print("Last action: ", self.last_action)
+        #print("Last action: ", self.last_action)
         #print("Observation:")
-        info = {'episode': self.sample, 'observation': self._get_obs()}
+        info = {'observation': self._get_obs()}
         #print(info['observation'])
         return info
         
@@ -150,3 +159,79 @@ class CircuitsGym(gym.Env):
         shots_register_raw = circuit(nshots=n_shots).frequencies(binary=False)
         shots_register=tuple(int(shots_register_raw[key]) for key in range(2))
         return np.asarray(shots_register, dtype=float)/float(n_shots)
+
+
+
+
+class QuantumCircuit(gym.Env):
+    
+    def __init__(self, circuits, labels, reward_f):
+        super(QuantumCircuit, self).__init__()
+        
+        self.circuits = circuits[:,np.newaxis,:,:]
+        self.n_circ = self.circuits.shape[0]
+        self.n_gates = self.circuits.shape[2]
+
+        self.observation_space = spaces.Box(
+            low=0,
+            high=1,
+            shape=(1, self.n_gates, self.circuits.shape[-1] + 2),
+            dtype=np.float32
+        )
+        """
+        self.observation_space = Dict({
+            'gates': MultiBinary(self.n_gates),
+            'angles': Box(low=0, high=1, shape=(self.n_gates,), dtype=np.float32),
+            'noisy_channels': MultiBinary(self.n_gates),
+            'position': MultiBinary(self.n_gates)
+        })
+        """
+        self.action_space = spaces.Discrete(2)
+
+        self.current_state = self.init_state()
+
+    def init_state(self, i=None):
+        # initialize the state
+        if i is None:
+            i = random.randint(0, self.n_circ - 1)
+        state = np.hstack(
+            ( self.circuits[i].squeeze(0), np.zeros((self.n_gates, 2)) )
+        )
+        state[0,-1] = 1
+        state = state[np.newaxis,:,:]
+        return state
+    
+    def _get_obs(self):
+        return self.current_state
+
+    def _get_info(self):
+        return { 'state': self._get_obs() } 
+
+    def reset(self, i=None):
+        self.current_state = self.init_state(i)
+        return self._get_obs()
+
+    def step(self, action):
+        position = self.get_position()
+        if action == 1:
+            self.current_state[0, position, 2] = 1
+        else:
+            pass
+        if position == self.n_gates - 1:
+            # compute final reward
+            reward = self.compute_reward()
+            terminated = True
+        else:
+            # update position
+            self.current_state[0, position, -1] = 0
+            self.current_state[0, position + 1, -1] = 1
+            reward = 0
+            terminated = False
+        return self._get_obs(), reward, terminated, self._get_info()
+            
+    def get_position(self):
+        return (self.current_state[:,:,-1] == 1).nonzero()[-1]
+
+    def compute_reward(self):
+        # TO BE IMPLEMENTED
+        return random.randint(0,1)
