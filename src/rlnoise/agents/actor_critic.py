@@ -48,7 +48,6 @@ class AC_agent(object):
             self.do_val=do_validation
             self.greedy_val=greedy_policy
         
-
     def train_episode(self, optimizer):
         '''Run a training episode'''
         huber_loss = keras.losses.Huber()
@@ -90,7 +89,7 @@ class AC_agent(object):
             critic_value_history.clear()
         return reward, state, circuit
 
-    def train(self, episodes, optimizer, verbose=True):
+    def train(self, episodes, optimizer, verbose=True, verbose_episode=20):
         '''Implement full training pipeline'''
         train_history = []
         val_history=[]
@@ -101,7 +100,7 @@ class AC_agent(object):
             step_dictionary["reward"]=reward
             step_dictionary["final_state"]=state
             train_history.append(step_dictionary)
-            if ((episode+1)%10)==0 and verbose:
+            if ((episode+1)%verbose_episode)==0 and verbose:
                 avg_reward=0
                 for i in range((episode-10), episode):
                     avg_reward+=train_history[i]["reward"]
@@ -135,7 +134,7 @@ class AC_agent(object):
                     action = np.where(action_probs.numpy()==np.max(action_probs.numpy()))
                 else:
                     action = np.random.choice(num_actions, p=np.squeeze(action_probs))
-                state, reward, done = self.env.step(action)
+                state, reward, done = self.val_env.step(action)
             tot_val_reward+=reward
         avg_val_reward=tot_val_reward/self.val_env.n_elements()
         return avg_val_reward

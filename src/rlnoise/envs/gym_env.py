@@ -6,11 +6,12 @@ from qibo.models import Circuit
 from copy import deepcopy
 from rlnoise.utils import truncated_moments_matching
 from rlnoise.rewards.observables_reward import obs_reward
+from rlnoise.rewards.density_matrix_reward import dm_reward
 
 
 class CircuitsGym(gym.Env):
 
-    def __init__(self, circuits_repr, labels, reward_func=truncated_moments_matching, reward_method=obs_reward):
+    def __init__(self, circuits_repr, labels, reward_func=truncated_moments_matching, reward_method="dm"):
 
         self.actions=(0,1)
         self.labels=labels
@@ -72,12 +73,21 @@ class CircuitsGym(gym.Env):
         # Check for termination.
         if self.position == (self.len-1):
             # Compute reward
-            reward = self.reward_method(
-                circuit=self.circuits_repr[self.sample],
-                noisy_channels=self.noisy_channels,
-                label=self.labels[self.sample], 
-                reward_func=self.reward_func
-                )
+            if self.reward_method=="observables":
+                reward = obs_reward(
+                    circuit=self.circuits_repr[self.sample],
+                    noisy_channels=self.noisy_channels,
+                    label=self.labels[self.sample], 
+                    reward_func=self.reward_func
+                    )
+            elif self.reward_method=="dm":
+                reward = dm_reward( 
+                    circuit=self.circuits_repr[self.sample],
+                    noisy_channels=self.noisy_channels,
+                    label=self.labels[self.sample]
+                    )
+            else:
+                print("Use a defined reward method")
             observation=self._get_obs()
             if verbose:
                 self._get_info(last_step=True)

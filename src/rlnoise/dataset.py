@@ -78,7 +78,6 @@ class Dataset(object):
     def generate_labels(self, n_shots=100, n_rounds=100):
         '''Generate the labels, containing the first two moments of distributions, necessary for training
         Args:
-            oservable (string): pauli observable
             n_shots (int): number of shots executed for one observable estimation
             n_rounds (int): number of estimations of one observable
 
@@ -224,7 +223,7 @@ class Dataset(object):
             multi qubit circuits:
                 circuit_repr[t,qubit,0] gate type (1=1q; -1=2q; 0=no_gate)
                 circuit_repr[t,qubit,1] gate name (1=rx; 0=rz)
-                circuit_repr[t,qubit,2] rotatoin angle nomalized
+                circuit_repr[t,qubit,2] rotation angle nomalized
         '''
 
         time_steps = self.circuit_depth(circuit)
