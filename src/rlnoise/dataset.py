@@ -3,11 +3,12 @@ import numpy as np
 from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
+from inspect import signature
 
 
 class Dataset(object):
 
-    def __init__(self, n_circuits, n_gates, n_qubits):
+    def __init__(self, n_circuits, n_gates, n_qubits, primitive_gates=None, noise_model=None, mode='rep'):
         '''Generate dataset for the training of RL-algorithm
 
         Args:
@@ -16,13 +17,64 @@ class Dataset(object):
             n_qubits (int): number of qubits in each circuit
         '''  
 
-        self.n_gates=n_gates
-        self.n_qubits=n_qubits
+        self.n_gates = n_gates
+        self.n_qubits = n_qubits
+        self.noise_model = noise_model
+        if primitive_gates is None:
+            primitive_gates = ['RX', 'RZ', 'CZ'] if n_qubits > 1 else ['RX', 'RZ']
+        self.primitive_gates = [ getattr(gates, g) for g in primitive_gates ]
+        self.mode = mode
+        
         self.circuits = [
-            self.generate_random_circuit(nqubits=n_qubits, ngates=n_gates)
+            self.generate_random_circuit()
             for i in range(n_circuits)
         ]
+        self.circ_rep = np.asarray([
+            self.circuit_to_rep(c)
+            for c in self.circuits
+        ])
+        self.train_circuits, self.val_circuits = self.train_val_split()
 
+    def generate_random_circuit(self):
+        """Generate a random circuit."""
+        circuit = Circuit(self.n_qubits)
+        for _ in range(self.n_gates):
+            for q0 in range(self.n_qubits):
+                gate = random.choice(self.primitive_gates) # maybe add identity gate?
+                params = signature(gate).parameters
+                if 'q0' in params and 'q1' in params:
+                    q1 = random.choice(
+                        list( set(range(self.n_qubits)) - {q0} )
+                    )
+                    circuit.add(gate(q1,q0))
+                else:
+                    if issubclass(gate, gates.ParametrizedGate):
+                        theta = 2 * np.pi * np.random.random()
+                        circuit.add(gate(q0, theta=theta))
+                    else:
+                        circuit.add(gate(q0))
+        if self.noise_model is not None:
+            self.noise_model.apply(circuit)
+        return circuit
+
+    def circuit_to_rep(self, circuit):
+        rep = np.zeros((self.n_gates, 2))
+        for i,gate in enumerate(circuit.queue):
+            if isinstance(gate, gates.RZ):
+                rep[i][1] = gate.init_kwargs["theta"]
+            elif isinstance(gate, gates.RX):
+                rep[i][0] = 1
+                rep[i][1] = gate.init_kwargs["theta"]
+        return rep
+
+    def train_val_split(self, split=0.2):
+        '''Split dataset into train ad validation sets'''
+
+        idx = random.sample(range(len(self.circuits)), int(split*len(self.circuits)))
+        val_circuits = [ c for i, c in enumerate(self.circuits) if i in idx ]
+        train_circuits = [ c for i, c in enumerate(self.circuits) if i not in idx ]
+        return train_circuits, val_circuits
+        
     def get_train_loader(self):
         ''' Returns training set circuits'''
         return (c for c in self.train_circuits)
@@ -31,10 +83,6 @@ class Dataset(object):
         ''' Returns validation set circuits'''
         return (c for c in self.val_circuits)
 
-    def get_noisy_circuits(self):
-        ''' Returns all noisy circuits'''
-        return (c for c in self.noisy_circuits)
-
     def get_circuits(self):
         ''' Returns all circuits'''
         return (c for c in self.circuits)
@@ -42,8 +90,14 @@ class Dataset(object):
     def __len__(self):
         return len(self.circuits)
 
+    def set_mode(self, mode):
+        self.mode = mode
+    
     def __getitem__(self, i):
-        return self.circuits[i]
+        if self.mode == 'rep':
+            return self.circ_rep[i]
+        elif self.mode == 'circ':
+            return self.circuits[i]
 
     def pauli_probabilities(self, observable='Z', n_shots=100, n_rounds=100):
         '''Computes the probability distibutions of Pauli observables for 1q noisy circuits
@@ -124,17 +178,6 @@ class Dataset(object):
             return np.asarray(shots_register, dtype=float)/float(n_shots)
         else:
             return np.asarray(shots_register)
-
-    def train_val_split(self, split=0.2, noise=False):
-        '''Split dataset into train ad validation sets'''
-
-        idx = random.sample(range(len(self.circuits)), int(split*len(self.circuits)))
-        if not noise:
-            self.val_circuits = [ c for i, c in enumerate(self.circuits) if i in idx ]
-            self.train_circuits = [ c for i, c in enumerate(self.circuits) if i not in idx ]
-        else:
-            self.val_circuits = [ c for i, c in enumerate(self.noisy_circuits) if i in idx ]
-            self.train_circuits = [ c for i, c in enumerate(self.noisy_circuits) if i not in idx ]
 
     def add_noise(self, noise_model='depolarising', noisy_gates=['rx'], noise_params=0.01):
         '''Add noise model to circuits
@@ -249,31 +292,6 @@ class Dataset(object):
     def circuit_depth(self, circuit):
         """Returns the depth of a circuit (number of circuit moments)"""
         return max(circuit.queue.moment_index)
-
-    @staticmethod
-    def generate_random_circuit(nqubits, ngates):
-        """Generate a random circuit with RX, RZ and CZ gates."""
-        one_qubit_gates = [gates.RX, gates.RZ]
-        two_qubit_gates = [gates.CZ]
-        n1, n2 = len(one_qubit_gates), len(two_qubit_gates)
-        n = n1 + n2 if nqubits > 1 else n1
-        circuit = Circuit(nqubits)
-        for _ in range(ngates):
-            igate = int(np.random.randint(0, n))
-            if igate >= n1:
-                q = tuple(np.random.randint(0, nqubits, 2))
-                while q[0] == q[1]:
-                    q = tuple(np.random.randint(0, nqubits, 2))
-                gate = two_qubit_gates[igate - n1]
-            else:
-                q = (np.random.randint(0, nqubits),)
-                gate = one_qubit_gates[igate]
-            if issubclass(gate, gates.ParametrizedGate):
-                theta = 2 * np.pi * np.random.random()
-                circuit.add(gate(*q, theta=theta, trainable=False))
-            else:
-                circuit.add(gate(*q))
-        return circuit
     
     def save_circuits(self, filename):
         '''Save circuits in json file'''
@@ -313,3 +331,21 @@ class Dataset(object):
             self.circuits.append(circ)
 
 
+    def repr_to_circuit(self, repr, noise_channel):
+        c = Circuit(1, density_matrix=True)
+        for gate, angle, noise_c, _ in repr[0]:
+            if gate == 0:
+                c.add(gates.RZ(
+                    0,
+                    theta = angle*2*np.pi,
+                    trainable = False
+                ))
+            else:
+                c.add(gates.RX(
+                    0,
+                    theta = angle*2*np.pi,
+                    trainable = False
+                ))
+            if noise_c == 1:
+                c.add(noise_channel)
+        return c

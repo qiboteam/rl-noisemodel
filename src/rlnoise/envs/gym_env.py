@@ -165,12 +165,14 @@ class CircuitsGym(gym.Env):
 
 class QuantumCircuit(gym.Env):
     
-    def __init__(self, circuits, labels, reward_f):
+    def __init__(self, circuits, noise_channel, labels, reward_f):
         super(QuantumCircuit, self).__init__()
-        
+
         self.circuits = circuits[:,np.newaxis,:,:]
         self.n_circ = self.circuits.shape[0]
         self.n_gates = self.circuits.shape[2]
+        self.noise_channel = noise_channel
+        self.labels = labels
 
         self.observation_space = spaces.Box(
             low=0,
@@ -179,6 +181,7 @@ class QuantumCircuit(gym.Env):
             dtype=np.float32
         )
         """
+        # This is the actual space, but probably adds unnecessary complications
         self.observation_space = Dict({
             'gates': MultiBinary(self.n_gates),
             'angles': Box(low=0, high=1, shape=(self.n_gates,), dtype=np.float32),
@@ -186,8 +189,9 @@ class QuantumCircuit(gym.Env):
             'position': MultiBinary(self.n_gates)
         })
         """
+            
         self.action_space = spaces.Discrete(2)
-
+        
         self.current_state = self.init_state()
 
     def init_state(self, i=None):
@@ -232,6 +236,34 @@ class QuantumCircuit(gym.Env):
     def get_position(self):
         return (self.current_state[:,:,-1] == 1).nonzero()[-1]
 
+    def get_qibo_circuit(self):
+        c = Circuit(1, density_matrix=True)
+        for gate, angle, noise_c, pos in self.current_state[0]:
+            if gate == 0:
+                c.add(gates.RZ(
+                    0,
+                    theta = angle*2*np.pi,
+                    trainable = False
+                ))
+            else:
+                c.add(gates.RX(
+                    0,
+                    theta = angle*2*np.pi,
+                    trainable = False
+                ))
+            if noise_c == 1:
+                c.add(self.noise_channel)
+        return c
+
     def compute_reward(self):
         # TO BE IMPLEMENTED
-        return random.randint(0,1)
+        c = self.get_qibo_circuit()
+        c.add(gates.M(0))
+        freq = c(nshots=10000).frequencies()
+        #print(freq)
+        zero = (freq['0'] - self.labels['0'])/self.labels['0']
+        one = (freq['1'] - self.labels['1'])/self.labels['1']
+        r = - np.sqrt(zero**2 + one**2)
+        return r
+        #return self.reward_f(c)
+        #return random.randint(0,1)
