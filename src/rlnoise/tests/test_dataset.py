@@ -1,10 +1,11 @@
-from rlnoise.dataset import Dataset, dataset_folder, figures_folder
+from rlnoise.utils import  dataset_folder, figures_folder
+from rlnoise.dataset import Dataset
 import numpy as np
 import matplotlib.pyplot as plt
 
 nqubits = 1
 ngates = 2
-ncirc = 1
+ncirc = 2
 
 # create dataset
 dataset = Dataset(
@@ -23,6 +24,16 @@ dataset.add_noise(noisy_gates=['rx'])
 for c in dataset.get_noisy_circuits():
     print(c.draw())
 
+density_matrices=dataset.generate_dm_labels()
+print(density_matrices)
+
+'''
+print('-------------------------------------')
+print('Representation')
+repr=dataset.generate_dataset_representation()
+print(repr.shape)
+np.save(dataset_folder() + '/test.npy', repr)
+
 print('-------------------------------------')
 print('Z observable')
 z=dataset.pauli_probabilities(observable='Z', n_shots=100, n_rounds=1000)
@@ -31,15 +42,6 @@ plt.hist(z[0], density=True)
 plt.savefig(figures_folder() + '/z_obs.png')
 plt.close()
 
-
-print('-------------------------------------')
-print('Representation')
-repr=dataset.generate_dataset_representation()
-print(repr.shape)
-np.save(dataset_folder() + '/test.npy', repr)
-
-'''
-print('-------------------------------------')
 print('Y observable')
 y=dataset.pauli_probabilities(observable='Y', n_shots=100, n_rounds=10)
 plt.hist(y[0], density=True)

@@ -4,7 +4,7 @@ from rlnoise.envs.gym_env import CircuitsGym
 
 nqubits = 1
 ngates = 5
-ncirc = 1
+ncirc = 2
 val_split=0.2
 
 # create dataset
@@ -19,11 +19,11 @@ for c in dataset.get_circuits():
     print(c.draw())
 circuits_repr=dataset.generate_dataset_representation()
 dataset.add_noise(noise_params=0.05)
-labels=dataset.generate_labels()
+labels=dataset.generate_dm_labels()
 print(labels)
 
 
-circuit_env=CircuitsGym(circuits_repr, labels)
+circuit_env=CircuitsGym(circuits_repr, labels, reward_method="dm")
 circuit_env.reset(verbose=True)
 for _ in range(ngates):
     action=np.random.randint(0,2)
