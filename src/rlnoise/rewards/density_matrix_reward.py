@@ -2,12 +2,24 @@ from qibo import gates
 from qibo.models import Circuit
 import numpy as np
 
+def step_reward(circuit, noisy_channels, label, previous_mse, alpha=1.):
+    generated_circuit = generate_circuit(circuit, noisy_channels)
+    generated_dm = np.asarray(generated_circuit().state())
+    _mse = mse(generated_dm, label)
+    if  _mse > previous_mse:
+        return -alpha, _mse
+    else:
+        return alpha, _mse
+
 def dm_reward(circuit, noisy_channels, label):
     generated_circuit = generate_circuit(circuit, noisy_channels)
     generated_dm = np.asarray(generated_circuit().state())
     return compute_reward(generated_dm, label)
 
-def compute_reward(a,b,alpha=100,t=1):
+def mse(a,b):
+    return np.sqrt(np.abs(((a-b)**2).mean()))
+
+def compute_reward(a,b,alpha=100,t=10):
     mse = alpha*np.sqrt(np.abs(((a-b)**2).mean()))
     if mse > t:
         return 0
