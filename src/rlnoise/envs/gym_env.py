@@ -162,16 +162,21 @@ class CircuitsGym(gym.Env):
 
 
 
-
+# currently working just for single qubit circuits
+# TO DO:
+# - Adapt to multi-qubits circuits
+# - Implement batches
+# - Write a reward that makes sense
 class QuantumCircuit(gym.Env):
     
-    def __init__(self, circuits, noise_channel, labels, reward_f):
+    def __init__(self, circuits, noise_channel, index2gate, labels, reward_f):
         super(QuantumCircuit, self).__init__()
 
         self.circuits = circuits[:,np.newaxis,:,:]
         self.n_circ = self.circuits.shape[0]
         self.n_gates = self.circuits.shape[2]
         self.noise_channel = noise_channel
+        self.index2gate = index2gate
         self.labels = labels
 
         self.observation_space = spaces.Box(
@@ -239,18 +244,12 @@ class QuantumCircuit(gym.Env):
     def get_qibo_circuit(self):
         c = Circuit(1, density_matrix=True)
         for gate, angle, noise_c, pos in self.current_state[0]:
-            if gate == 0:
-                c.add(gates.RZ(
+            c.add(
+                self.index2gate[gate](
                     0,
                     theta = angle*2*np.pi,
                     trainable = False
-                ))
-            else:
-                c.add(gates.RX(
-                    0,
-                    theta = angle*2*np.pi,
-                    trainable = False
-                ))
+            ))
             if noise_c == 1:
                 c.add(self.noise_channel)
         return c

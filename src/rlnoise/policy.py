@@ -9,7 +9,7 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
             self,
             observation_space,
             features_dim,
-            filter_shape = (4,4),
+            filter_shape,
             n_filters = 32                 
     ):
         super().__init__(observation_space, features_dim)
@@ -26,9 +26,9 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         
         self.cnn = torch.nn.Sequential(
             conv1,
-            torch.nn.ReLU(), # Relu might not be great if we have negative angles
+            torch.nn.ELU(), # Relu might not be great if we have negative angles
             conv2,
-            torch.nn.ReLU(),
+            torch.nn.ELU(),
             torch.nn.Flatten(1,-1),
         )
         
@@ -39,7 +39,7 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         if hdim < features_dim:
             print(f'Warning, using features_dim ({features_dim}) greater than hidden dim ({hdim}).')
 
-        self.linear = torch.nn.Sequential(torch.nn.Linear(hdim, features_dim), torch.nn.ReLU())
+        self.linear = torch.nn.Sequential(torch.nn.Linear(hdim, features_dim), torch.nn.ELU())
 
     def forward(self, x):
         #print(x.shape)

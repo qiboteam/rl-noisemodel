@@ -8,27 +8,36 @@ from inspect import signature
 
 class Dataset(object):
 
-    def __init__(self, n_circuits, n_gates, n_qubits, primitive_gates=None, noise_model=None, mode='rep'):
+    def __init__(self, n_circuits, n_gates, n_qubits, clifford=True, primitive_gates=None, noise_model=None, mode='rep'):
         '''Generate dataset for the training of RL-algorithm
 
         Args:
             n_circuits (int): number of random circuits generated
-            n_gates (int): number of gates in each circuit
+            n_gates (int): number of gates in each circuit (depth)
             n_qubits (int): number of qubits in each circuit
-        '''  
+        '''
+
+        super(Dataset, self).__init__()
 
         self.n_gates = n_gates
         self.n_qubits = n_qubits
+        self.clifford = clifford
         self.noise_model = noise_model
         if primitive_gates is None:
-            primitive_gates = ['RX', 'RZ', 'CZ'] if n_qubits > 1 else ['RX', 'RZ']
-        self.primitive_gates = [ getattr(gates, g) for g in primitive_gates ]
+            primitive_gates = {'RZ': 0, 'RX': 1, 'CZ': -1} if n_qubits > 1 else {'RZ': 0, 'RX': 1}
+        self.index2gate = { i: getattr(gates, g) for g,i in primitive_gates.items() }
+        self.gate2index = { getattr(gates, g): i for g,i in primitive_gates.items() }
         self.mode = mode
         
         self.circuits = [
             self.generate_random_circuit()
             for i in range(n_circuits)
         ]
+        if self.noise_model is not None:
+            self.noisy_circuits = [
+                self.noise_model.apply(c)
+                for c in self.circuits
+            ]
         self.circ_rep = np.asarray([
             self.circuit_to_rep(c)
             for c in self.circuits
@@ -40,7 +49,9 @@ class Dataset(object):
         circuit = Circuit(self.n_qubits)
         for _ in range(self.n_gates):
             for q0 in range(self.n_qubits):
-                gate = random.choice(self.primitive_gates) # maybe add identity gate?
+                if self.clifford:
+                    raise AssertionError("To be implemented.")
+                gate = random.choice(list(self.index2gate.values())) # maybe add identity gate?
                 params = signature(gate).parameters
                 if 'q0' in params and 'q1' in params:
                     q1 = random.choice(
@@ -53,26 +64,31 @@ class Dataset(object):
                         circuit.add(gate(q0, theta=theta))
                     else:
                         circuit.add(gate(q0))
-        if self.noise_model is not None:
-            self.noise_model.apply(circuit)
         return circuit
 
     def circuit_to_rep(self, circuit):
-        rep = np.zeros((self.n_gates, 2))
-        for i,gate in enumerate(circuit.queue):
-            if isinstance(gate, gates.RZ):
-                rep[i][1] = gate.init_kwargs["theta"]
-            elif isinstance(gate, gates.RX):
-                rep[i][0] = 1
-                rep[i][1] = gate.init_kwargs["theta"]
+        """Maps qibo circuits to numpy array representation."""
+        rep = np.zeros((self.n_gates, 2*self.n_qubits))
+        # looping over moments
+        for i,moment in enumerate(circuit.queue.moments):
+            for j,gate in enumerate(moment):
+                # checking whether it's a 2-qubits gate
+                if len(gate.init_args) > 1:
+                    raise AssertionError ("To be implemented.")
+                else:
+                    rep[i,2*j] = self.gate2index[type(gate)]
+                    rep[i,2*j+1] = gate.init_kwargs["theta"] / (2 * np.pi)
         return rep
 
     def train_val_split(self, split=0.2):
         '''Split dataset into train ad validation sets'''
 
         idx = random.sample(range(len(self.circuits)), int(split*len(self.circuits)))
-        val_circuits = [ c for i, c in enumerate(self.circuits) if i in idx ]
-        train_circuits = [ c for i, c in enumerate(self.circuits) if i not in idx ]
+        val_circuits = [ self.__getitem__(i) for i in range(self.__len__()) if i in idx ]
+        train_circuits = [ self.__getitem__(i) for i in range(self.__len__()) if i not in idx ]
+        if self.mode == 'rep':
+            val_circuits = np.asarray(val_circuits)
+            train_circuits = np.asarray(train_circuits)
         return train_circuits, val_circuits
         
     def get_train_loader(self):
@@ -98,200 +114,8 @@ class Dataset(object):
             return self.circ_rep[i]
         elif self.mode == 'circ':
             return self.circuits[i]
-
-    def pauli_probabilities(self, observable='Z', n_shots=100, n_rounds=100):
-        '''Computes the probability distibutions of Pauli observables for 1q noisy circuits
-
-        Args:
-            oservable (string): pauli observable
-            n_shots (int): number of shots executed for one observable estimation
-            n_rounds (int): number of estimations of one observable
-
-        Returns:
-            register (np.ndarray): average observable value obtained at each measurement round
-        '''
-
-        circuits = deepcopy(self.noisy_circuits)
-        self.add_masurement_gates(circuits, observable=observable)
-        register=np.ndarray((len(self.circuits), n_rounds), dtype=float)
-        for i in range(n_rounds):
-            probs=self.compute_shots(circuits, n_shots=n_shots, probabilities=True)
-            register[:,i]=probs[:,0]-probs[:,1]
-        return register
-
-    def generate_labels(self, n_shots=100, n_rounds=100):
-        '''Generate the labels, containing the first two moments of distributions, necessary for training
-        Args:
-            oservable (string): pauli observable
-            n_shots (int): number of shots executed for one observable estimation
-            n_rounds (int): number of estimations of one observable
-
-        Returns:
-            moments (np.ndarray): array containing the first two moments of the distribution for each observable
-        '''
-        moments=np.ndarray((len(self.circuits), 3, 2), dtype=float)
-        n_obs=0
-        for obs in ['Z', 'Y', 'X']:
-            register=self.pauli_probabilities(observable=obs, n_shots=n_shots, n_rounds=n_rounds)
-            moments[:,n_obs,0]=np.mean(register, axis=1)
-            moments[:,n_obs,1]=np.var(register, axis=1)
-            n_obs+=1
-        return moments
-    
-    def add_masurement_gates(self, circuits, observable='Z'):
-        '''Add measurement gates at the end of circuits dataset, necessary when circuits are executed the first time
-        
-        Args: 
-            circuits: circuits dataset
-            observable (string): Pauli observable to be measured ('Z' for computational basis)
-        '''
-
-        for i in range(len(self.circuits)):
-            if observable=='X' or observable=='Y':
-                circuits[i].add(gates.H(*range(self.n_qubits)))
-            if observable=='Y':
-                circuits[i].add(gates.SDG(*range(self.n_qubits)))
-            circuits[i].add(gates.M(*range(self.n_qubits)))
-        
-
-    def compute_shots(self, circuits, n_shots=1024, probabilities=False):
-        '''Computes shots of circuits dataset
-
-        Args:
-            circuits: circuits dataset 
-            n_shots (int): number of shots executed
-            probabilities (bool): normalize shot counts to obtain probabilities
-
-        Returns:
-            shots_regiter (numpy.ndarray): number of shot counts/probabilities for each circuit in computational basis (order: 000; 001; 010 ...)
-        '''
-
-        shots_register_raw = [   
-            circuits[i](nshots=n_shots).frequencies(binary=False)
-            for i in range(len(self.circuits))
-        ]
-        shots_register=[]
-        for i in range(len(self.circuits)):
-            single_register=tuple(int(shots_register_raw[i][key]) for key in range(2**self.n_qubits))
-            shots_register.append(single_register)
-        if probabilities:
-            return np.asarray(shots_register, dtype=float)/float(n_shots)
-        else:
-            return np.asarray(shots_register)
-
-    def add_noise(self, noise_model='depolarising', noisy_gates=['rx'], noise_params=0.01):
-        '''Add noise model to circuits
-
-        Args:
-            noise_model (str): noise model ("depolarising" or "depolarising_prop")
-            noisy_gates (list): gates after which noise channels are added 
-            noise_params (float): depolarising error parameter
-        '''
-        if noise_model=='depolarising':
-            self.noisy_circuits = [
-                self.add_dep_on_circuit(self.circuits[i], noisy_gates, noise_params)
-                for i in range(len(self.circuits))
-            ]
-        # Depolarising parameter is proportional to rotation angle
-        if noise_model=='depolarising_prop':
-            self.noisy_circuits = [
-                self.add_dep_on_circuit(self.circuits[i], noisy_gates, noise_params, prop=True)
-                for i in range(len(self.circuits))
-            ]
-
-    def add_dep_on_circuit(self, circuit, noisy_gates, depolarizing_error, prop=False):
-        '''Add noise model on a single circuit'''
-
-        noisy_circ = Circuit(circuit.nqubits, density_matrix=True)
-        time_steps = self.circuit_depth(circuit)
-        for t in range(time_steps):
-            for qubit in range(circuit.nqubits):
-                gate = circuit.queue.moments[t][qubit]
-                if gate == None:
-                    pass
-                elif gate.name in noisy_gates:
-                    noisy_circ.add(circuit.queue.moments[t][qubit])
-                    if not prop:
-                        noisy_circ.add(
-                            gates.DepolarizingChannel(
-                                circuit.queue.moments[t][qubit].qubits, depolarizing_error
-                            )
-                        )
-                    else:
-                        noisy_circ.add(
-                            gates.DepolarizingChannel(
-                                circuit.queue.moments[t][qubit].qubits, depolarizing_error*gate.parameters[0]
-                            )
-                        )
-                else:
-                    noisy_circ.add(circuit.queue.moments[t][qubit])
-        return noisy_circ
-
-    def generate_dataset_representation(self):
-        '''Generate dataset with features representing the circuit to be used as input for the RL algorithm. 
-            For 1q circuits the feature representation is of dim (n_circuits, n_gates, 2).
-            For multi qubit circuits the feature representation is of dim (n_circuits, max_circuit_moments, n_qubits, 3).
-            More info in generate_circuit_representation.
-
-        Returns:
-            self.representation (numpy.ndarray): circuits representation as a feature vector
-        '''
-
-        # This variable is useful to have circuit representations of the same size for multi qubit circuits
-        max_depth = max([
-                self.circuit_depth(self.__getitem__(i))
-                for i in range(len(self.circuits))
-            ])
-        self.representation = np.asarray([
-                self.generate_circuit_representation(self.__getitem__(i), max_depth)
-                for i in range(len(self.circuits))
-            ])
-        return self.representation
-
-    def generate_circuit_representation(self, circuit, max_depth):
-        '''Generate feature representation vector for a single circuit.
-            Features are organised as follows.
-            1q circuits: 
-                circuit_repr[t,0] gate name (1=rx; 0=rz)
-                circuit_repr[t,1] rotation angle normalized
-            multi qubit circuits:
-                circuit_repr[t,qubit,0] gate type (1=1q; -1=2q; 0=no_gate)
-                circuit_repr[t,qubit,1] gate name (1=rx; 0=rz)
-                circuit_repr[t,qubit,2] rotatoin angle nomalized
-        '''
-
-        time_steps = self.circuit_depth(circuit)
-        if circuit.nqubits == 1:
-            circuit_repr=np.zeros((time_steps, 2), dtype=float)
-            for t in range(time_steps):
-                gate = circuit.queue.moments[t][0]
-                if gate.name == 'rx':
-                    circuit_repr[t,0]=1
-                    circuit_repr[t,1]=gate.parameters[0]/(2*np.pi)
-                else:
-                    circuit_repr[t,1]=gate.parameters[0]/(2*np.pi)
-        else:
-            circuit_repr=np.zeros((max_depth, circuit.nqubits, 3), dtype=float)
-            for t in range(time_steps):
-                for qubit in range(circuit.nqubits):
-                    gate = circuit.queue.moments[t][qubit]
-                    if gate == None:
-                        pass
-                    elif len(gate.qubits) == 1:
-                        circuit_repr[t,qubit,0]=1
-                        if gate.name == 'rx':
-                            circuit_repr[t,qubit,1]=1
-                            circuit_repr[t,qubit,2]=gate.parameters[0]/(2*np.pi)
-                        else:
-                            circuit_repr[t,qubit,2]=gate.parameters[0]/(2*np.pi)
-                    else:
-                        # TODO: find 2 qubit gates matching for circuits with more than 3q
-                        circuit_repr[t,qubit,0]=-1
-        return np.asarray(circuit_repr)
-
-    def circuit_depth(self, circuit):
-        """Returns the depth of a circuit (number of circuit moments)"""
-        return max(circuit.queue.moment_index)
+        elif self.mode == 'noisy_circ':
+            return self.noisy_circuits[i]
     
     def save_circuits(self, filename):
         '''Save circuits in json file'''
@@ -330,22 +154,94 @@ class Dataset(object):
                     circ.add(getattr(gates, g['name'])(g['qubit'][0], g['qubit'][1], **g['kwargs']))
             self.circuits.append(circ)
 
+    def rep_to_circuit(self, rep, noise_channel):
+        c = Circuit(self.n_qubits, density_matrix=True)
+        for *row, _ in rep[0]:
+            gates = row[:self.n_qubits]
+            angles = row[self.n_qubits:2*self.n_qubits]
+            noise_ch = row[-self.n_qubits:]
+            for i, (gate, angle, nc) in enumerate(zip(gates, angles, noise_ch)):
+                gate = self.index2gate[gate]
+                # check for 2-qubits gates
+                params = signature(gate).parameters
+                if 'q0' in params and 'q1' in params:
+                    raise AssertionError("To be implemented.")
+                else:
+                    c.add(gate(
+                        i,
+                        theta = angle * 2 * np.pi,
+                        trainable = False
+                    ))
+                if nc == 1:
+                    if self.n_qubits > 1:
+                        raise AssertionError("To be implemented.")
+                    c.add(noise_channel) # this has to be adapted for multi-qubits
+        return c
 
-    def repr_to_circuit(self, repr, noise_channel):
-        c = Circuit(1, density_matrix=True)
-        for gate, angle, noise_c, _ in repr[0]:
-            if gate == 0:
-                c.add(gates.RZ(
-                    0,
-                    theta = angle*2*np.pi,
-                    trainable = False
-                ))
-            else:
-                c.add(gates.RX(
-                    0,
-                    theta = angle*2*np.pi,
-                    trainable = False
-                ))
-            if noise_c == 1:
-                c.add(noise_channel)
+
+class CircuitRepresentation(object):
+
+    def __init__(self, gates_map, noise_channels_map, shape='2d'):
+        super(CircuitRepresentation, self).__init__()
+
+        self.gate2index = { getattr(gates, k): v for k,v in gates_map.items() }
+        self.index2gate = { v: k for k,v in self.gate2index.items() }
+        self.channel2index = { getattr(gates, k): v for k,v in noise_channels_map.items() }
+        self.index2channel = { v: k for k,v in self.channel2index.items() }
+        self.shape = shape
+
+    def circuit_to_array(self, circuit):
+        """Maps qibo circuits to numpy array representation."""
+        depth = len(circuit.queue.moments)
+        nqubits = circuit.nqubits
+        rep = np.zeros((
+            depth,
+            nqubits,
+            len(self.gate2index) + len(self.channel2index)
+        ))
+        # looping over moments
+        for i,moment in enumerate(circuit.queue.moments):
+            for j,gate in enumerate(moment):
+                # checking whether it's a 2-qubits gate
+                if len(gate.init_args) > 1:
+                    raise AssertionError ("To be implemented.")
+                else:
+                    try:
+                        k = self.gate2index[type(gate)]
+                        val = gate.init_kwargs["theta"] / (2 * np.pi)
+                    except:
+                        k = self.channel2index[type(gate)] + len(self.gate2index)
+                        val = gate.init_kwargs["lam"]
+                    rep[i, j, k] = val
+        if self.shape == '2d':
+            rep = rep.reshape(depth, -1)
+        return rep
+
+    def array_to_circuit(self, array):
+        """Maps numpy array to qibo circuit."""
+        depth = array.shape[0]
+        if self.shape == '2d':
+            array = array.reshape(depth, -1, len(self.gate2index) + len(self.channel2index))
+        nqubits = array.shape[1]
+        c = Circuit(nqubits, density_matrix=True)
+        for moment in array:
+            for qubit, row in enumerate(moment):
+                # add the gate
+                gate = row[:len(self.gate2index)]
+                idx = int(gate.nonzero()[0])
+                c.add(
+                    self.index2gate[idx](
+                        qubit,
+                        theta = gate[idx]
+                    ))
+                # add the channel
+                channel = row[-len(self.channel2index):]
+                idx = channel.nonzero()[0]
+                if len(idx) > 0:
+                    idx = int(idx)
+                    c.add(
+                      self.index2channel[idx](
+                          qubit,
+                          lam = channel[idx]
+                    ))
         return c
