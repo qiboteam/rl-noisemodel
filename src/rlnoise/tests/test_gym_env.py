@@ -4,37 +4,36 @@ sys.path.append('../envs/')
 from dataset import Dataset, CircuitRepresentation
 from policy import CNNFeaturesExtractor
 import numpy as np
-from gym_env import CircuitsGym, QuantumCircuit
+from gym_env import QuantumCircuit
 from stable_baselines3 import PPO, DQN, DDPG
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
 
-nqubits = 3
-ngates = 10
+nqubits = 1
+depth = 5
 ncirc = 1
 val_split = 0.2
 
 noise_model = NoiseModel()
-lam = 0.5
-noise_model.add(DepolarizingError(lam), gates.RX)
+lam = 0.1
+noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-gate2index = {'RX':1, 'RZ':0}
-channel2index = {'DepolarizingChannel': 0}
-index2gate = {v:getattr(gates, k) for k,v in gate2index.items()}
+primitive_gates = ['RZ', 'RX']
+channels = ['DepolarizingChannel']
 
 rep = CircuitRepresentation(
-    gates_map = gate2index,
-    noise_channels_map = channel2index,
+    primitive_gates = primitive_gates,
+    noise_channels = channels,
     shape = '2d'
 )
 
 # create dataset
 dataset = Dataset(
     n_circuits = ncirc,
-    n_gates = ngates,
+    n_gates = depth,
     n_qubits = nqubits,
+    representation = rep,
     clifford = False,
-    primitive_gates = gate2index,
     noise_model = noise_model,
     mode = 'rep'
 )
@@ -45,19 +44,27 @@ dataset.set_mode('circ')
 circuit = dataset[0]
 dataset.set_mode('noisy_circ')
 noisy_circuit = dataset[0]
-#noisy_rep = dataset.circuit_to_rep(noisy_circuit)
 
-crep = rep.circuit_to_array(circuit)
+def test_representation():
+    print('> Noiseless Circuit:\n', circuit.draw())
+    array = rep.circuit_to_array(circuit)
+    print(' --> Representation:\n', array)
+    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print('> Noisy Circuit:\n', noisy_circuit.draw())
+    array = rep.circuit_to_array(noisy_circuit)
+    print(array)
+    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
 
-circuit.add(gates.M(0))
+
 noisy_circuit.add(gates.M(0))
 labels = noisy_circuit(nshots=10000).frequencies()
 
 dataset.set_mode('rep')
 circuit_env = QuantumCircuit(
-    circuits = dataset[0].reshape(1,ngates,2),
+    circuits = dataset[0][np.newaxis,:,:],
     noise_channel = noise_channel,
-    index2gate = index2gate,
+    representation = rep,
     labels = labels,
     reward_f = None
 )
@@ -65,7 +72,10 @@ circuit_env = QuantumCircuit(
 policy = "MlpPolicy"
 policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
-    features_extractor_kwargs = dict(features_dim=64, filter_shape=(4,4)),
+    features_extractor_kwargs = dict(
+        features_dim = 64,
+        filter_shape = (4, nqubits * rep.encoding_dim )
+    )
 )
 
 
@@ -94,7 +104,7 @@ while not done:
     action, _states = model.predict(obs, deterministic=True)
     obs, rewards, done, info = circuit_env.step(action)
 untrained_rep = obs
-untrained_circ = dataset.rep_to_circuit(obs, noise_channel)
+untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
 untrained_circ.add(gates.M(0))
 untrained_pred = untrained_circ(nshots=10000).frequencies()
 
@@ -108,7 +118,7 @@ while not done:
     action, _states = model.predict(obs, deterministic=True)
     obs, rewards, done, info = circuit_env.step(action)
 trained_rep = obs
-trained_circ = dataset.rep_to_circuit(obs, noise_channel)
+trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
 trained_circ.add(gates.M(0))
 trained_pred = untrained_circ(nshots=10000).frequencies()
 
