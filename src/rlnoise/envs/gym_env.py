@@ -6,12 +6,13 @@ from qibo.models import Circuit
 from copy import deepcopy
 from rlnoise.utils import truncated_moments_matching
 from rlnoise.rewards.observables_reward import obs_reward
-from rlnoise.rewards.density_matrix_reward import dm_reward
+from rlnoise.rewards.density_matrix_reward import dm_reward, step_reward
 
+PENALTY = 0.1
 
 class CircuitsGym(gym.Env):
 
-    def __init__(self, circuits_repr, labels, reward_func=truncated_moments_matching, reward_method="dm"):
+    def __init__(self, circuits_repr, labels, reward_func=truncated_moments_matching, reward_method="dm", reward_each_step=True):
 
         self.actions=(0,1)
         self.labels=labels
@@ -20,6 +21,8 @@ class CircuitsGym(gym.Env):
         self.circuits_repr = circuits_repr
         self.set_reward_func(reward_func=reward_func)
         self.set_reward_method(reward_method=reward_method)
+        self.reward_each_step=reward_each_step
+        self.previuos_mse=None
 
         self.observation_space = spaces.Box(low=0, high=1, shape=(self.len, 4), dtype=float)
         self.action_space = spaces.Discrete(2)
@@ -61,6 +64,13 @@ class CircuitsGym(gym.Env):
         if verbose:
             print("EPISODE STARTED")
             self._get_info()
+        _, self.previuos_mse = step_reward(
+                    circuit=self.circuit,
+                    noisy_channels=self.noisy_channels,
+                    label=self.labels[self.sample], 
+                    previous_mse=0, 
+                    alpha=1.
+                    )
         return self._get_obs()
 
     def get_sample(self):
@@ -68,8 +78,11 @@ class CircuitsGym(gym.Env):
 
     def step(self, action, verbose=False):
         self.last_action=action
+        penalty = 0.
         if action == 1:
             self.noisy_channels[self.position]=1.
+            # Penalty for adding a gate
+            penalty = PENALTY
         # Check for termination.
         if self.position == (self.len-1):
             # Compute reward
@@ -94,7 +107,17 @@ class CircuitsGym(gym.Env):
                 print("REWARD: ", reward)
             return observation, reward, True
         else:
-            reward=0
+            if self.reward_each_step:
+                reward, self.previuos_mse = step_reward(
+                    circuit=self.circuits_repr[self.sample],
+                    noisy_channels=self.noisy_channels,
+                    label=self.labels[self.sample], 
+                    previous_mse=self.previuos_mse, 
+                    alpha=1.
+                    )
+                reward = reward - penalty
+            else:
+                reward=0
             self.position+=1
             observation=self._get_obs()
             if verbose:
