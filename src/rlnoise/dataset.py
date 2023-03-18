@@ -50,8 +50,6 @@ class Dataset(object):
         circuit = Circuit(self.n_qubits)
         for _ in range(self.n_gates):
             for q0 in range(self.n_qubits):
-                if self.clifford:
-                    raise AssertionError("To be implemented.")
                 gate = random.choice(list(self.rep.index2gate.values())) # maybe add identity gate?
                 params = signature(gate).parameters
                 if 'q0' in params and 'q1' in params:
@@ -61,7 +59,11 @@ class Dataset(object):
                     circuit.add(gate(q1,q0))
                 else:
                     if issubclass(gate, gates.ParametrizedGate):
-                        theta = 2 * np.pi * np.random.random()
+                        if self.clifford:
+                            theta = random.choice([0, 0.25, 0.5, 0.75, 1])
+                        else:
+                            theta = np.random.random()
+                        theta *= 2 * np.pi
                         circuit.add(gate(q0, theta=theta))
                     else:
                         circuit.add(gate(q0))
