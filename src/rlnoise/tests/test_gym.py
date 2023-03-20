@@ -1,10 +1,8 @@
 import sys
-sys.path.append('../')
-sys.path.append('../envs/')
-from dataset import Dataset, CircuitRepresentation
-from policy import CNNFeaturesExtractor
+from rlnoise.dataset import Dataset, CircuitRepresentation
+from rlnoise.policy import CNNFeaturesExtractor
 import numpy as np
-from gym_env import QuantumCircuit
+from rlnoise.envs.gym_env import QuantumCircuit
 from stable_baselines3 import PPO, DQN, DDPG
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
