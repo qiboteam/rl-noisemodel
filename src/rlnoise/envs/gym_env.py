@@ -76,6 +76,7 @@ class QuantumCircuit(gym.Env):
         #print(f'> Position: {position}, Action: {action}')
         for q, a in enumerate(action):
             if a == 1:
+                # might be better to use self.rep.array_to_gate()
                 idx = q * self.rep.encoding_dim + self.n_gate_types + 1
                 self.current_state[0, position, idx] = a
                 self.current_state[0, position, idx + 1] = self.noise_channel.init_kwargs['lam']
