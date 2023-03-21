@@ -2,6 +2,19 @@ from qibo import gates
 from qibo.models import Circuit
 import numpy as np
 
+def dm_reward_stablebaselines(circuit, label):
+    generated_dm = np.asarray(circuit().state())
+    return compute_reward(generated_dm, label)
+
+def step_reward_stablebaselines(circuit, label, previous_mse, alpha=1.):
+    generated_dm = np.asarray(circuit().state())
+    _mse = mse(generated_dm, label)
+    if  _mse > previous_mse:
+        return -alpha, _mse
+    else:
+        return alpha, _mse
+
+
 def step_reward(circuit, noisy_channels, label, previous_mse, alpha=1.):
     generated_circuit = generate_circuit(circuit, noisy_channels)
     generated_dm = np.asarray(generated_circuit().state())

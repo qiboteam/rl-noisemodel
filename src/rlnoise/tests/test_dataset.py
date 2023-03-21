@@ -1,79 +1,57 @@
-from rlnoise.utils import  dataset_folder, figures_folder
-from rlnoise.dataset import Dataset
+import sys
+from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
-import matplotlib.pyplot as plt
+from qibo.noise import DepolarizingError, NoiseModel
+from qibo import gates
 
 nqubits = 1
-ngates = 2
+depth = 5
 ncirc = 2
+val_split = 0.2
+
+noise_model = NoiseModel()
+lam = 0.2
+noise_model.add(DepolarizingError(lam), gates.RZ)
+noise_channel = gates.DepolarizingChannel((0,), lam=lam)
+primitive_gates = ['RZ', 'RX']
+channels = ['DepolarizingChannel']
+
+rep = CircuitRepresentation(
+    primitive_gates = primitive_gates,
+    noise_channels = channels,
+    shape = '2d'
+)
 
 # create dataset
 dataset = Dataset(
-    n_circuits=ncirc,
-    n_gates=ngates,
-    n_qubits=nqubits,
+    n_circuits = ncirc,
+    n_gates = depth,
+    n_qubits = nqubits,
+    representation = rep,
+    clifford = True,
+    noise_model = noise_model,
+    mode = 'rep'
 )
-print('Circuits')
-for c in dataset.get_circuits():
-    print(c.draw())
-    
 
-print('-------------------------------------')
-print('Noisy circuits')
-dataset.add_noise(noisy_gates=['rx'])
-for c in dataset.get_noisy_circuits():
-    print(c.draw())
+# input circuit
+circuit_rep = dataset[0]
+dataset.set_mode('circ')
+circuit = dataset[0]
+dataset.set_mode('noisy_circ')
+noisy_circuit = dataset[0]
 
-density_matrices=dataset.generate_dm_labels()
-print(density_matrices)
+dm=dataset.get_dm_labels()
+print("DM: ", dm)
 
-'''
-print('-------------------------------------')
-print('Representation')
-repr=dataset.generate_dataset_representation()
-print(repr.shape)
-np.save(dataset_folder() + '/test.npy', repr)
+def test_representation():
+    print('> Noiseless Circuit:\n', circuit.draw())
+    array = rep.circuit_to_array(circuit)
+    print(' --> Representation:\n', array)
+    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print('> Noisy Circuit:\n', noisy_circuit.draw())
+    array = rep.circuit_to_array(noisy_circuit)
+    print(array)
+    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
 
-print('-------------------------------------')
-print('Z observable')
-z=dataset.pauli_probabilities(observable='Z', n_shots=100, n_rounds=1000)
-plt.hist(z[0], density=True)
-
-plt.savefig(figures_folder() + '/z_obs.png')
-plt.close()
-
-print('Y observable')
-y=dataset.pauli_probabilities(observable='Y', n_shots=100, n_rounds=10)
-plt.hist(y[0], density=True)
-plt.savefig(figures_folder() + '/y_obs.png')
-plt.close()
-
-print('-------------------------------------')
-print('X observable')
-x=dataset.pauli_probabilities(observable='X', n_shots=100, n_rounds=10)
-plt.hist(x[0], density=True)
-plt.savefig(figures_folder()+ '/x_obs.png')
-plt.close()
-
-print('-------------------------------------')
-print('Shots')
-shots=dataset.noisy_shots(n_shots=2048, probabilities=True)
-print(shots)
-np.save('data/noisy_shots_1q.npy', repr)
-
-dataset.train_val_split()
-print('> Training Circuits')
-for c in dataset.get_train_loader():
-    print(c.draw())
-print('> Validation Circuits')
-for c in dataset.get_val_loader():
-    print(c.draw())
-
-print('Saving Circuits to dataset.json')
-dataset.save_circuits('data/dataset1q.json')
-dataset.load_circuits('data/dataset1q.json')
-print('Loading Circuits from dataset.json\n')
-
-for i in range(len(dataset)):
-    print(dataset[i].draw())
-'''
+test_representation()

@@ -1,6 +1,6 @@
-from rlnoise.dataset import Dataset
+from rlnoise.old_dataset import Dataset
 import numpy as np
-from rlnoise.envs.gym_env import CircuitsGym
+from rlnoise.envs.old_gym import CircuitsGym
 
 nqubits = 1
 ngates = 5

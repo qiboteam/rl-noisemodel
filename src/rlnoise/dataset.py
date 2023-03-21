@@ -2,7 +2,6 @@ import itertools, json, random
 import numpy as np
 from qibo import gates
 from qibo.models import Circuit
-from copy import deepcopy
 from inspect import signature
 
 
@@ -24,6 +23,7 @@ class Dataset(object):
         self.clifford = clifford
         self.noise_model = noise_model
         self.mode = mode
+        self.n_circuits=n_circuits
         
         self.circuits = [
             self.generate_random_circuit()
@@ -44,9 +44,13 @@ class Dataset(object):
         ])
         self.train_circuits, self.val_circuits = self.train_val_split()
 
+    def get_dm_labels(self):
+        return np.asarray([self.noisy_circuits[i]().state()
+                for i in range(self.n_circuits)])
+
     def generate_random_circuit(self):
         """Generate a random circuit."""
-        circuit = Circuit(self.n_qubits)
+        circuit = Circuit(self.n_qubits, density_matrix=True)
         for _ in range(self.n_gates):
             for q0 in range(self.n_qubits):
                 gate = random.choice(list(self.rep.index2gate.values())) # maybe add identity gate?

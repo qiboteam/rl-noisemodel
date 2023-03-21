@@ -4,7 +4,7 @@ from gym import spaces
 from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
-
+from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines, step_reward_stablebaselines
 
 # currently working just for single qubit circuits
 # TO DO:
@@ -12,9 +12,11 @@ from copy import deepcopy
 # - Implement batches
 # - Write a reward that makes sense
 # - Adapt it for working with the 3d representation
+
+
 class QuantumCircuit(gym.Env):
     
-    def __init__(self, circuits, noise_channel, representation, labels, reward_f):
+    def __init__(self, circuits, noise_channel, representation, labels, reward_method="dm"):
         super(QuantumCircuit, self).__init__()
 
         self.circuits = circuits[:,np.newaxis,:,:]
@@ -25,6 +27,7 @@ class QuantumCircuit(gym.Env):
         self.n_gate_types = len(self.rep.gate2index)
         self.n_channel_types = len(self.rep.channel2index)
         self.labels = labels
+        self.reward_method=reward_method
 
         shape = list(self.circuits.shape[1:])
         assert shape[-1] % (self.rep.encoding_dim) == 0
@@ -42,8 +45,12 @@ class QuantumCircuit(gym.Env):
 
         #self.action_space = spaces.Discrete(2)
         self.action_space = spaces.MultiBinary(self.n_qubits * self.n_channel_types)
-        
         self.current_state = self.init_state()
+        if self.reward_method=="dm":
+            _, self.previous_mse = step_reward_stablebaselines(
+            circuit=self.get_qibo_circuit(), 
+            label=self.labels[self.sample],
+            previous_mse=0)
 
     def init_state(self, i=None):
         # initialize the state
@@ -54,10 +61,11 @@ class QuantumCircuit(gym.Env):
         )
         state[0,-1] = 1
         state = state[np.newaxis,:,:]
+        self.sample=i
         return state
     
     def _get_obs(self):
-        return self.current_state
+        return self.current_state #current_state.shape= (1, depth, 6 if only 1qubit )
 
     def _get_info(self):
         return { 'state': self._get_obs() } 
@@ -69,24 +77,33 @@ class QuantumCircuit(gym.Env):
     def step(self, action):
         #print('> State:\n', self._get_obs())
         position = self.get_position()
-        action = action.reshape(self.n_qubits, -1)
-        #print(f'> Position: {position}, Action: {action}')
+        action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)
+        
+        #print(f'> Position: {position}, Action: {action} , Action shape: {action.shape}')
         for q, a in enumerate(action):
             if a == 1:
                 # might be better to use self.rep.array_to_gate()
-                idx = q * self.rep.encoding_dim + self.n_gate_types + 1
-                self.current_state[0, position, idx] = a
+                idx = q * self.rep.encoding_dim + self.n_gate_types + 1 #idx selects the column of the noise (for 1 qubit and 2 type_of_gates is the 3rd)
+                self.current_state[0, position, idx] = a #current_state.shape= (1, depth, 6 if only 1qubit )
                 self.current_state[0, position, idx + 1] = self.noise_channel.init_kwargs['lam']
+                if self.reward_method=="dm":
+                    reward, self.previous_mse = step_reward_stablebaselines(
+                        circuit=self.get_qibo_circuit(), 
+                        label=self.labels[self.sample],
+                        previous_mse=self.previous_mse)
+            else:
+                reward=0
         #print(f'> New State: \n{self._get_obs()}')
         if position == self.n_moments - 1:
             # compute final reward
-            reward = self.compute_reward()
+            #reward = self.compute_reward()
+            reward=self.compute_final_reward()
             terminated = True
         else:
             # update position
             self.current_state[0, position, -1] = 0
             self.current_state[0, position + 1, -1] = 1
-            reward = 0
+            print('Reward= ', reward)
             terminated = False
         return self._get_obs(), reward, terminated, self._get_info()
 
@@ -97,18 +114,37 @@ class QuantumCircuit(gym.Env):
         return (self.current_state[:,:,-1] == 1).nonzero()[-1]
 
     def get_qibo_circuit(self):
-        return self.rep.array_to_circuit(self.current_state[0][:,:-1])
+        return self.rep.array_to_circuit(self.current_state[self.sample][:,:-1])
 
-    def compute_reward(self):
+    def compute_final_reward(self):
         # TO BE IMPLEMENTED
         c = self.get_qibo_circuit()
-        #print(c.draw())
-        c.add([gates.M(i) for i in range(self.n_qubits)])
-        freq = c(nshots=10000).frequencies()
-        #print(freq)
-        zero = (freq['0'] - self.labels['0'])/self.labels['0']
-        one = (freq['1'] - self.labels['1'])/self.labels['1']
-        r = - np.sqrt(zero**2 + one**2)
-        return r
-        #return self.reward_f(c)
-        #return random.randint(0,1)
+
+        if self.reward_method == 'dm':
+            return dm_reward_stablebaselines(
+                circuit=c, label=self.labels[self.sample]
+            )
+        elif self.reward_method == 'counts':
+            #print(c.draw())
+            c.add([gates.M(i) for i in range(self.n_qubits)])
+            freq = c(nshots=10000).frequencies()
+            #print(freq)
+            zero = (freq['0'] - self.labels['0'])/self.labels['0']
+            one = (freq['1'] - self.labels['1'])/self.labels['1']
+            r = - np.sqrt(zero**2 + one**2)
+            return r
+            #return self.reward_f(c)
+            #return random.randint(0,1)
+
+    def compute_step_reward(self):
+        alpha=0.01
+        circuit = self.get_qibo_circuit() #circuit.shape=(n_gates,5)
+        print('Il circuito ricostruito e`: ',circuit.draw())
+        #print('Circuit.shape= ',self.rep.circuit_to_array(circuit).shape) 
+        true_circuit_label=self.labels
+        learned_labels=np.asarray(circuit().state())
+        mse = alpha*np.sqrt(np.abs(((true_circuit_label-learned_labels)**2).mean()))
+        return -mse
+            #... da continuare
+
+    
