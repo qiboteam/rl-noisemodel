@@ -103,7 +103,7 @@ class QuantumCircuit(gym.Env):
             # update position
             self.current_state[0, position, -1] = 0
             self.current_state[0, position + 1, -1] = 1
-            print('Reward= ', reward)
+            #print('Reward= ', reward)
             terminated = False
         return self._get_obs(), reward, terminated, self._get_info()
 

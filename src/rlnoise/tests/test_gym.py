@@ -6,9 +6,10 @@ from rlnoise.envs.gym_env import QuantumCircuit
 from stable_baselines3 import PPO, DQN, DDPG
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
+#from rlnoise.utils import SaveOnBestTrainingRewardCallback
 
 nqubits = 1
-depth = 5
+depth = 10
 ncirc = 1
 val_split = 0.2
 
@@ -93,15 +94,21 @@ model = DQN(
 # Untrained Agent
 obs = circuit_env.reset()
 done = False
+
 while not done:
     action, _states = model.predict(obs, deterministic=True)
     obs, rewards, done, info = circuit_env.step(action)
 untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
 
+
+#SAVE TRAIN BEST MODEL
+#callback = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=log_dir)
+
 # Train
-model.learn(190, progress_bar=True)
+model.learn(10000, progress_bar=True)
 
 # Trained Agent
+
 obs = circuit_env.reset()
 done = False
 while not done:
