@@ -33,11 +33,11 @@ def mse(a,b):
     return np.sqrt(np.abs(((a-b)**2).mean()))
 
 def compute_reward(a,b,alpha=100,t=10):
-    mse = alpha*np.sqrt(np.abs(((a-b)**2).mean()))
+    mse = alpha*np.sqrt(np.abs(((a-b)**2)).mean())
     if mse > t:
         return 0
     else:
-        return 1-mse
+        return t-mse
 
 def generate_circuit(circuit, noisy_channels, dep_error=0.05):
     qibo_circuit = Circuit(1, density_matrix=True)

@@ -46,11 +46,6 @@ class QuantumCircuit(gym.Env):
         #self.action_space = spaces.Discrete(2)
         self.action_space = spaces.MultiBinary(self.n_qubits * self.n_channel_types)
         self.current_state = self.init_state()
-        if self.reward_method=="dm":
-            _, self.previous_mse = step_reward_stablebaselines(
-            circuit=self.get_qibo_circuit(), 
-            label=self.labels[self.sample],
-            previous_mse=0)
 
     def init_state(self, i=None):
         # initialize the state
@@ -72,6 +67,11 @@ class QuantumCircuit(gym.Env):
 
     def reset(self, i=None):
         self.current_state = self.init_state(i)
+        if self.reward_method=="dm":
+            _, self.previous_mse = step_reward_stablebaselines(
+            circuit=self.get_qibo_circuit(), 
+            label=self.labels[self.sample],
+            previous_mse=0)
         return self._get_obs()
 
     def step(self, action):
@@ -103,7 +103,6 @@ class QuantumCircuit(gym.Env):
             # update position
             self.current_state[0, position, -1] = 0
             self.current_state[0, position + 1, -1] = 1
-            print('Reward= ', reward)
             terminated = False
         return self._get_obs(), reward, terminated, self._get_info()
 

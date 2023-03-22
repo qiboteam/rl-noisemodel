@@ -6,10 +6,11 @@ from rlnoise.envs.gym_env import QuantumCircuit
 from stable_baselines3 import PPO, DQN, DDPG
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
+from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
 depth = 5
-ncirc = 1
+ncirc = 10
 val_split = 0.2
 
 noise_model = NoiseModel()
@@ -89,29 +90,42 @@ model = DQN(
     #learning_rate = 1e-5 # default 1e-4
 )
 """
+test_sample=0
 
 # Untrained Agent
-obs = circuit_env.reset()
+obs = circuit_env.reset(i=test_sample)
 done = False
 while not done:
     action, _states = model.predict(obs, deterministic=True)
     obs, rewards, done, info = circuit_env.step(action)
 untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
+dm_untrained=untrained_circ().state()
 
 # Train
-model.learn(190, progress_bar=True)
+model.learn(20000, progress_bar=True)
 
 # Trained Agent
-obs = circuit_env.reset()
+obs = circuit_env.reset(i=test_sample)
 done = False
 while not done:
     action, _states = model.predict(obs, deterministic=True)
     obs, rewards, done, info = circuit_env.step(action)
 trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
+dm_trained=trained_circ().state()
+
+labels = dataset.get_dm_labels()
+label_dm = labels[test_sample]
+
 
 print('---- Original Circuit ----\n', circuit.draw(), '\n', circuit_rep)
 print(' --> With noise\n', noisy_circuit.draw())#, '\n', noisy_rep)
+print(label_dm)
+print(dm_reward_stablebaselines(noisy_circuit,label_dm))
 
 print('---- Before Training ----\n', untrained_circ.draw())
+print(dm_untrained)
+print(dm_reward_stablebaselines(untrained_circ,label_dm))
 
 print('---- After Training ----\n', trained_circ.draw())
+print(dm_trained)
+print(dm_reward_stablebaselines(trained_circ,label_dm))
