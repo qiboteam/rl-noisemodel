@@ -9,8 +9,8 @@ from qibo import gates
 from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
-depth = 5
-ncirc = 10
+depth = 3
+ncirc = 2
 val_split = 0.2
 
 noise_model = NoiseModel()
@@ -44,20 +44,9 @@ circuit = dataset[0]
 dataset.set_mode('noisy_circ')
 noisy_circuit = dataset[0]
 
-def test_representation():
-    print('> Noiseless Circuit:\n', circuit.draw())
-    array = rep.circuit_to_array(circuit)
-    print(' --> Representation:\n', array)
-    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    print('> Noisy Circuit:\n', noisy_circuit.draw())
-    array = rep.circuit_to_array(noisy_circuit)
-    print(array)
-    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
-
 dataset.set_mode('rep')
 circuit_env = QuantumCircuit(
-    circuits = dataset[0][np.newaxis,:,:],
+    circuits = np.asarray(dataset[:][:,:]),
     noise_channel = noise_channel,
     representation = rep,
     labels = dataset.get_dm_labels(),
@@ -69,7 +58,7 @@ policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
     features_extractor_kwargs = dict(
         features_dim = 64,
-        filter_shape = (4, nqubits * rep.encoding_dim )
+        filter_shape = (2, nqubits * rep.encoding_dim )
     )
 )
 
@@ -90,42 +79,52 @@ model = DQN(
     #learning_rate = 1e-5 # default 1e-4
 )
 """
-test_sample=0
-
-# Untrained Agent
-obs = circuit_env.reset(i=test_sample)
-done = False
-while not done:
-    action, _states = model.predict(obs, deterministic=True)
-    obs, rewards, done, info = circuit_env.step(action)
-untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-dm_untrained=untrained_circ().state()
-
-# Train
-model.learn(20000, progress_bar=True)
-
-# Trained Agent
-obs = circuit_env.reset(i=test_sample)
-done = False
-while not done:
-    action, _states = model.predict(obs, deterministic=True)
-    obs, rewards, done, info = circuit_env.step(action)
-trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-dm_trained=trained_circ().state()
 
 labels = dataset.get_dm_labels()
-label_dm = labels[test_sample]
+test_sample=0
+avg_untrained_rew=0.
+# Untrained Agent
+for i in range(ncirc):
+    obs = circuit_env.reset(i=i)
+    done = False
+    while not done:
+        action, _states = model.predict(obs, deterministic=True)
+        obs, rewards, done, info = circuit_env.step(action)
+    untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
+    dm_untrained=untrained_circ().state()
+    label_dm = labels[i]
+    avg_untrained_rew += dm_reward_stablebaselines(noisy_circuit,label_dm)
+
+# Train
+model.learn(10000, progress_bar=True)
+
+avg_trained_rew=0.
+# Trained Agent
+for i in range(ncirc):
+    obs = circuit_env.reset(i=i)
+    done = False
+    while not done:
+        action, _states = model.predict(obs, deterministic=True)
+        obs, rewards, done, info = circuit_env.step(action)
+    trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
+    dm_trained=trained_circ().state()
+    label_dm = labels[i]
+    avg_trained_rew += dm_reward_stablebaselines(trained_circ,label_dm)
+    if i==test_sample:
+        test_dm=dm_trained
+        test_circ=trained_circ.copy()
+    
 
 
 print('---- Original Circuit ----\n', circuit.draw(), '\n', circuit_rep)
-print(' --> With noise\n', noisy_circuit.draw())#, '\n', noisy_rep)
-print(label_dm)
-print(dm_reward_stablebaselines(noisy_circuit,label_dm))
+print(' --> With noise\n', noisy_circuit.draw())
+print(label_dm[test_sample])
 
-print('---- Before Training ----\n', untrained_circ.draw())
-print(dm_untrained)
-print(dm_reward_stablebaselines(untrained_circ,label_dm))
+print('---- Avg loss Before Training ----\n')
+print(avg_untrained_rew/ncirc)
 
-print('---- After Training ----\n', trained_circ.draw())
-print(dm_trained)
-print(dm_reward_stablebaselines(trained_circ,label_dm))
+print('---- Avg loss After Training ----\n')
+print(avg_trained_rew/ncirc)
+print("Test DM", test_dm)
+print("Test circ")
+print(test_circ.draw())

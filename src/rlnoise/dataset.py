@@ -63,7 +63,7 @@ class Dataset(object):
                 else:
                     if issubclass(gate, gates.ParametrizedGate):
                         if self.clifford:
-                            theta = random.choice([0, 0.25, 0.5, 0.75, 1])
+                            theta = random.choice([0, 0.25, 0.5, 0.75])
                         else:
                             theta = np.random.random()
                         theta *= 2 * np.pi
