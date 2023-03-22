@@ -113,7 +113,7 @@ class QuantumCircuit(gym.Env):
         return (self.current_state[:,:,-1] == 1).nonzero()[-1]
 
     def get_qibo_circuit(self):
-        return self.rep.array_to_circuit(self.current_state[self.sample][:,:-1])
+        return self.rep.array_to_circuit(self.current_state[0,:,:-1]) #here was the error
 
     def compute_final_reward(self):
         # TO BE IMPLEMENTED
@@ -144,6 +144,6 @@ class QuantumCircuit(gym.Env):
         learned_labels=np.asarray(circuit().state())
         mse = alpha*np.sqrt(np.abs(((true_circuit_label-learned_labels)**2).mean()))
         return -mse
-            #... da continuare
+            
 
     

@@ -9,8 +9,8 @@ from qibo import gates
 from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
-depth = 3
-ncirc = 2
+depth = 6
+ncirc = 3
 val_split = 0.2
 
 noise_model = NoiseModel()
@@ -45,8 +45,10 @@ dataset.set_mode('noisy_circ')
 noisy_circuit = dataset[0]
 
 dataset.set_mode('rep')
+
+circuits=dataset[:]
 circuit_env = QuantumCircuit(
-    circuits = np.asarray(dataset[:][:,:]),
+    circuits = dataset[:],
     noise_channel = noise_channel,
     representation = rep,
     labels = dataset.get_dm_labels(),
@@ -96,12 +98,13 @@ for i in range(ncirc):
     avg_untrained_rew += dm_reward_stablebaselines(noisy_circuit,label_dm)
 
 # Train
-model.learn(10000, progress_bar=True)
+model.learn(10000, progress_bar=True) #probably to put inside the for loop
 
 avg_trained_rew=0.
 # Trained Agent
 for i in range(ncirc):
     obs = circuit_env.reset(i=i)
+    #print('Circuit %d representation \n'%(i),rep.array_to_circuit(obs[:,:,:-1][0]).draw()) #test to check that works for more circuits
     done = False
     while not done:
         action, _states = model.predict(obs, deterministic=True)
