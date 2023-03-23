@@ -9,8 +9,8 @@ from qibo import gates
 from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
-depth = 6
-ncirc = 3
+depth = 5
+ncirc = 10
 val_split = 0.2
 
 noise_model = NoiseModel()
@@ -98,7 +98,7 @@ for i in range(ncirc):
     avg_untrained_rew += dm_reward_stablebaselines(noisy_circuit,label_dm)
 
 # Train
-model.learn(10000, progress_bar=True) #probably to put inside the for loop
+model.learn(20000, progress_bar=True) #probably to put inside the for loop
 
 avg_trained_rew=0.
 # Trained Agent
@@ -121,12 +121,12 @@ for i in range(ncirc):
 
 print('---- Original Circuit ----\n', circuit.draw(), '\n', circuit_rep)
 print(' --> With noise\n', noisy_circuit.draw())
-print(label_dm[test_sample])
+print(labels[test_sample])
 
-print('---- Avg loss Before Training ----\n')
+print('---- Avg rew Before Training ----\n')
 print(avg_untrained_rew/ncirc)
 
-print('---- Avg loss After Training ----\n')
+print('---- Avg rew After Training ----\n')
 print(avg_trained_rew/ncirc)
 print("Test DM", test_dm)
 print("Test circ")
