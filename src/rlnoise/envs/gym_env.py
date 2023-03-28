@@ -71,16 +71,10 @@ class QuantumCircuit(gym.Env):
     def step(self, action):
         #print('> State:\n', self._get_obs())
         position = self.get_position()
-        action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)
-        
+        action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)        
         #print(f'> Position: {position}, Action: {action} , Action shape: {action.shape}')
         for q, a in enumerate(action):
             if a == 1:
-                copy = self.current_state.copy()
-                # might be better to use self.rep.array_to_gate()
-                #idx = q * self.rep.encoding_dim + self.n_gate_types + 1 #idx selects the column of the noise (for 1 qubit and 2 type_of_gates is the 3rd)
-                #self.current_state[0, position, idx] = a #current_state.shape= (1, depth, 6 if only 1qubit )
-                #self.current_state[0, position, idx + 1] = self.noise_channel.init_kwargs['lam']
                 idx = q * self.rep.encoding_dim
                 self.current_state[0, position, idx:idx+self.rep.encoding_dim] += self.rep.gate_to_array(self.noise_channel)
         #print(f'> New State: \n{self._get_obs()}')
