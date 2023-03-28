@@ -60,16 +60,16 @@ def test_representation():
     print(array)
     print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
 
-    
+#test_representation()
+
 reward = FrequencyReward()
 dataset.set_mode('rep')
 circuit_env = QuantumCircuit(
-    circuits = np.array([dataset[i] for i in range(len(dataset))]),
+    circuits = dataset.circ_rep,
     noise_channel = noise_channel,
     representation = rep,
     labels = labels,
     reward = reward,
-    reward_method="dm"
 )
 
 policy = "MlpPolicy"

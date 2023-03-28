@@ -9,33 +9,37 @@ class Reward(ABC):
         self.metric = metric
 
     @abstractmethod
-    def __call__(self, circuit, target):
+    def __call__(self, circuit, target, final=False):
         pass
 
     
 class FrequencyReward(Reward):
 
-    def __call__(self, circuit, target):
-        circuit.add(gates.M(*range(circuit.nqubits)))
-        # get the number of shots
-        nshots = 0
-        for v in target.values():
-            nshots += v
-        # normalize in the number of shots
-        target = {k: v/nshots for k,v in target.items()}
-        # get the predicted statistics
-        freq = circuit(nshots=nshots).frequencies()         
-        freq = {k: v/nshots for k,v in freq.items()}
-        # Fill the missing keys
-        for k in freq.keys() | target.keys():
-            if k not in freq:
-                freq[k] = 0
-            elif k not in target:
-                target[k] = 0
+    def __call__(self, circuit, target, final=False):
+        if final:
+            circuit.add(gates.M(*range(circuit.nqubits)))
+            # get the number of shots
+            nshots = 0
+            for v in target.values():
+                nshots += v
+            # normalize in the number of shots
+            target = {k: v/nshots for k,v in target.items()}
+            # get the predicted statistics
+            freq = circuit(nshots=nshots).frequencies()         
+            freq = {k: v/nshots for k,v in freq.items()}
+            # Fill the missing keys
+            for k in freq.keys() | target.keys():
+                if k not in freq:
+                    freq[k] = 0
+                elif k not in target:
+                    target[k] = 0
         
-        freq = np.array([ freq[k] for k in target.keys() ])
-        target = np.array([ target[k] for k in target.keys() ])
-        return 1 - self.metric(freq, target)
+            freq = np.array([ freq[k] for k in target.keys() ])
+            target = np.array([ target[k] for k in target.keys() ])
+            reward = 1 - self.metric(freq, target)
+        else:
+            reward = 0
+        return reward
     
 
 
