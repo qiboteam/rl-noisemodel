@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../rewards/')
-from rewards import FrequencyReward
+from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.policy import CNNFeaturesExtractor
 import numpy as np
@@ -11,8 +11,8 @@ from qibo import gates
 from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
-depth = 5
-ncirc = 100
+depth = 4
+ncirc = 4
 val_split = 0.2
 
 noise_model = NoiseModel()
@@ -47,7 +47,8 @@ dataset.set_mode('circ')
 circuit = dataset[test_sample]
 dataset.set_mode('noisy_circ')
 noisy_circuit = dataset[test_sample]
-labels = list(dataset.get_frequencies())
+#labels = list(dataset.get_frequencies())
+labels=np.array(dataset.get_dm_labels())
 
 def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())
@@ -62,7 +63,8 @@ def test_representation():
 
 #test_representation()
 
-reward = FrequencyReward()
+#reward = FrequencyReward()
+reward = DensityMatrixReward()
 dataset.set_mode('rep')
 circuit_env = QuantumCircuit(
     circuits = dataset.circ_rep,

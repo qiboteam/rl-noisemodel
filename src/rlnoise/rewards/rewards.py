@@ -9,7 +9,7 @@ class Reward(ABC):
         self.metric = metric
 
     @abstractmethod
-    def __call__(self, circuit, target, final=False):
+    def __call__(self, circuit, target, final=False): #target sono le labels dello stato i-esimo
         pass
 
     
@@ -41,7 +41,19 @@ class FrequencyReward(Reward):
             reward = 0
         return reward
     
-
+class DensityMatrixReward(Reward):
+    def __call__(self, circuit, target, final=False):
+        if final:
+            circuit_dm=np.array(circuit().state())
+            #print('Density matrix circuito',circuit_dm)
+            #print('Density matrix target', target)
+            reward = 1 - self.metric(circuit_dm, target)
+            
+        else:
+            reward = 0
+        #print('La reward e`',reward)
+        return reward
+    
 
 
 if __name__ == '__main__':
