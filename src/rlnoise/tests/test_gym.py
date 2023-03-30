@@ -1,4 +1,6 @@
 import sys
+sys.path.append('../rewards/')
+from rewards import FrequencyReward
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.policy import CNNFeaturesExtractor
 import numpy as np
@@ -10,7 +12,7 @@ from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
 depth = 5
-ncirc = 10
+ncirc = 100
 val_split = 0.2
 
 noise_model = NoiseModel()
@@ -37,12 +39,15 @@ dataset = Dataset(
     mode = 'rep'
 )
 
+test_sample = np.random.randint(ncirc)
+
 # input circuit
-circuit_rep = dataset[0]
+circuit_rep = dataset[test_sample]
 dataset.set_mode('circ')
-circuit = dataset[0]
+circuit = dataset[test_sample]
 dataset.set_mode('noisy_circ')
-noisy_circuit = dataset[0]
+noisy_circuit = dataset[test_sample]
+labels = list(dataset.get_frequencies())
 
 def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())
@@ -55,13 +60,16 @@ def test_representation():
     print(array)
     print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
 
+#test_representation()
+
+reward = FrequencyReward()
 dataset.set_mode('rep')
 circuit_env = QuantumCircuit(
-    circuits = dataset[0][np.newaxis,:,:],
+    circuits = dataset.circ_rep,
     noise_channel = noise_channel,
     representation = rep,
-    labels = dataset.get_dm_labels(),
-    reward_method="dm"
+    labels = labels,
+    reward = reward,
 )
 
 policy = "MlpPolicy"
@@ -90,7 +98,6 @@ model = DQN(
     #learning_rate = 1e-5 # default 1e-4
 )
 """
-test_sample=0
 
 # Untrained Agent
 obs = circuit_env.reset(i=test_sample)
