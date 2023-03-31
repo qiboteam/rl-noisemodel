@@ -48,6 +48,15 @@ class Dataset(object):
         return np.asarray([self.noisy_circuits[i]().state()
                 for i in range(self.n_circuits)])
 
+    def get_frequencies(self, nshots=1000):
+        assert self.mode == 'circ' or self.mode == 'noisy_circ'
+        freq = []
+        for i in range(self.__len__()):
+            c = self.__getitem__(i)
+            c.add(gates.M(*range(self.n_qubits)))
+            freq.append(c(nshots=nshots).frequencies())
+        return iter(freq)
+
     def generate_random_circuit(self):
         """Generate a random circuit."""
         circuit = Circuit(self.n_qubits, density_matrix=True)
