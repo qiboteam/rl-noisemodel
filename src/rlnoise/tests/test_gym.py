@@ -11,8 +11,8 @@ from qibo import gates
 from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
-depth = 4
-ncirc = 4
+depth = 10
+ncirc = 100
 val_split = 0.2
 
 noise_model = NoiseModel()
@@ -21,6 +21,7 @@ noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
 primitive_gates = ['RZ', 'RX']
 channels = ['DepolarizingChannel']
+noise_param_space = { 'range': (0,0.2), 'n_steps': 100 } 
 
 rep = CircuitRepresentation(
     primitive_gates = primitive_gates,
@@ -47,8 +48,9 @@ dataset.set_mode('circ')
 circuit = dataset[test_sample]
 dataset.set_mode('noisy_circ')
 noisy_circuit = dataset[test_sample]
-#labels = list(dataset.get_frequencies())
-labels=np.array(dataset.get_dm_labels())
+noisy_rep = dataset.noisy_circ_rep[test_sample]
+labels = list(dataset.get_frequencies())
+#labels=np.array(dataset.get_dm_labels())
 
 def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())
@@ -63,22 +65,22 @@ def test_representation():
 
 #test_representation()
 
-#reward = FrequencyReward()
-reward = DensityMatrixReward()
+reward = FrequencyReward()
+#reward = DensityMatrixReward()
 dataset.set_mode('rep')
 circuit_env = QuantumCircuit(
     circuits = dataset.circ_rep,
-    noise_channel = noise_channel,
     representation = rep,
     labels = labels,
     reward = reward,
+    noise_param_space = noise_param_space
 )
 
 policy = "MlpPolicy"
 policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
     features_extractor_kwargs = dict(
-        features_dim = 64,
+        features_dim = 32,
         filter_shape = (4, nqubits * rep.encoding_dim )
     )
 )
@@ -107,11 +109,12 @@ done = False
 while not done:
     action, _states = model.predict(obs, deterministic=True)
     obs, rewards, done, info = circuit_env.step(action)
+untrained_rep = obs[:,:,:-1][0]
 untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-dm_untrained=untrained_circ().state()
+dm_untrained = untrained_circ().state()
 
 # Train
-model.learn(20000, progress_bar=True)
+model.learn(50000, progress_bar=True)
 
 # Trained Agent
 obs = circuit_env.reset(i=test_sample)
@@ -119,6 +122,7 @@ done = False
 while not done:
     action, _states = model.predict(obs, deterministic=True)
     obs, rewards, done, info = circuit_env.step(action)
+trained_rep = obs[:,:,:-1][0]
 trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
 dm_trained=trained_circ().state()
 
@@ -126,15 +130,15 @@ labels = dataset.get_dm_labels()
 label_dm = labels[test_sample]
 
 
-print('---- Original Circuit ----\n', circuit.draw(), '\n', circuit_rep)
-print(' --> With noise\n', noisy_circuit.draw())#, '\n', noisy_rep)
+print('---- Original Circuit ----\n', circuit.draw())
+print(' --> With noise\n', noisy_circuit.draw(), '\n', noisy_rep)
 print(label_dm)
 print(dm_reward_stablebaselines(noisy_circuit,label_dm))
 
-print('---- Before Training ----\n', untrained_circ.draw())
+print('---- Before Training ----\n', untrained_circ.draw(), '\n', untrained_rep)
 print(dm_untrained)
 print(dm_reward_stablebaselines(untrained_circ,label_dm))
 
-print('---- After Training ----\n', trained_circ.draw())
+print('---- After Training ----\n', trained_circ.draw(), '\n', trained_rep)
 print(dm_trained)
 print(dm_reward_stablebaselines(trained_circ,label_dm))
