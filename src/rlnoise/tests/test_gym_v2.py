@@ -10,8 +10,8 @@ from qibo import gates
 from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
-depth = 5
-ncirc = 1
+depth = 11
+ncirc = 100
 
 noise_model = NoiseModel()
 lam = 0.1
@@ -64,16 +64,15 @@ reward = DensityMatrixReward()
 
 circuits=dataset[:]
 circuit_env = QuantumCircuit(
-    circuits = dataset[0][np.newaxis,:,:],
+    circuits = circuits,
     noise_channel = noise_channel,
     representation = rep,
     labels = labels,
     reward = reward,
+    kernel_size=3
 )
 
-print(circuit_env.reset())
 
-"""
 policy = "MlpPolicy"
 policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
@@ -90,7 +89,7 @@ model = PPO(
     verbose=1,
 )
 
-test_sample=0
+
 avg_untrained_rew =0 
 
 # Untrained Agent
@@ -100,8 +99,10 @@ for i in range(ncirc):
     while not done:
         action, _states = model.predict(obs, deterministic=True)
         obs, rewards, done, info = circuit_env.step(action)
-    untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-    dm_untrained=untrained_circ().state()
+    untrained_circ = circuit_env.get_qibo_circuit()
+    #print('drawing untrained circuits %d: \n'%(i),untrained_circ.draw())
+    dm_untrained=np.array(untrained_circ().state())
+    #print('dm untrained label %d: \n'%(i), dm_untrained)
     label_dm = labels[i]
     avg_untrained_rew += dm_reward_stablebaselines(noisy_circuit,label_dm)
 
@@ -117,13 +118,13 @@ for i in range(ncirc):
     while not done:
         action, _states = model.predict(obs, deterministic=True)
         obs, rewards, done, info = circuit_env.step(action)
-    trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-    dm_trained=trained_circ().state()
+    trained_circ = circuit_env.get_qibo_circuit()
+    dm_trained=np.array(trained_circ().state())
     label_dm = labels[i]
     avg_trained_rew += dm_reward_stablebaselines(trained_circ,label_dm)
     if i==test_sample:
         test_dm=dm_trained
-        test_circ=trained_circ.copy()
+        test_circ=trained_circ
     
 
 
@@ -134,7 +135,6 @@ print(labels[test_sample])
 print('---- Avg rew Before Training ----\n')
 print(avg_untrained_rew/ncirc)
 
-print('---- After Training ----\n', trained_circ.draw())
-print(dm_trained)
-print(dm_reward_stablebaselines(trained_circ,label_dm))
-"""
+print('---- After Training ----\n', test_circ.draw())
+print(test_dm)
+print(avg_trained_rew/ncirc)

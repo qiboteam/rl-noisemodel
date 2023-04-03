@@ -5,7 +5,7 @@ from qibo import gates
 
 class Reward(ABC):
 
-    def __init__(self, metric=lambda x,y: np.sqrt((x-y)**2).mean()):
+    def __init__(self, metric=lambda x,y: np.sqrt(np.abs(((x-y)**2)).mean())):
         self.metric = metric
 
     @abstractmethod
