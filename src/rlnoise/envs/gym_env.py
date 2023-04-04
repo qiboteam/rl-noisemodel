@@ -114,5 +114,15 @@ class QuantumCircuit(gym.Env):
     def get_qibo_circuit(self):
         return self.rep.array_to_circuit(self.current_state[0][:,:-1])
 
+    def compute_step_reward(self):
+        alpha=0.01
+        circuit = self.get_qibo_circuit() #circuit.shape=(n_gates,5)
+        print('Il circuito ricostruito e`: ',circuit.draw())
+        #print('Circuit.shape= ',self.rep.circuit_to_array(circuit).shape) 
+        true_circuit_label=self.labels
+        learned_labels=np.asarray(circuit().state())
+        mse = alpha*np.sqrt(np.abs(((true_circuit_label-learned_labels)**2).mean()))
+        return -mse
+            #... da continuare
 
     
