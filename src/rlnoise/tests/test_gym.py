@@ -1,5 +1,7 @@
 import sys
 sys.path.append('../rewards/')
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]=""
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.policy import CNNFeaturesExtractor
@@ -9,6 +11,8 @@ from stable_baselines3 import PPO, DQN, DDPG
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
 from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
+import qibo
+qibo.set_backend('qibojit','numba')
 
 nqubits = 1
 depth = 10
