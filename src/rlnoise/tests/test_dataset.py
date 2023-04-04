@@ -29,6 +29,7 @@ dataset = Dataset(
     n_qubits = nqubits,
     representation = rep,
     clifford = True,
+    shadows = True,
     noise_model = noise_model,
     mode = 'rep'
 )

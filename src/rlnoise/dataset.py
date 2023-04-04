@@ -3,11 +3,12 @@ import numpy as np
 from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
+from rlnoise.rewards.classical_shadows import ClassicalShadows
 
 
 class Dataset(object):
 
-    def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, noise_model=None, mode='rep'):
+    def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, noise_model=None, mode='rep'):
         '''Generate dataset for the training of RL-algorithm
         Args:
             n_circuits (int): number of random circuits generated
@@ -24,6 +25,7 @@ class Dataset(object):
         self.noise_model = noise_model
         self.mode = mode
         self.n_circuits=n_circuits
+        self.shadows = shadows
         
         self.circuits = [
             self.generate_random_circuit()
@@ -44,9 +46,16 @@ class Dataset(object):
         ])
         self.train_circuits, self.val_circuits = self.train_val_split()
 
-    def get_dm_labels(self):
-        return np.asarray([self.noisy_circuits[i]().state()
-                for i in range(self.n_circuits)])
+    def get_dm_labels(self, num_snapshots=10000):
+        if self.shadows:
+            states = []
+            for i in range(self.n_circuits):
+                model = ClassicalShadows(self.noisy_circuits[i], num_snapshots)
+                model.get_classical_shadow()
+                states.append(model.shadow_state_reconstruction())
+        else:
+            states = [self.noisy_circuits[i]().state() for i in range(self.n_circuits)]
+        return np.asarray(states)
 
     def get_frequencies(self, nshots=1000):
         assert self.mode == 'circ' or self.mode == 'noisy_circ'
