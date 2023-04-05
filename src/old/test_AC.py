@@ -1,7 +1,7 @@
 from rlnoise.dataset import Dataset
 from rlnoise.agents.actor_critic_V2 import AC_agent
 from tensorflow import keras
-from rlnoise.envs.gym_env import CircuitsGym
+from rlnoise.gym_env import CircuitsGym
 from rlnoise.utils import truncated_moments_matching
 
 nqubits = 1

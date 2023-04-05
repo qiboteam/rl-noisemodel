@@ -1,5 +1,5 @@
 from rlnoise.dataset import Dataset
-from rlnoise.envs.gym_env import CircuitsGym
+from rlnoise.gym_env import CircuitsGym
 
 episodes = 5
 results = []  
