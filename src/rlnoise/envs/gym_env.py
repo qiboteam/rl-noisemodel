@@ -16,7 +16,7 @@ from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines, ste
 
 class QuantumCircuit(gym.Env):
     
-    def __init__(self, circuits, representation, labels, reward, noise_param_space=None):
+    def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None):
         super(QuantumCircuit, self).__init__()
 
         self.circuits = circuits[:,np.newaxis,:,:]
@@ -38,9 +38,13 @@ class QuantumCircuit(gym.Env):
         shape = list(self.circuits.shape[1:])
         assert shape[-1] % (self.rep.encoding_dim) == 0
         self.n_qubits = int(shape[-1] / self.rep.encoding_dim)
-        shape[-1] += 1
-
-        #assert self.n_channel_types == 1, "Multiple possible channels not implemented yet"
+        if kernel_size is not None:
+            assert kernel_size % 2 == 1, "Kernel_size must be odd"
+            shape[0] = kernel_size
+            self.kernel_size = kernel_size
+        else:
+            self.kernel_size = None
+            shape[-1] += 1
         
         self.observation_space = spaces.Box(
             low = 0,
@@ -49,7 +53,6 @@ class QuantumCircuit(gym.Env):
             dtype = np.float32
         )
 
-        #self.action_space = spaces.MultiBinary(self.n_qubits * self.n_channel_types)
         self.action_space = spaces.MultiDiscrete(
             [ self.n_channel_types + 1 for i in range(self.n_qubits) ] +       # +1 for the no channel option 
             [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ]
@@ -73,7 +76,10 @@ class QuantumCircuit(gym.Env):
         return state, self.labels[i]
     
     def _get_obs(self):
-        return self.current_state #current_state.shape= (1, depth, 6 if only 1qubit )
+        if self.kernel_size is not None:
+            return self.get_kernel()
+        else:
+            return self.current_state #current_state.shape= (1, depth, 6 if only 1qubit )
 
     def _get_info(self):
         return { 'state': self._get_obs() } 
@@ -114,15 +120,32 @@ class QuantumCircuit(gym.Env):
     def get_qibo_circuit(self):
         return self.rep.array_to_circuit(self.current_state[0][:,:-1])
 
-    def compute_step_reward(self):
-        alpha=0.01
-        circuit = self.get_qibo_circuit() #circuit.shape=(n_gates,5)
-        print('Il circuito ricostruito e`: ',circuit.draw())
-        #print('Circuit.shape= ',self.rep.circuit_to_array(circuit).shape) 
-        true_circuit_label=self.labels
-        learned_labels=np.asarray(circuit().state())
-        mse = alpha*np.sqrt(np.abs(((true_circuit_label-learned_labels)**2).mean()))
-        return -mse
-            #... da continuare
+    def get_kernel(self):
+        pos = self.get_position()
+        l = len(self.current_state[0])
+        r = int(self.kernel_size / 2)
+        if pos - r < 0:
+            pad = r - pos + 1
+            tmp = np.pad(
+                self.current_state,
+                pad_width = ((0,0), (0,0), (pad, 0)),
+                mode = 'constant',
+                constant_values = 0
+            )
+        elif pos + r >= l:
+            pad = pos + r - l + 1
+            tmp = np.pad(
+                self.current_state,
+                pad_width = ((0,0), (0,0), (0, pad)),
+                mode = 'constant',
+                constant_values = 0
+            )
+        else:
+            tmp = self.current_state
+        
+        kernel = tmp[:,pos-r:pos+r+1,:-1]
+        return kernel
+        
+
 
     
