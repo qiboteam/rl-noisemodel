@@ -42,12 +42,12 @@ class FrequencyReward(Reward):
         return reward
     
 class DensityMatrixReward(Reward):
-    def __call__(self, circuit, target, final=False):
+    def __call__(self, circuit, target, final=False,alpha=10.):
         if final:
             circuit_dm=np.array(circuit().state())
             #print('Density matrix circuito',circuit_dm)
             #print('Density matrix target', target)
-            reward = 1 - self.metric(circuit_dm, target)
+            reward = 1 - alpha*self.metric(circuit_dm, target)
             
         else:
             reward = 0
