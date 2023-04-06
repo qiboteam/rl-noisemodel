@@ -32,7 +32,6 @@ rep = CircuitRepresentation(
     noise_channels = channels,
     shape = '2d'
 )
-
 # create dataset
 dataset = Dataset(
     n_circuits = ncirc,
@@ -43,44 +42,24 @@ dataset = Dataset(
     noise_model = noise_model,
     mode = 'rep'
 )
-
+#Setting up the environment
 test_sample = np.random.randint(ncirc)
-
-# input circuit
-circuit_rep = dataset[test_sample]
-dataset.set_mode('circ')
-circuit = dataset[test_sample]
-dataset.set_mode('noisy_circ')
-noisy_circuit = dataset[test_sample]
-noisy_rep = dataset.noisy_circ_rep[test_sample]
-labels = list(dataset.get_frequencies())
-#labels=np.array(dataset.get_dm_labels())
-
-def test_representation():
-    print('> Noiseless Circuit:\n', circuit.draw())
-    array = rep.circuit_to_array(circuit)
-    print(' --> Representation:\n', array)
-    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    print('> Noisy Circuit:\n', noisy_circuit.draw())
-    array = rep.circuit_to_array(noisy_circuit)
-    print(array)
-    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
-
-#test_representation()
+test_sample=0
+circuits=dataset[:]
 #reward = FrequencyReward()
-#reward = DensityMatrixReward()
-dataset.set_mode('rep')
+reward = DensityMatrixReward()
+#labels = list(dataset.get_frequencies())
+labels=np.array(dataset.get_dm_labels())
 
 circuits=dataset[:]
 circuit_env = QuantumCircuit(
-    circuits = dataset.circ_rep,
+    circuits = circuits,
     representation = rep,
     labels = labels,
     reward = reward,
     noise_param_space = noise_param_space
 )
-
+#Setting up the policy
 policy = "MlpPolicy"
 policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
@@ -89,13 +68,26 @@ policy_kwargs = dict(
         filter_shape = (2, nqubits * rep.encoding_dim )
     )
 )
-
 model = PPO(
     policy,
     circuit_env,
     policy_kwargs=policy_kwargs,
     verbose=1,
 )
+
+                        #Testing the environment
+obs = circuit_env.reset(i=test_sample)
+print('obs shape: ', obs.shape)
+print('position: ',int(circuit_env.get_position()))
+done = False
+while not done:
+    action, _states = model.predict(obs, deterministic=True)
+    obs, rewards, done, info = circuit_env.step(action)
+untrained_rep = obs[:,:,:-1][0]
+#untrained_circ = rep.array_to_circuit(obs[:,:,:][0])
+print(circuit_env.get_qibo_circuit().draw())
+#dm_untrained = untrained_circ().state()
+
 """
 model = DQN(
     policy,
@@ -107,67 +99,3 @@ model = DQN(
     #learning_rate = 1e-5 # default 1e-4
 )
 """
-test_sample=0
-
-# Untrained Agent
-for i in range(ncirc):
-    obs = circuit_env.reset(i=i)
-    done = False
-    while not done:
-        action, _states = model.predict(obs, deterministic=True)
-        obs, rewards, done, info = circuit_env.step(action)
-    untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-    dm_untrained=untrained_circ().state()
-    label_dm = labels[i]
-    avg_untrained_rew += dm_reward_stablebaselines(noisy_circuit,label_dm)
-
-obs = circuit_env.reset(i=test_sample)
-done = False
-while not done:
-    action, _states = model.predict(obs, deterministic=True)
-    obs, rewards, done, info = circuit_env.step(action)
-untrained_rep = obs[:,:,:-1][0]
-untrained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-dm_untrained = untrained_circ().state()
-
-# Train
-model.learn(50000, progress_bar=True)
-
-avg_trained_rew=0.
-# Trained Agent
-for i in range(ncirc):
-    obs = circuit_env.reset(i=i)
-    #print('Circuit %d representation \n'%(i),rep.array_to_circuit(obs[:,:,:-1][0]).draw()) #test to check that works for more circuits
-    done = False
-    while not done:
-        action, _states = model.predict(obs, deterministic=True)
-        obs, rewards, done, info = circuit_env.step(action)
-    trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-    dm_trained=trained_circ().state()
-    label_dm = labels[i]
-    avg_trained_rew += dm_reward_stablebaselines(trained_circ,label_dm)
-    if i==test_sample:
-        test_dm=dm_trained
-        test_circ=trained_circ.copy()
-
-print('---- Original Circuit ----\n', circuit.draw(), '\n', circuit_rep)
-print(' --> With noise\n', noisy_circuit.draw())
-print(labels[test_sample])
-
-print('---- Avg rew Before Training ----\n')
-print(avg_untrained_rew/ncirc)
-obs = circuit_env.reset(i=test_sample)
-done = False
-while not done:
-    action, _states = model.predict(obs, deterministic=True)
-    obs, rewards, done, info = circuit_env.step(action)
-trained_rep = obs[:,:,:-1][0]
-trained_circ = rep.array_to_circuit(obs[:,:,:-1][0])
-dm_trained=trained_circ().state()
-
-labels = dataset.get_dm_labels()
-label_dm = labels[test_sample]
-
-print('---- After Training ----\n', trained_circ.draw(), '\n', trained_rep)
-print(dm_trained)
-print(dm_reward_stablebaselines(trained_circ,label_dm))

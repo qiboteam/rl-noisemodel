@@ -40,7 +40,7 @@ class QuantumCircuit(gym.Env):
         self.n_qubits = int(shape[-1] / self.rep.encoding_dim)
         if kernel_size is not None:
             assert kernel_size % 2 == 1, "Kernel_size must be odd"
-            shape[0] = kernel_size
+            shape[1] = kernel_size
             self.kernel_size = kernel_size
         else:
             self.kernel_size = None
@@ -63,6 +63,10 @@ class QuantumCircuit(gym.Env):
         #    "param": spaces.Box(low=0, high=1, shape=(self.n_qubits,), dtype=np.float32)
         #})
         self.current_state, self.current_target = self.init_state()
+        if self.kernel_size is not None:
+            padding = np.zeros((1, int(kernel_size/2), self.current_state.shape[-1]), dtype=np.float32)
+            self.padded_circuit=np.concatenate((padding,self.current_state,padding), axis=1)
+        
 
     def init_state(self, i=None):
         # initialize the state
@@ -121,29 +125,10 @@ class QuantumCircuit(gym.Env):
         return self.rep.array_to_circuit(self.current_state[0][:,:-1])
 
     def get_kernel(self):
-        pos = self.get_position()
+        pos = int(self.get_position())
         l = len(self.current_state[0])
         r = int(self.kernel_size / 2)
-        if pos - r < 0:
-            pad = r - pos + 1
-            tmp = np.pad(
-                self.current_state,
-                pad_width = ((0,0), (0,0), (pad, 0)),
-                mode = 'constant',
-                constant_values = 0
-            )
-        elif pos + r >= l:
-            pad = pos + r - l + 1
-            tmp = np.pad(
-                self.current_state,
-                pad_width = ((0,0), (0,0), (0, pad)),
-                mode = 'constant',
-                constant_values = 0
-            )
-        else:
-            tmp = self.current_state
-        
-        kernel = tmp[:,pos-r:pos+r+1,:-1]
+        kernel = self.padded_circuit[:,pos:pos+2*r+1,:-1]
         return kernel
         
 
