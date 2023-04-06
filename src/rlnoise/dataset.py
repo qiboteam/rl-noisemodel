@@ -44,7 +44,7 @@ class Dataset(object):
             self.rep.circuit_to_array(c)
             for c in self.noisy_circuits
         ])
-        self.train_circuits, self.val_circuits = self.train_val_split()
+        self.train_circuits, self.val_circuits ,self.train_noisy_label, self.val_noisy_label= self.train_val_split()
 
     def get_dm_labels(self, num_snapshots=10000):
         if self.shadows:
@@ -91,15 +91,30 @@ class Dataset(object):
         return circuit
 
     def train_val_split(self, split=0.2):
-        '''Split dataset into train ad validation sets'''
+        '''
+        Split dataset into train ad validation sets and it return the array representation of the circuits without noise
+        and the label of the correspondent noisy circuit.
+        return: train_circuits, val_circuits,train_noisy_label,val_noisy_label 
+        '''
 
         idx = random.sample(range(len(self.circuits)), int(split*len(self.circuits)))
         val_circuits = [ self.__getitem__(i) for i in range(self.__len__()) if i in idx ]
         train_circuits = [ self.__getitem__(i) for i in range(self.__len__()) if i not in idx ]
-        if self.mode == 'rep' or self.mode == 'noisy_rep':
-            val_circuits = np.asarray(val_circuits)
-            train_circuits = np.asarray(train_circuits)
-        return train_circuits, val_circuits
+        self.mode='rep'
+        val_circuits = np.asarray(val_circuits)
+        train_circuits = np.asarray(train_circuits)
+        train_noisy_label=np.asarray([
+            self.noise_model.apply(self.rep.array_to_circuit(c))().state()
+            for c in train_circuits
+        ])
+        val_noisy_label=np.asarray([
+            self.noise_model.apply(self.rep.array_to_circuit(c))().state()
+            for c in val_circuits
+        ])        
+        #if self.mode == 'rep' or self.mode == 'noisy_rep':
+        #    val_circuits = np.asarray(val_circuits)
+        #    train_circuits = np.asarray(train_circuits)
+        return train_circuits, val_circuits,train_noisy_label,val_noisy_label
         
     def get_train_loader(self):
         ''' Returns training set circuits'''
