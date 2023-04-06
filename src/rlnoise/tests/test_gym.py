@@ -6,11 +6,11 @@ from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.policy import CNNFeaturesExtractor
 import numpy as np
-from rlnoise.envs.gym_env import QuantumCircuit
+from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO, DQN, DDPG
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
-from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
+from old.density_matrix_reward import dm_reward_stablebaselines
 import qibo
 qibo.set_backend('qibojit','numba')
 

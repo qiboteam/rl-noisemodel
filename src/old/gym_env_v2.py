@@ -4,7 +4,7 @@ from gym import spaces
 from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
-from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines, step_reward_stablebaselines
+from old.density_matrix_reward import dm_reward_stablebaselines, step_reward_stablebaselines
 
 # currently working just for single qubit circuits
 # TO DO:

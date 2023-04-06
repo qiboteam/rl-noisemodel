@@ -7,7 +7,7 @@ from rlnoise.envs.gym_env_v2 import QuantumCircuit
 from stable_baselines3 import PPO, DQN, DDPG
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
-from rlnoise.rewards.density_matrix_reward import dm_reward_stablebaselines
+from old.density_matrix_reward import dm_reward_stablebaselines
 
 nqubits = 1
 depth = 11

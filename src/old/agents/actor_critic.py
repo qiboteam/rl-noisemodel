@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from rlnoise.envs.gym_env import CircuitsGym
+from rlnoise.gym_env import CircuitsGym
 from rlnoise.utils import models_folder
 import math
 
@@ -51,23 +51,16 @@ class AC_agent(object):
     def train_episode(self, optimizer):
         '''Run a training episode'''
         huber_loss = keras.losses.Huber()
-        # Discount factor for past rewards
-        gamma = 0.95  
-        # Return the smallest folat so that: 1.0 + eps != 1.0
-        eps = np.finfo(np.float32).eps.item() 
-        # Useful containers
+        num_actions = self.env.action_space.n
         action_probs_history = []
         critic_value_history = []
-        rewards_history = []
-        # Initialize the environement
         state = self.env.reset() 
-        num_actions = self.env.action_space.n
-        circuit = self.env.get_sample() 
-        episode_reward = 0.
+        circuit = self.env.get_sample()
         done = False
         with tf.GradientTape() as tape:
-            while done is not True:
+            while not done:
                 state = tf.convert_to_tensor(state)
+                # add a dimension to the state (4) -> (1,4) as required by tf/keras
                 state = tf.expand_dims(state, 0)
                 # given the state predict the probability of each action and the future rewards 
                 action_probs, critic_value = self.model(state)
@@ -77,36 +70,15 @@ class AC_agent(object):
                 action_probs_history.append(tf.math.log(action_probs[0, action]))
                 # applies the new action
                 state, reward, done = self.env.step(action)
-                rewards_history.append(reward)
-                episode_reward += reward
-            
-            # computes the epected value for the reward 
-            # - At each timestep what was the total reward received after that timestep
-            # - Rewards in the past are discounted by multiplying them with gamma
-            # - These are the labels for the critic
-            returns = []
-            discounted_sum = 0
-            for r in rewards_history[::-1]:
-                discounted_sum = r + gamma * discounted_sum
-                returns.insert(0, discounted_sum)
-            # normalization
-            returns = np.array(returns)
-            returns = (returns - np.mean(returns)) / (np.std(returns) + eps)
-            returns = returns.tolist()
             # compute of the loss for the actor and critic 
-            history = zip(action_probs_history, critic_value_history, returns)
+            history = zip(action_probs_history, critic_value_history)
             actor_losses = []
             critic_losses = []
-            for log_prob, value, ret in history:
-                # for each value in the history the critic had estimated to have in the future a total reward of "value"
-                # we have taken a given action with log(prob) = log_prob and we have received the reward "ret"
-                # according to this we need to update the actor so that he will predict with higher probability an action 
-                # that will bring higher rewqard with respect to the one estimated by the critic 
-                diff = ret - value
-                actor_losses.append(-log_prob * diff)  # actor loss
-                # and we need to update the critic so that it will predict a better estimate of the total future rewards
+            for log_prob, value in history:
+                diff = reward - value
+                actor_losses.append(-log_prob * diff)
                 critic_losses.append(
-                    huber_loss(tf.expand_dims(value, 0), tf.expand_dims(ret, 0))
+                    huber_loss(tf.expand_dims(value, 0), tf.expand_dims(reward, 0))
                 )
             # Backpropagation
             loss_value = sum(actor_losses) + sum(critic_losses)
@@ -115,8 +87,7 @@ class AC_agent(object):
             # Clear the loss and reward history
             action_probs_history.clear()
             critic_value_history.clear()
-            rewards_history.clear()
-        return episode_reward, state, circuit
+        return reward, state, circuit
 
     def train(self, episodes, optimizer, verbose=True, verbose_episode=20):
         '''Implement full training pipeline'''

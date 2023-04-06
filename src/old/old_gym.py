@@ -5,8 +5,8 @@ from qibo import gates
 from qibo.models import Circuit
 from copy import deepcopy
 from rlnoise.utils import truncated_moments_matching
-from rlnoise.rewards.observables_reward import obs_reward
-from rlnoise.rewards.density_matrix_reward import dm_reward, step_reward
+from old.observables_reward import obs_reward
+from old.density_matrix_reward import dm_reward, step_reward
 
 PENALTY = 0.1
 

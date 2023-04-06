@@ -1,4 +1,4 @@
-from rlnoise.old_dataset import Dataset
+from old.old_dataset import Dataset
 import numpy as np
 from rlnoise.envs.old_gym import CircuitsGym
 
