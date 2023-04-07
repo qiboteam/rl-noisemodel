@@ -17,15 +17,21 @@ from old.density_matrix_reward import dm_reward_stablebaselines, step_reward_sta
 class QuantumCircuit(gym.Env):
     
     def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None):
+        '''
+        Args: 
+            circuits (list): list of circuit represented as numpy vectors
+        
+        '''
         super(QuantumCircuit, self).__init__()
 
-        self.circuits = circuits[:,np.newaxis,:,:]
-        self.n_circ = self.circuits.shape[0]
-        self.n_moments = self.circuits.shape[2]
+        self.circuits = circuits
+        self.n_circ = len(self.circuits)
+        self.circuit_lenght = None
         self.rep = representation
         self.n_gate_types = len(self.rep.gate2index)
         self.n_channel_types = len(self.rep.channel2index)
         self.noise_channels = list(self.rep.channel2index.keys())
+        self.kernel_size = kernel_size
         if noise_param_space is None:
             self.noise_par_space = { 'range': (0,0.1), 'n_steps': 100 } # convert this to a list of dict for allowing custom range and steps for the different noise channels
         else:
@@ -34,22 +40,20 @@ class QuantumCircuit(gym.Env):
         assert self.noise_incr > 0
         self.labels = labels
         self.reward = reward
-
-        shape = list(self.circuits.shape[1:])
-        assert shape[-1] % (self.rep.encoding_dim) == 0
-        self.n_qubits = int(shape[-1] / self.rep.encoding_dim)
+        self.current_state, self.current_target = self.init_state()
+        self.n_qubits = int(self.shape[-1] / self.rep.encoding_dim)
         if kernel_size is not None:
             assert kernel_size % 2 == 1, "Kernel_size must be odd"
-            shape[1] = kernel_size
+            self.shape[1] = kernel_size
             self.kernel_size = kernel_size
         else:
             self.kernel_size = None
-            shape[-1] += 1
+            self.shape[-1] += 1
         
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
-            shape = tuple(shape),
+            shape = tuple(self.shape),
             dtype = np.float32
         )
 
@@ -62,21 +66,23 @@ class QuantumCircuit(gym.Env):
         #    "channel": spaces.MultiDiscrete([ self.n_channel_types for i in range(self.n_qubits) ]),
         #    "param": spaces.Box(low=0, high=1, shape=(self.n_qubits,), dtype=np.float32)
         #})
-        self.current_state, self.current_target = self.init_state()
-        if self.kernel_size is not None:
-            padding = np.zeros((1, int(kernel_size/2), self.current_state.shape[-1]), dtype=np.float32)
-            self.padded_circuit=np.concatenate((padding,self.current_state,padding), axis=1)
         
-
     def init_state(self, i=None):
         # initialize the state
         if i is None:
             i = random.randint(0, self.n_circ - 1)
+        self.circuit_lenght=self.circuits[i].shape[0]
         state = np.hstack(
-            ( self.circuits[i].squeeze(0), np.zeros((self.n_moments, 1)) )
+            ( self.circuits[i], np.zeros((self.circuit_lenght, 1)) )#vedere se levare lo squeeze
         )
         state[0,-1] = 1
         state = state[np.newaxis,:,:]
+        self.shape = np.array(state[:,:,:-1].shape)
+        assert (self.shape[-1]) % (self.rep.encoding_dim) == 0
+
+        if self.kernel_size is not None:
+            padding = np.zeros((1, int(self.kernel_size/2), self.shape[-1]+1), dtype=np.float32)
+            self.padded_circuit=np.concatenate((padding,state,padding), axis=1)
         return state, self.labels[i]
     
     def _get_obs(self):
@@ -104,7 +110,7 @@ class QuantumCircuit(gym.Env):
                 channel = self.noise_channels[a[0]-1](q, lam=lam) # -1 cause there is no identity channel in self.noise_channels
                 self.current_state[0, position, idx:idx+self.rep.encoding_dim] += self.rep.gate_to_array(channel)
         #print(f'> New State: \n{self._get_obs()}')
-        if position == self.n_moments - 1:
+        if position == self.circuit_lenght - 1:
             # compute final reward
             terminated = True
         else:

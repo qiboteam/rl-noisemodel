@@ -15,7 +15,7 @@ import qibo
 qibo.set_backend('qibojit','numba')
 
 nqubits = 1
-depth = 10
+depth = 25
 ncirc = 100
 val_split = 0.2
 
@@ -50,10 +50,21 @@ circuits=dataset[:]
 reward = DensityMatrixReward()
 #labels = list(dataset.get_frequencies())
 labels=np.array(dataset.get_dm_labels())
+circuit_list=[]
+#generate list of circuits of different lenght
+for i in range(len(dataset[:])):
+    if i<20:
+        circuit_list.append(dataset[i])
+    elif i>20 and i<=50: 
+        circuit_list.append(dataset[i][:-2,:])
+    elif i>50 and i<=70: 
+        circuit_list.append(dataset[i][:-6,:])
+    else:
+        circuit_list.append(dataset[i][:-10,:])
 
-circuits=dataset[:]
+print('\n\n-----Testing environment on circuits of depths: %d,%d,%d and %d -----'%(circuit_list[10].shape[0],circuit_list[30].shape[0],circuit_list[60].shape[0],circuit_list[90].shape[0]) )
 circuit_env = QuantumCircuit(
-    circuits = circuits,
+    circuits = circuit_list,
     representation = rep,
     labels = labels,
     reward = reward,
@@ -77,18 +88,19 @@ model = PPO(
 )
 
                         #Testing the environment
-obs = circuit_env.reset(i=test_sample)
-print('obs shape: ', obs.shape)
-print('position: ',int(circuit_env.get_position()))
-done = False
-while not done:
-    action, _states = model.predict(obs, deterministic=True)
-    obs, rewards, done, info = circuit_env.step(action)
-untrained_rep = obs[:,:,:-1][0]
-#untrained_circ = rep.array_to_circuit(obs[:,:,:][0])
-print(circuit_env.get_qibo_circuit().draw())
-#dm_untrained = untrained_circ().state()
-
+for i in range(len(circuit_list)):                        
+    obs = circuit_env.reset(i)
+    #print('obs shape: ', obs.shape)
+    #print('position: ',int(circuit_env.get_position()))
+    done = False
+    while not done:
+        action, _states = model.predict(obs, deterministic=True)
+        obs, rewards, done, info = circuit_env.step(action)
+    untrained_rep = obs[:,:,:-1][0]
+    #untrained_circ = rep.array_to_circuit(obs[:,:,:][0])
+    #print(circuit_env.get_qibo_circuit().draw())
+    #dm_untrained = untrained_circ().state()
+print('----All done----')
 """
 model = DQN(
     policy,
