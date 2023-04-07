@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from IPython import display
 import numpy as np
 import os
-
+from rlnoise.gym_env import QuantumCircuit
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
     return folder
@@ -94,3 +94,44 @@ def plot_results(train_history, val_history, n_steps=20, filename="train_info.pn
     plt.legend()
     plt.show()
     plt.savefig(figures_folder()+ '/' +filename)
+
+def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
+    '''
+evaluation_circ: circuit in array form where evaluate the model
+evaluation_labels: labels of the noisy circuit 
+train_environment: environment used to train agent
+model: model to test \n
+return: average reward (total reward/n_circuits)
+    '''
+    environment = QuantumCircuit(
+    circuits = evaluation_circ,
+    representation = train_environment.rep,
+    labels = evaluation_labels,
+    reward = train_environment.reward,
+    kernel_size=train_environment.kernel_size   
+    )
+    avg_rew=0
+    n_circ=len(evaluation_circ)
+    for i in range(n_circ):
+        obs = environment.reset(i=i)
+        done = False
+        while not done:
+            action, _states = model.predict(obs, deterministic=True)
+            obs, rewards, done, info = environment.step(action)
+        untrained_circ = environment.get_qibo_circuit()
+        dm_untrained=np.array(untrained_circ().state())
+        avg_rew += rewards
+
+    return avg_rew/n_circ
+'''
+def test_representation():
+    print('> Noiseless Circuit:\n', circuit.draw())
+    array = rep.circuit_to_array(circuit)
+    print(' --> Representation:\n', array)
+    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print('> Noisy Circuit:\n', noisy_circuit.draw())
+    array = rep.circuit_to_array(noisy_circuit)
+    print(array)
+    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
+'''
