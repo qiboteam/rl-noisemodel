@@ -57,7 +57,8 @@ circuit_env = QuantumCircuit(
     representation = rep,
     labels = labels,
     reward = reward,
-    noise_param_space = noise_param_space
+    noise_param_space = noise_param_space,
+    kernel_size=3
 )
 #Setting up the policy
 policy = "MlpPolicy"

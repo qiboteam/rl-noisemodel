@@ -114,7 +114,7 @@ class Dataset(object):
         #if self.mode == 'rep' or self.mode == 'noisy_rep':
         #    val_circuits = np.asarray(val_circuits)
         #    train_circuits = np.asarray(train_circuits)
-        return train_circuits, val_circuits,train_noisy_label,val_noisy_label
+        return train_circuits, val_circuits,train_noisy_label,val_noisy_label #for now this return only dm__labels. Must be adapted for a more general case (es using classical shadow or frequency)
         
     def get_train_loader(self):
         ''' Returns training set circuits'''

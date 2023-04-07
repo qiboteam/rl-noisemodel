@@ -126,9 +126,11 @@ class QuantumCircuit(gym.Env):
 
     def get_kernel(self):
         pos = int(self.get_position())
-        l = len(self.current_state[0])
-        r = int(self.kernel_size / 2)
-        kernel = self.padded_circuit[:,pos:pos+2*r+1,:-1]
+        r=int(self.kernel_size/2)
+        self.padded_circuit[:,r:-r,:]=self.current_state
+        #print(self.padded_circuit)
+        kernel = self.padded_circuit[:,pos:pos+self.kernel_size,:-1]
+        
         return kernel
         
 

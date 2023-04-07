@@ -123,7 +123,7 @@ return: average reward (total reward/n_circuits)
         avg_rew += rewards
 
     return avg_rew/n_circ
-
+'''
 def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())
     array = rep.circuit_to_array(circuit)
@@ -134,3 +134,4 @@ def test_representation():
     array = rep.circuit_to_array(noisy_circuit)
     print(array)
     print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
+'''
