@@ -95,21 +95,20 @@ def plot_results(train_history, val_history, n_steps=20, filename="train_info.pn
     plt.show()
     plt.savefig(figures_folder()+ '/' +filename)
 
-def model_evaluation(evaluation_circ,evaluation_labels,representation,reward,model):
+def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     '''
 evaluation_circ: circuit in array form where evaluate the model
 evaluation_labels: labels of the noisy circuit 
-representation: object of class CircuitRepresentation()
-reward: reward function from ABC class Reward()
+train_environment: environment used to train agent
 model: model to test \n
 return: average reward (total reward/n_circuits)
     '''
     environment = QuantumCircuit(
     circuits = evaluation_circ,
-    representation = representation,
+    representation = train_environment.rep,
     labels = evaluation_labels,
-    reward = reward,
-    kernel_size=3   
+    reward = train_environment.reward,
+    kernel_size=train_environment.kernel_size   
     )
     avg_rew=0
     n_circ=len(evaluation_circ)

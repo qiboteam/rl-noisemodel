@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from qibo.noise import DepolarizingError, NoiseModel
@@ -10,6 +11,9 @@ noise_channel = gates.DepolarizingChannel((0,), lam=lam)
 primitive_gates = ['RZ', 'RX']
 channels = ['DepolarizingChannel']
 
+benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
+if not os.path.exists(benchmark_circ_path):
+    os.makedirs(benchmark_circ_path)
 
 rep = CircuitRepresentation(
     primitive_gates = primitive_gates,
@@ -20,7 +24,7 @@ rep = CircuitRepresentation(
 depths=[7,15,25]
 
 for i in depths:
-    f = open("depth_"+str(i)+".npz","wb")
+    f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
     nqubits = 1
     depth = i
     ncirc = 10
@@ -39,7 +43,6 @@ for i in depths:
     val_set=np.asarray(dataset.val_circuits)
     val_label=np.asarray(dataset.val_noisy_label)
     np.savez(f,train_set=train_set, train_label=train_label, val_set=val_set,val_label=val_label)
-    #print('train set shape: ', train_set.shape)
 
 f.close()
 
