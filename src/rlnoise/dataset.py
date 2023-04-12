@@ -71,8 +71,9 @@ class Dataset(object):
         circuit = Circuit(self.n_qubits, density_matrix=True)
         for _ in range(self.n_gates):
             for q0 in range(self.n_qubits):
-                gate = random.choice(list(self.rep.index2gate.values())) # maybe add identity gate?
+                gate = random.choice(list(self.rep.index2gate.values()))
                 params = signature(gate).parameters
+                # 2 qubit gate
                 if 'q0' in params and 'q1' in params:
                     q1 = random.choice(
                         list( set(range(self.n_qubits)) - {q0} )
@@ -104,11 +105,13 @@ class Dataset(object):
         val_circuits = np.asarray(val_circuits)
         train_circuits = np.asarray(train_circuits)
         train_noisy_label=np.asarray([
-            self.noise_model.apply(self.rep.array_to_circuit(c))().state()
+            #self.noise_model.apply(self.rep.array_to_circuit(c))().state()
+            self.noise_model.apply(self.rep.rep_to_circuit(c))().state()
             for c in train_circuits
         ])
         val_noisy_label=np.asarray([
-            self.noise_model.apply(self.rep.array_to_circuit(c))().state()
+            #self.noise_model.apply(self.rep.array_to_circuit(c))().state()
+            self.noise_model.apply(self.rep.rep_to_circuit(c))().state()
             for c in val_circuits
         ])        
         #if self.mode == 'rep' or self.mode == 'noisy_rep':
@@ -210,7 +213,10 @@ class CircuitRepresentation(object):
         elif type(gate) in self.gate2index.keys():
             gate_idx = self.gate2index[type(gate)]
             param_idx = len(self.gate2index)
-            param_val = gate.init_kwargs['theta'] / (2 * np.pi)
+            if 'theta' in gate.init_kwargs:
+                param_val = gate.init_kwargs['theta'] / (2 * np.pi)
+            else:
+                param_val=0
         elif gate is None:
             return one_hot
         one_hot[gate_idx] = 1
@@ -247,28 +253,36 @@ class CircuitRepresentation(object):
         """
         nqubits = circuit.nqubits
         moments = circuit.queue.moments
-        moments = self.reorder_moments(moments)
+        moments2 = self.reorder_moments(moments)
         rep = np.asarray([
             self.gate_to_array(gate)
-            for m in list(zip(*moments))
+            for m in list(zip(*moments2))
             for gate in m
-        ])
+        ])     
+
         rep = (rep[::2] + rep[1::2]).reshape(nqubits,-1,self.encoding_dim)
         rep = np.transpose(rep, axes=(1,0,2))
         if self.shape == '2d':
             rep = rep.reshape(-1, self.encoding_dim*nqubits)
-        return rep
+        return rep #rep shape: n_moments,n_qubits,encoding_dim
 
     # Doesn't work with CZ or CX
-    def array_to_gate(self, array, qubit):
+    def array_to_gate(self, array, qubit,qubit2=None):
         """Build pair of qibo (gate,channel) starting from the encoding."""
         # separate gate part and channel part
-        gate = array[:len(self.gate2index) + 1]
+        gate_arr = array[:len(self.gate2index) + 1]
         channel = array[len(self.gate2index) + 1:]
         # extract parameters and objects
-        theta = gate[-1]
-        gate = self.index2gate[ int(gate[:-1].nonzero()[0]) ]
-        gate = gate(qubit, theta=theta * 2*np.pi)
+        theta = gate_arr[-1]
+        gate_idx=gate_arr[:-1].nonzero()[0]
+        if gate_arr[self.gate2index.get(gates.CZ)]==1: 
+            gate = self.index2gate[ int(gate_idx) ]
+            gate = gate(qubit,qubit2)
+        elif gate_arr[self.gate2index.get(gates.RZ)]==1 or gate_arr[self.gate2index.get(gates.RX)]==1: 
+            gate = self.index2gate[ int(gate_idx) ]
+            gate = gate(qubit, theta=theta * 2*np.pi)            
+        else:
+            gate=gates.I(qubit)  
         # check whether there is a noisy channel
         if len(channel.nonzero()[0]) > 0:
             lam = channel[-1]
@@ -280,6 +294,30 @@ class CircuitRepresentation(object):
             channel = None
         return (gate, channel)
 
+
+    def rep_to_circuit(self,rep_array):
+        '''Maps numpy array to qibo circuit''' 
+        nqubits = rep_array.shape[1]      
+        c = Circuit(nqubits, density_matrix=True)
+        for moment in range(len(rep_array)):
+            count=0
+            for qubit, row in enumerate(rep_array[moment]):
+                if row[self.gate2index.get(gates.CZ)]==1: 
+                    count+=1
+                    if count==2:
+                        gate, channel=self.array_to_gate(row,qubit,qubit-1)
+                        c.add(gate)
+                        if channel is not None:
+                            c.add(channel)
+                else:
+                    gate, channel = self.array_to_gate(row, qubit)
+                    if channel is not None:
+                        c.add(channel)
+
+                    c.add(gate)
+        return c
+
+'''
     def array_to_circuit(self, array):
         """Maps numpy array to qibo circuit."""
         depth = array.shape[0]
@@ -295,3 +333,8 @@ class CircuitRepresentation(object):
                 if channel is not None:
                     c.add(channel)
         return c
+'''
+#it seems to work with multi qubit and CZ and CX gates. 
+#problem:
+#1) It add more gates than the specified depth beacuse the CZ or CX gate is counted only in one of the two connected qubit
+#2) If we want to add more primitive gates we must modify line 284 and 311
