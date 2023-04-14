@@ -12,7 +12,7 @@ from rlnoise.utils import model_evaluation
 #loading benchmark datasets
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 f = open(benchmark_circ_path+"/depth_15.npz","rb")
-tmp=np.load(f)
+tmp=np.load(f,allow_pickle=True)
 train_set=tmp['train_set']
 train_label=tmp['train_label']
 val_set=tmp['val_set']
@@ -20,12 +20,12 @@ val_label=tmp['val_label']
 f.close()
 
 #Setting up training env and policy model
-nqubits=1
+nqubits=2
 noise_model = NoiseModel()
 lam = 0.2
 noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-primitive_gates = ['RZ', 'RX']
+primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel']
 reward = DensityMatrixReward()
 kernel_size=3
@@ -33,7 +33,7 @@ kernel_size=3
 rep = CircuitRepresentation(
     primitive_gates = primitive_gates,
     noise_channels = channels,
-    shape = '2d'
+    shape = '3d'
 )
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
@@ -47,7 +47,7 @@ policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
     features_extractor_kwargs = dict(
         features_dim = 64,
-        filter_shape = (2, nqubits * rep.encoding_dim )
+        filter_shape = (nqubits,1)
     )
 )
 model = PPO(

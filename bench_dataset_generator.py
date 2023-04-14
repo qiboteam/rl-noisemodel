@@ -8,7 +8,7 @@ noise_model = NoiseModel()
 lam = 0.2
 noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-primitive_gates = ['RZ', 'RX']
+primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel']
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
@@ -18,14 +18,14 @@ if not os.path.exists(benchmark_circ_path):
 rep = CircuitRepresentation(
     primitive_gates = primitive_gates,
     noise_channels = channels,
-    shape = '2d'
+    shape = '3d'
 )
 
 depths=[7,15,25]
 
 for i in depths:
     f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
-    nqubits = 1
+    nqubits = 2
     depth = i
     ncirc = 10
     dataset = Dataset(

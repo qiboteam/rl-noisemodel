@@ -23,9 +23,10 @@ class QuantumCircuit(gym.Env):
         
         '''
         super(QuantumCircuit, self).__init__()
-
+        self.position=None
         self.circuits = circuits
         self.n_circ = len(self.circuits)
+        self.n_qubits = circuits[0].shape[1]
         self.circuit_lenght = None
         self.rep = representation
         self.n_gate_types = len(self.rep.gate2index)
@@ -41,15 +42,16 @@ class QuantumCircuit(gym.Env):
         self.labels = labels
         self.reward = reward
         self.current_state, self.current_target = self.init_state()
-        self.n_qubits = int(self.shape[-1] / self.rep.encoding_dim)
+        #self.n_qubits = int(self.shape[-1] / self.rep.encoding_dim)
+
         if kernel_size is not None:
             assert kernel_size % 2 == 1, "Kernel_size must be odd"
-            self.shape[1] = kernel_size
+            self.shape[2] = kernel_size
             self.kernel_size = kernel_size
         else:
             self.kernel_size = None
-            self.shape[-1] += 1
-        
+            self.shape[0] += 1
+        print('self.shape2: ',self.shape)
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
@@ -72,17 +74,23 @@ class QuantumCircuit(gym.Env):
         if i is None:
             i = random.randint(0, self.n_circ - 1)
         self.circuit_lenght=self.circuits[i].shape[0]
-        state = np.hstack(
-            ( self.circuits[i], np.zeros((self.circuit_lenght, 1)) )#vedere se levare lo squeeze
+        print('circuit shape: ',self.circuits[i].shape)
+        state = np.concatenate(
+            ( self.circuits[i], np.zeros((self.circuit_lenght,self.n_qubits, 1)) ),axis=2
         )
-        state[0,-1] = 1
-        state = state[np.newaxis,:,:]
-        self.shape = np.array(state[:,:,:-1].shape)
-        assert (self.shape[-1]) % (self.rep.encoding_dim) == 0
+        state[0,:,-1] = 1
+        print('state: ',state.shape)
+        state = state[:,:,:]
+        state=state.transpose(2,1,0) #rearranged in shape (1, num_qubits, depth, encoding_dim+1)
+        print('state shape: ',state.shape)
+        self.shape = np.array(state[:-1,:,:].shape)
+        print('self.shape: ',self.shape)
+        assert (self.shape[0]) % (self.rep.encoding_dim) == 0
 
         if self.kernel_size is not None:
-            padding = np.zeros((1, int(self.kernel_size/2), self.shape[-1]+1), dtype=np.float32)
-            self.padded_circuit=np.concatenate((padding,state,padding), axis=1)
+            padding = np.zeros(( self.shape[0]+1,self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
+            self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
+            print('padding shape: ',self.padded_circuit.shape)
         return state, self.labels[i]
     
     def _get_obs(self):
@@ -95,10 +103,12 @@ class QuantumCircuit(gym.Env):
         return { 'state': self._get_obs() } 
 
     def reset(self, i=None):
+        self.position=0
         self.current_state, self.current_target = self.init_state(i)
         return self._get_obs()
 
     def step(self, action):
+        
         #print('> State:\n', self._get_obs())
         position = self.get_position()
         action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)        
@@ -115,17 +125,20 @@ class QuantumCircuit(gym.Env):
             terminated = True
         else:
             # update position
-            self.current_state[0, position, -1] = 0
-            self.current_state[0, position + 1, -1] = 1
+            #self.current_state[0, position, -1] = 0
+            #self.current_state[0, position + 1, -1] = 1
+            self.position+=1
             terminated = False
         reward = self.reward(self.get_qibo_circuit(), self.current_target, terminated)
+        
         return self._get_obs(), reward, terminated, self._get_info()
 
     def render(self):
         print(self.get_qibo_circuit().draw(), end='\r')
             
     def get_position(self):
-        return (self.current_state[:,:,-1] == 1).nonzero()[-1]
+        #return (self.current_state[:,0,-1] == 1).nonzero()[-1]
+        return self.position
 
     def get_qibo_circuit(self):
         return self.rep.array_to_circuit(self.current_state[0][:,:-1])

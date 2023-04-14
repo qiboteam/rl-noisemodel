@@ -4,13 +4,15 @@ import numpy as np
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
 
-nqubits = 5
-depth = 3
-ncirc = 3
+nqubits = 3
+depth = 2
+ncirc = 1
 
 noise_model = NoiseModel()
-lam = 0.2
-noise_model.add(DepolarizingError(lam), gates.RX)
+lam = 0.05
+lamCZ=0.1
+noise_model.add(DepolarizingError(lam), gates.RZ)
+noise_model.add(DepolarizingError(lamCZ), gates.CZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
 primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel']
@@ -47,6 +49,13 @@ for i in range(len(dataset[:])):
     print(noisy_test_circ.draw())
     print('------test rep %d ------\n'%(i),test_rep)
     print('------noisy test rep %d------ \n'%(i),noisy_test_rep)
+
+    reconstructed_circuit=rep.rep_to_circuit(test_rep)
+    print('reconstructed_circuit:\n')
+    print(reconstructed_circuit.draw())
+    reconstructed_noisy_circuit=rep.rep_to_circuit(noisy_test_rep)
+    print('reconstructed_circuit:\n')
+    print(reconstructed_noisy_circuit.draw())
 """
 # input circuit
 circuit_rep = dataset[0]
