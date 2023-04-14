@@ -65,8 +65,8 @@ model.learn(10000, progress_bar=True)
 
 val_avg_rew_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 
-print('The RL model was trained on %d circuits with depth %d'%(train_set.shape[0],train_set.shape[1]))
-print('The validation performed on %d circuits with depth %d has produced this rewards: '%(val_set.shape[0],val_set.shape[1]))
+print('The RL model was trained on %d circuits with depth %d'%(train_set.shape[0],15))
+print('The validation performed on %d circuits with depth %d has produced this rewards: '%(val_set.shape[0],15))
 print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 
 #per allenare il modello su circuiti di lunghezza variabili va modificata la logica del gym environment

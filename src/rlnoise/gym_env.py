@@ -38,6 +38,7 @@ class QuantumCircuit(gym.Env):
         else:
             self.noise_par_space = noise_param_space
         self.noise_incr = np.diff(self.noise_par_space['range']) / self.noise_par_space['n_steps']
+
         assert self.noise_incr > 0
         self.labels = labels
         self.reward = reward
@@ -51,17 +52,18 @@ class QuantumCircuit(gym.Env):
         else:
             self.kernel_size = None
             self.shape[0] += 1
-        print('self.shape2: ',self.shape)
+        #print('self.shape2: ',self.shape)
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
             shape = tuple(self.shape),
             dtype = np.float32
         )
-
+        #action_shape=([ self.n_channel_types + 1 for i in range(self.n_qubits) ] +  [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ])
+        
         self.action_space = spaces.MultiDiscrete(
-            [ self.n_channel_types + 1 for i in range(self.n_qubits) ] +       # +1 for the no channel option 
-            [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ]
+            [self.n_qubits, 2]     # +1 for the no channel option 
+            
         )
         # doesn't work with stable baselines
         #self.action_space = spaces.Dict({
@@ -74,23 +76,23 @@ class QuantumCircuit(gym.Env):
         if i is None:
             i = random.randint(0, self.n_circ - 1)
         self.circuit_lenght=self.circuits[i].shape[0]
-        print('circuit shape: ',self.circuits[i].shape)
+        #print('circuit shape: ',self.circuits[i].shape)
         state = np.concatenate(
             ( self.circuits[i], np.zeros((self.circuit_lenght,self.n_qubits, 1)) ),axis=2
         )
         state[0,:,-1] = 1
-        print('state: ',state.shape)
+        #print('state: ',state.shape)
         state = state[:,:,:]
         state=state.transpose(2,1,0) #rearranged in shape (1, num_qubits, depth, encoding_dim+1)
-        print('state shape: ',state.shape)
+        #print('state shape: ',state.shape)
         self.shape = np.array(state[:-1,:,:].shape)
-        print('self.shape: ',self.shape)
+        #print('self.shape: ',self.shape)
         assert (self.shape[0]) % (self.rep.encoding_dim) == 0
 
         if self.kernel_size is not None:
             padding = np.zeros(( self.shape[0]+1,self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
             self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
-            print('padding shape: ',self.padded_circuit.shape)
+            #print('padding shape: ',self.padded_circuit.shape)
         return state, self.labels[i]
     
     def _get_obs(self):
@@ -105,6 +107,7 @@ class QuantumCircuit(gym.Env):
     def reset(self, i=None):
         self.position=0
         self.current_state, self.current_target = self.init_state(i)
+        #print('current state shape: ', self.current_state.shape)
         return self._get_obs()
 
     def step(self, action):
@@ -113,12 +116,14 @@ class QuantumCircuit(gym.Env):
         position = self.get_position()
         action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)        
         #print(f'> Position: {position}, Action: {action} , Action shape: {action.shape}')
-        for q, a in enumerate(action):
-            if a[0] != 0:
+        for q, a in enumerate(action[0]):
+            if a != 0:
                 idx = q * self.rep.encoding_dim
-                lam = self.noise_par_space['range'][0] + a[1] * self.noise_incr
-                channel = self.noise_channels[a[0]-1](q, lam=lam) # -1 cause there is no identity channel in self.noise_channels
-                self.current_state[0, position, idx:idx+self.rep.encoding_dim] += self.rep.gate_to_array(channel)
+                #lam = self.noise_par_space['range'][0] + a[1] * self.noise_incr
+                lam=0.2
+                channel = self.noise_channels[0](q, lam=lam) # -1 cause there is no identity channel in self.noise_channels
+                self.current_state[:-1,q, position] += self.rep.gate_to_array(channel)
+                #self.current_state[0, position, idx:idx+self.rep.encoding_dim] += self.rep.gate_to_array(channel)
         #print(f'> New State: \n{self._get_obs()}')
         if position == self.circuit_lenght - 1:
             # compute final reward
@@ -141,16 +146,18 @@ class QuantumCircuit(gym.Env):
         return self.position
 
     def get_qibo_circuit(self):
-        return self.rep.array_to_circuit(self.current_state[0][:,:-1])
+        return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0)[:,:,:-1])
 
     def get_kernel(self):
         pos = int(self.get_position())
+        kernel=[]
         r=int(self.kernel_size/2)
-        self.padded_circuit[:,r:-r,:]=self.current_state
+        self.padded_circuit[:,:,r:-r]=self.current_state
         #print(self.padded_circuit)
-        kernel = self.padded_circuit[:,pos:pos+self.kernel_size,:-1]
+         
+        kernel.append(self.padded_circuit[:-1,:,pos:pos+self.kernel_size])
         
-        return kernel
+        return np.asarray(kernel,dtype='float32')
         
 
 

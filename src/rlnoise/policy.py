@@ -15,8 +15,8 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         super().__init__(observation_space, features_dim)
         indim = observation_space.shape[0]
         sample = torch.as_tensor(observation_space.sample()[None]).float()
-        print('indim: ',indim)
-        print('filter shape: ',filter_shape)
+        #print('indim: ',indim)
+        #print('filter shape: ',filter_shape)
         conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=n_filters, kernel_size=filter_shape)
         
         # Compute shape by doing one forward pass
@@ -45,5 +45,5 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
     def forward(self, x):
         #print(x.shape)
         x = self.cnn(x)
-        #print(x.shape)
+        
         return self.linear(x)

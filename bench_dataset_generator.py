@@ -27,7 +27,7 @@ for i in depths:
     f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
     nqubits = 2
     depth = i
-    ncirc = 10
+    ncirc = 100
     dataset = Dataset(
         n_circuits = ncirc,
         n_gates = depth,
