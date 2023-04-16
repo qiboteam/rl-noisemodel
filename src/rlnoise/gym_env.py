@@ -114,9 +114,13 @@ class QuantumCircuit(gym.Env):
         
         #print('> State:\n', self._get_obs())
         position = self.get_position()
-        action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)        
+        #print('action shape:',action.shape)
+        #print('ACTION: ',action)
+        #print('current state BEFORE action: \n',self.current_state.transpose(1,2,0))
+        #action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)        
         #print(f'> Position: {position}, Action: {action} , Action shape: {action.shape}')
-        for q, a in enumerate(action[0]):
+        for q, a in enumerate(action):
+            #print('considering qubit: ',q,'and action: ',a, 'at position: ',position)
             if a != 0:
                 idx = q * self.rep.encoding_dim
                 #lam = self.noise_par_space['range'][0] + a[1] * self.noise_incr
@@ -135,7 +139,8 @@ class QuantumCircuit(gym.Env):
             self.position+=1
             terminated = False
         reward = self.reward(self.get_qibo_circuit(), self.current_target, terminated)
-        
+        #print('current state AFTER action: \n',self.current_state.transpose(1,2,0))
+        #print('current state shape: ',self.current_state.transpose(1,2,0).shape)
         return self._get_obs(), reward, terminated, self._get_info()
 
     def render(self):

@@ -6,12 +6,12 @@ from qibo import gates
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor
 from rlnoise.gym_env import QuantumCircuit
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO,DQN
 from rlnoise.utils import model_evaluation
 
 #loading benchmark datasets
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
-f = open(benchmark_circ_path+"/depth_15.npz","rb")
+f = open(benchmark_circ_path+"/depth_25.npz","rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=tmp['train_set']
 train_label=tmp['train_label']
@@ -56,17 +56,24 @@ model = PPO(
     policy_kwargs=policy_kwargs,
     verbose=1,
 )
+model2 = PPO(
+    policy,
+    circuit_env_training,
+    policy_kwargs=policy_kwargs,
+    verbose=1,
+)
 print('Train dataset circuit shape: ',train_set.shape)
 print('train label shape: ',train_label.shape)
 
 val_avg_rew_untrained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 
-model.learn(10000, progress_bar=True) 
+model.learn(5000, progress_bar=True) 
 
 val_avg_rew_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
-
-print('The RL model was trained on %d circuits with depth %d'%(train_set.shape[0],15))
-print('The validation performed on %d circuits with depth %d has produced this rewards: '%(val_set.shape[0],15))
+del model
+del model2
+print('The RL model was trained on %d circuits with depth %d'%(train_set.shape[0],30))
+print('The validation performed on %d circuits with depth %d has produced this rewards: '%(val_set.shape[0],30))
 print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 
 #per allenare il modello su circuiti di lunghezza variabili va modificata la logica del gym environment

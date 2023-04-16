@@ -117,6 +117,7 @@ return: average reward (total reward/n_circuits)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
+            action=action[0]
             obs, rewards, done, info = environment.step(action)
         untrained_circ = environment.get_qibo_circuit()
         dm_untrained=np.array(untrained_circ().state())
