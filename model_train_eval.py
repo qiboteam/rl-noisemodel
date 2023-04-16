@@ -10,8 +10,10 @@ from stable_baselines3 import PPO,DQN
 from rlnoise.utils import model_evaluation
 
 #loading benchmark datasets
+circuits_depth=7
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
-f = open(benchmark_circ_path+"/depth_25.npz","rb")
+model_path=os.getcwd()+'/src/rlnoise/saved_models/'
+f = open(benchmark_circ_path+"/depth_%d.npz"%(circuits_depth),"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=tmp['train_set']
 train_label=tmp['train_label']
@@ -56,28 +58,16 @@ model = PPO(
     policy_kwargs=policy_kwargs,
     verbose=1,
 )
-model2 = PPO(
-    policy,
-    circuit_env_training,
-    policy_kwargs=policy_kwargs,
-    verbose=1,
-)
-print('Train dataset circuit shape: ',train_set.shape)
+print('Train dataset circuit shape: ',train_set.shape,'number of qubits: ',train_set[0].shape)
 print('train label shape: ',train_label.shape)
-
+#model=PPO.load(model_path+"trained_model_D%d"%(3))
 val_avg_rew_untrained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 
-model.learn(5000, progress_bar=True) 
-
+model.learn(30000, progress_bar=True) 
+#model.save(model_path+"trained_model_D%d"%(circuits_depth))
 val_avg_rew_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 del model
-del model2
 print('The RL model was trained on %d circuits with depth %d'%(train_set.shape[0],30))
 print('The validation performed on %d circuits with depth %d has produced this rewards: '%(val_set.shape[0],30))
 print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 
-#per allenare il modello su circuiti di lunghezza variabili va modificata la logica del gym environment
-
-#far funzionre il training con gym env: fatto
-#dividere il test in 2 file, model.py e evaluation.py: fatto
-#pulire test gym env solo per testare che l'ambiente funzioni, creo/carico dataset con 2 circ: fatto

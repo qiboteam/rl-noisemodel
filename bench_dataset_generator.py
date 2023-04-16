@@ -12,8 +12,11 @@ primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel']
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
+model_path=os.getcwd()+'/src/rlnoise/saved_models'
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
+if not os.path.exists(model_path):
+    os.makedirs(model_path)
 
 rep = CircuitRepresentation(
     primitive_gates = primitive_gates,
@@ -21,13 +24,13 @@ rep = CircuitRepresentation(
     shape = '3d'
 )
 
-depths=[7,15,25]
+depths=[7]
 
 for i in depths:
     f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
-    nqubits = 2
+    nqubits = 3
     depth = i
-    ncirc = 1000
+    ncirc = 100
     dataset = Dataset(
         n_circuits = ncirc,
         n_gates = depth,
