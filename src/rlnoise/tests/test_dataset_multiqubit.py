@@ -6,7 +6,7 @@ from qibo import gates
 
 nqubits = 3
 depth = 5
-ncirc = 10
+ncirc = 100
 
 noise_model = NoiseModel()
 lam = 0.05
@@ -45,19 +45,19 @@ for i in range(len(dataset[:])):
     noisy_test_rep=dataset[i]
     reconstructed_circuit=rep.rep_to_circuit(test_rep)
     reconstructed_noisy_circuit=rep.rep_to_circuit(noisy_test_rep)
-    '''
-    print('------test circ %d ------\n'%(i))
-    print(test_circ.draw())
-    print('------noisy test circ %d------ \n\n'%(i))
-    print(noisy_test_circ.draw())
-    print('------test rep %d ------\n'%(i),test_rep)
-    print('------noisy test rep %d------ \n'%(i),noisy_test_rep)   
-    print('reconstructed_circuit:\n')
-    print(reconstructed_circuit.draw())
-    print('reconstructed_circuit:\n')
-    print(reconstructed_noisy_circuit.draw())
-    '''
-    print('Difference between real dm_label and reconstructed: \n',(np.square(noisy_test_circ().state()-reconstructed_noisy_circuit().state())).mean()) #THERE IS A DIFFERENCE BETWEEN THE DM
+    
+    #print('------test circ %d ------\n'%(i))
+    #print(test_circ.draw())
+    #print('------noisy test circ %d------ \n\n'%(i))
+    #print(noisy_test_circ.draw())
+    #print('------test rep %d ------\n'%(i),test_rep)
+    #print('------noisy test rep %d------ \n'%(i),noisy_test_rep)   
+    #print('reconstructed_circuit:\n')
+    #print(reconstructed_circuit.draw())
+    #print('reconstructed_circuit:\n')
+    #print(reconstructed_noisy_circuit.draw())
+    
+    print('\n Difference between real dm_label and reconstructed: \n',np.float32((np.square(noisy_test_circ().state()-reconstructed_noisy_circuit().state())).mean())) #THERE IS A DIFFERENCE BETWEEN THE DM
 """
 # input circuit
 circuit_rep = dataset[0]

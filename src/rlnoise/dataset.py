@@ -321,9 +321,8 @@ class CircuitRepresentation(object):
                     elif count!=-1:
                         gate, channel=self.array_to_gate(row,qubit,count) 
                         c.add(gate)
-                        if channel is not None:
-                            c.add(channel)                         
-                            c.add(channel.__class__(count,lam=channel.init_kwargs['lam']))
+                        if channel is not None:            
+                            c.add(channel.__class__((qubit,count),lam=channel.init_kwargs['lam']))
                 else:
                     gate, channel = self.array_to_gate(row, qubit)
                     c.add(gate)
