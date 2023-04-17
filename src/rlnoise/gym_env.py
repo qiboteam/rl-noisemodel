@@ -60,10 +60,19 @@ class QuantumCircuit(gym.Env):
             dtype = np.float32
         )
         #action_shape=([ self.n_channel_types + 1 for i in range(self.n_qubits) ] +  [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ])
-        
+        '''
         self.action_space = spaces.MultiDiscrete(
-            [self.n_qubits, 2]     # +1 for the no channel option 
+            [self.n_qubits, 2]     # +1 for the no ch.annel option 
             
+        )
+        '''
+        '''
+        self.action_space = spaces.Box( low=0., high=1,shape=(self.n_qubits,2), dtype=np.float32
+
+        )
+        '''
+        self.action_space = spaces.Box( low=0., high=0.2,shape=(self.n_qubits,1), dtype=np.float32
+
         )
         # doesn't work with stable baselines
         #self.action_space = spaces.Dict({
@@ -111,7 +120,8 @@ class QuantumCircuit(gym.Env):
         return self._get_obs()
 
     def step(self, action):
-        
+        reward2=0.
+        previous_mse=np.sqrt(np.abs(((self.current_target-self.get_qibo_circuit()().state())**2)).mean())
         #print('> State:\n', self._get_obs())
         position = self.get_position()
         #print('action shape:',action.shape)
@@ -120,17 +130,27 @@ class QuantumCircuit(gym.Env):
         #action = action.reshape(self.n_qubits, -1) #action.shape=(num_qubits, 1)        
         #print(f'> Position: {position}, Action: {action} , Action shape: {action.shape}')
         for q, a in enumerate(action):
+            #a=int(np.round(a))
             #print('considering qubit: ',q,'and action: ',a, 'at position: ',position)
-            if a != 0:
+            if a !=0:
+                
                 idx = q * self.rep.encoding_dim
                 #lam = self.noise_par_space['range'][0] + a[1] * self.noise_incr
                 lam=0.2
-                channel = self.noise_channels[0](q, lam=lam) # -1 cause there is no identity channel in self.noise_channels
+                
+                channel = self.noise_channels[0](q, lam=action[q]) # -1 cause there is no identity channel in self.noise_channels
+                #print('added noise on qubit %d with lambda=%f'%(q,action[q]))
                 self.current_state[:-1,q, position] += self.rep.gate_to_array(channel)
+                actual_mse=np.sqrt(np.abs(((self.current_target-self.get_qibo_circuit()().state())**2)).mean())
+                if actual_mse>previous_mse:
+                    reward2-=0.05
+                else:
+                    reward2+=0.1
                 #self.current_state[0, position, idx:idx+self.rep.encoding_dim] += self.rep.gate_to_array(channel)
         #print(f'> New State: \n{self._get_obs()}')
         if position == self.circuit_lenght - 1:
             # compute final reward
+            previous_mse=0.
             terminated = True
         else:
             # update position
@@ -139,9 +159,10 @@ class QuantumCircuit(gym.Env):
             self.position+=1
             terminated = False
         reward = self.reward(self.get_qibo_circuit(), self.current_target, terminated)
+        reward2+=self.reward(self.get_qibo_circuit(), self.current_target, terminated)
         #print('current state AFTER action: \n',self.current_state.transpose(1,2,0))
         #print('current state shape: ',self.current_state.transpose(1,2,0).shape)
-        return self._get_obs(), reward, terminated, self._get_info()
+        return self._get_obs(), reward2, terminated, self._get_info()
 
     def render(self):
         print(self.get_qibo_circuit().draw(), end='\r')

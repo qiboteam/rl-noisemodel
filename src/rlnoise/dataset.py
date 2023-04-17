@@ -317,11 +317,13 @@ class CircuitRepresentation(object):
                 elif row[int(self.gate2index.get(gates.CZ))]==1: 
                     if count == -1:
                         count=qubit
+                        #lambda qui scrivilo come la colonna -1 della rappresentazione
                         pass
                     elif count!=-1:
                         gate, channel=self.array_to_gate(row,qubit,count) 
                         c.add(gate)
-                        if channel is not None:            
+                        if channel is not None:     
+                            #METTI COME PARAMETRO LAMBDA LA MEDIA TRA IL PRIMO E IL SECONDO       
                             c.add(channel.__class__((qubit,count),lam=channel.init_kwargs['lam']))
                 else:
                     gate, channel = self.array_to_gate(row, qubit)

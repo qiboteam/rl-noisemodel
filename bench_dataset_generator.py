@@ -5,8 +5,10 @@ from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
 
 noise_model = NoiseModel()
-lam = 0.2
+lam = 0.01
+lamCZ=0.1
 noise_model.add(DepolarizingError(lam), gates.RZ)
+noise_model.add(DepolarizingError(lamCZ), gates.CZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
 primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel']
@@ -28,7 +30,7 @@ depths=[7]
 
 for i in depths:
     f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
-    nqubits = 3
+    nqubits = 2
     depth = i
     ncirc = 100
     dataset = Dataset(
