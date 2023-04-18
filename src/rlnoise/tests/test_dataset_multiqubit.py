@@ -1,12 +1,14 @@
-import sys
+
+import time
 from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
 
+
 nqubits = 3
 depth = 5
-ncirc = 100
+ncirc = 10
 
 noise_model = NoiseModel()
 lam = 0.05
@@ -14,7 +16,7 @@ lamCZ=0.1
 noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_model.add(DepolarizingError(lamCZ), gates.CZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-primitive_gates = ['RZ', 'RX','CZ']
+primitive_gates = ['RZ', 'RX','CZ','CNOT']
 channels = ['DepolarizingChannel']
 
 rep = CircuitRepresentation(
@@ -22,7 +24,7 @@ rep = CircuitRepresentation(
     noise_channels = channels,
     shape = '3d'
 )
-
+start_time=time.time()
 # create dataset
 dataset = Dataset(
     n_circuits = ncirc,
@@ -30,10 +32,12 @@ dataset = Dataset(
     n_qubits = nqubits,
     representation = rep,
     clifford = True,
-    shadows = True,
+    shadows = False,
     noise_model = noise_model,
     mode = 'rep'
 )
+end_time = time.time()
+
 for i in range(len(dataset[:])):
     dataset.set_mode('circ')
     test_circ=dataset[i]
@@ -46,18 +50,19 @@ for i in range(len(dataset[:])):
     reconstructed_circuit=rep.rep_to_circuit(test_rep)
     reconstructed_noisy_circuit=rep.rep_to_circuit(noisy_test_rep)
     
-    #print('------test circ %d ------\n'%(i))
-    #print(test_circ.draw())
-    #print('------noisy test circ %d------ \n\n'%(i))
-    #print(noisy_test_circ.draw())
+    print('------test circ %d ------\n'%(i))
+    print(test_circ.draw())
+    print('------noisy test circ %d------ \n\n'%(i))
+    print(noisy_test_circ.draw())
     #print('------test rep %d ------\n'%(i),test_rep)
     #print('------noisy test rep %d------ \n'%(i),noisy_test_rep)   
-    #print('reconstructed_circuit:\n')
-    #print(reconstructed_circuit.draw())
-    #print('reconstructed_circuit:\n')
-    #print(reconstructed_noisy_circuit.draw())
+    print('reconstructed_circuit:\n')
+    print(reconstructed_circuit.draw())
+    print('reconstructed_circuit:\n')
+    print(reconstructed_noisy_circuit.draw())
     
-    print('\n Difference between real dm_label and reconstructed: \n',np.float32((np.square(noisy_test_circ().state()-reconstructed_noisy_circuit().state())).mean())) #THERE IS A DIFFERENCE BETWEEN THE DM
+    #print('\n Difference between real dm_label and reconstructed: \n',np.float32((np.square(noisy_test_circ().state()-reconstructed_noisy_circuit().state())).mean())) 
+print('Execution time: %f seconds'%(end_time-start_time))
 """
 # input circuit
 circuit_rep = dataset[0]

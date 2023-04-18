@@ -101,29 +101,23 @@ class Dataset(object):
         '''
         Split dataset into train ad validation sets and it return the array representation of the circuits without noise
         and the label of the correspondent noisy circuit.
-        return: train_circuits, val_circuits,train_noisy_label,val_noisy_label 
+
+        Return: 
+            train_circuits: array representation of training circuit dataset
+            val_circuits: same as before but for validation dataset
+            train_noisy_label: labels of noisy circuits for training dataset
+            val_noisy_label: same as before but for validation
         '''
 
         idx = random.sample(range(len(self.circuits)), int(split*len(self.circuits)))
         val_circuits = [ self.__getitem__(i) for i in range(self.__len__()) if i in idx ]
         train_circuits = [ self.__getitem__(i) for i in range(self.__len__()) if i not in idx ]
-        self.mode='rep'
+        val_label=[self.get_dm_labels()[i] for i in range(self.__len__()) if i in idx]
+        train_label=[self.get_dm_labels()[i] for i in range(self.__len__()) if i not in idx]
         val_circuits = np.asarray(val_circuits,dtype=object)
         train_circuits = np.asarray(train_circuits,dtype=object)
-        train_noisy_label=np.asarray([
-            #self.noise_model.apply(self.rep.array_to_circuit(c))().state()
-            self.noise_model.apply(self.rep.rep_to_circuit(c))().state()
-            for c in train_circuits
-        ])
-        val_noisy_label=np.asarray([
-            #self.noise_model.apply(self.rep.array_to_circuit(c))().state()
-            self.noise_model.apply(self.rep.rep_to_circuit(c))().state()
-            for c in val_circuits
-        ])        
-        if self.mode == 'rep' or self.mode == 'noisy_rep':
-            val_circuits = np.asarray(val_circuits)
-            train_circuits = np.asarray(train_circuits)
-        return train_circuits, val_circuits,train_noisy_label,val_noisy_label #for now this return only dm__labels. Must be adapted for a more general case (es using classical shadow or frequency)
+
+        return train_circuits, val_circuits,train_label,val_label 
         
     def get_train_loader(self):
         ''' Returns training set circuits'''
@@ -305,7 +299,13 @@ class CircuitRepresentation(object):
 
 
     def rep_to_circuit(self,rep_array):
-        '''Maps numpy array to qibo circuit''' 
+        '''Maps numpy array to qibo circuit
+        
+        Args: 
+            rep_array: array representation of the circuit
+        Returns:
+            c: qibo circuit corresponding to the array representation
+        ''' 
         nqubits = rep_array.shape[1]      
         c = Circuit(nqubits, density_matrix=True)
         num_gates=int(len(self.gate2index))
@@ -314,7 +314,7 @@ class CircuitRepresentation(object):
             for qubit, row in enumerate(rep_array[moment]):
                 if len(np.nonzero(row[:num_gates])[0]) == 0:
                     pass
-                elif row[int(self.gate2index.get(gates.CZ))]==1: 
+                elif row[int(self.gate2index.get(gates.CZ))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
                     if count == -1:
                         count=qubit
                         #lambda qui scrivilo come la colonna -1 della rappresentazione
