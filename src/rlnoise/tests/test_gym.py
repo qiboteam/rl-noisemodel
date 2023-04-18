@@ -14,16 +14,16 @@ from old.density_matrix_reward import dm_reward_stablebaselines
 import qibo
 qibo.set_backend('qibojit','numba')
 
-nqubits = 1
+nqubits = 2
 depth = 25
-ncirc = 100
+ncirc = 2
 val_split = 0.2
 
 noise_model = NoiseModel()
 lam = 0.2
 noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-primitive_gates = ['RZ', 'RX']
+primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel']
 noise_param_space = { 'range': (0,0.2), 'n_steps': 100 } 
 
@@ -52,6 +52,7 @@ reward = DensityMatrixReward()
 labels=np.array(dataset.get_dm_labels())
 circuit_list=[]
 #generate list of circuits of different lenght
+'''
 for i in range(len(dataset[:])):
     if i<20:
         circuit_list.append(dataset[i])
@@ -63,8 +64,9 @@ for i in range(len(dataset[:])):
         circuit_list.append(dataset[i][:-10,:])
 
 print('\n\n-----Testing environment on circuits of depths: %d,%d,%d and %d -----'%(circuit_list[10].shape[0],circuit_list[30].shape[0],circuit_list[60].shape[0],circuit_list[90].shape[0]) )
+'''
 circuit_env = QuantumCircuit(
-    circuits = circuit_list,
+    circuits = circuits,
     representation = rep,
     labels = labels,
     reward = reward,
@@ -88,13 +90,14 @@ model = PPO(
 )
 
                         #Testing the environment
-for i in range(len(circuit_list)):                        
+for i in range(len(circuits)):                        
     obs = circuit_env.reset(i)
     #print('obs shape: ', obs.shape)
     #print('position: ',int(circuit_env.get_position()))
     done = False
     while not done:
         action, _states = model.predict(obs, deterministic=True)
+        print('action shape:',action.shape)
         obs, rewards, done, info = circuit_env.step(action)
     untrained_rep = obs[:,:,:-1][0]
     #untrained_circ = rep.array_to_circuit(obs[:,:,:][0])

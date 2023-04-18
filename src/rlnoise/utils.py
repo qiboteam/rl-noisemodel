@@ -103,6 +103,7 @@ train_environment: environment used to train agent
 model: model to test \n
 return: average reward (total reward/n_circuits)
     '''
+    debug=True
     environment = QuantumCircuit(
     circuits = evaluation_circ,
     representation = train_environment.rep,
@@ -117,12 +118,31 @@ return: average reward (total reward/n_circuits)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
+            action=action[0]
+           
             obs, rewards, done, info = environment.step(action)
-        untrained_circ = environment.get_qibo_circuit()
-        dm_untrained=np.array(untrained_circ().state())
+        predicted_circ = environment.get_qibo_circuit()
+        dm_untrained=np.array(predicted_circ().state())
         avg_rew += rewards
+        if i==1 and debug:
+            from qibo.noise import DepolarizingError, NoiseModel
+            from qibo import gates
+            noise_model = NoiseModel()
+            lam = 0.01
+            lamCZ=0.1
+            noise_model.add(DepolarizingError(lam), gates.RZ)
+            noise_model.add(DepolarizingError(lamCZ), gates.CZ)
+            predicted_rep=train_environment.rep.circuit_to_array(predicted_circ)
+            true_rep=train_environment.rep.circuit_to_array(noise_model.apply(train_environment.rep.rep_to_circuit(evaluation_circ[i])))
+            print("True representation: \n", true_rep)
+            print("Predicted representation: \n", predicted_rep)
 
+    
     return avg_rew/n_circ
+
+def mse(x,y):
+    return np.sqrt(np.abs(((x-y)**2)).mean())
+    
 '''
 def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())
