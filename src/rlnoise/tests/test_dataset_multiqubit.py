@@ -14,7 +14,7 @@ noise_model = NoiseModel()
 
 lamCZ=0.1
 noise_model.add(DepolarizingError(lamCZ), gates.CZ)
-noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=0.05),gates.RZ)
+noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=0.05),gates.CZ)
 
 primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel','ThermalRelaxationChannel']
@@ -45,21 +45,43 @@ for i in range(len(dataset[:])):
     noisy_test_circ=dataset[i]
     dataset.set_mode('rep')
     test_rep=dataset[i]
-    dataset.set_mode('noisy_rep')
-    noisy_test_rep=dataset[i]
+    #dataset.set_mode('noisy_rep')
+    #noisy_test_rep=dataset[i]
     reconstructed_circuit=rep.rep_to_circuit(test_rep)
-    reconstructed_noisy_circuit=rep.rep_to_circuit(noisy_test_rep)
+    noisy_test_rep=np.asarray(
+        [
+        [
+        [1, 0, 0, 0.5, 0.1, 0.05],
+        [0, 0, 0, 0, 0, 0], 
+        [0, 1, 0, 0.5, 0, 0.05]
+        ],
+        [
+        [0, 0, 1, 0, 0.1, 0],
+        [0, 0, 0, 0, 0, 0], 
+        [0, 0, 1, 0, 0.1, 0.05]
+        ],
+        [
+        [0, 0, 0, 0, 0.1, 0],
+        [0, 1, 0, 0.5, 0.1, 0.05], 
+        [0, 0, 0, 0, 0, 0.05]
+        ],
+        ]
+    )
+    reconstructed_test=rep.rep_to_circuit(noisy_test_rep)
+    
+    #reconstructed_noisy_circuit=rep.rep_to_circuit(noisy_test_rep)
     
     #print('------test circ %d ------\n'%(i))
     #print(test_circ.draw())
     print('------noisy test circ %d------ \n\n'%(i))
     print(noisy_test_circ.draw())
     #print('------test rep %d ------\n'%(i),test_rep)
-    print('------noisy test rep %d------ \n'%(i),noisy_test_rep)   
+    #print('------noisy test rep %d------ \n'%(i),noisy_test_rep)   
     #print('reconstructed_circuit:\n')
     #print(reconstructed_circuit.draw())
-    print('reconstructed_circuit:\n')
-    print(reconstructed_noisy_circuit.draw())
+    print('reconstructed_noisy_circuit:\n')
+    print(reconstructed_test.draw())
+    #print(reconstructed_noisy_circuit.draw())
     
     #print('\n Difference between real dm_label and reconstructed: \n',np.float32((np.square(noisy_test_circ().state()-reconstructed_noisy_circuit().state())).mean())) 
 print('Execution time: %f seconds'%(end_time-start_time))

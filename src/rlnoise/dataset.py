@@ -40,12 +40,12 @@ class Dataset(object):
             self.rep.circuit_to_array(c)
             for c in self.circuits
         ],dtype=object)
-        
+        '''
         self.noisy_circ_rep = np.asarray([
             self.rep.circuit_to_array(c)
             for c in self.noisy_circuits
         ],dtype=object)
-        
+        '''
         self.train_circuits, self.val_circuits ,self.train_noisy_label, self.val_noisy_label= self.train_val_split()
 
     def get_dm_labels(self, num_snapshots=10000):
@@ -144,8 +144,8 @@ class Dataset(object):
             return self.circuits[i]
         elif self.mode == 'noisy_circ':
             return self.noisy_circuits[i]
-        elif self.mode == 'noisy_rep':
-            return self.noisy_circ_rep[i]
+        #elif self.mode == 'noisy_rep': #TO BE FIXED TO WORK WITH MORE THAN ONE CHANNEL ON A GATE
+        #    return self.noisy_circ_rep[i]
     
     def save_circuits(self, filename):
         '''Save circuits in json file'''
@@ -234,7 +234,10 @@ class CircuitRepresentation(object):
 
     def reorder_moments(self,moments):
         new_moments = []  
+        count=0
         for row in list(zip(*moments)):
+            
+            count+=1
             row=np.array(row)
             new_row = []
             i = 0
@@ -257,7 +260,7 @@ class CircuitRepresentation(object):
                 i+=1
             new_moments.append(new_row)
         return list(zip(*new_moments))      
-      
+    #   DOESN'T WORK WITH MORE THAN ONE CHANNEL ON A GATE
     def circuit_to_array(self, circuit):
         """Maps qibo circuits to numpy array representation.
         """
@@ -282,7 +285,7 @@ class CircuitRepresentation(object):
         """Build pair of qibo (gate,channel) starting from the encoding."""
         # separate gate part and channel part
         gate_arr = array[:len(self.gate2index) + 1]
-        channel = array[len(self.gate2index) + 1:]
+        channel_arr = array[len(self.gate2index) + 1:]
         # extract parameters and objects
         theta = gate_arr[-1]
         gate_idx=gate_arr[:-1].nonzero()[0]
@@ -292,24 +295,32 @@ class CircuitRepresentation(object):
         elif gate_arr[self.gate2index.get(gates.RZ)]==1 or gate_arr[self.gate2index.get(gates.RX)]==1: 
             gate = self.index2gate[ int(gate_idx) ]
             gate = gate(qubit, theta=theta * 2*np.pi)            
-
+        else:
+            gate=None
         # check whether there is a noisy channel
-        if len(channel.nonzero()[0]) > 0:
-
-            lam = channel[-2]
-            time=channel[-1]
-            for i in channel.nonzero()[0]:
+        if len(channel_arr.nonzero()[0]) > 0:
+            channel_list=[]
+            channel_idx=channel_arr.nonzero()[0]
+            for idx in channel_idx:
+        
+            #channel_idx=int(channel_idx)
+            
+                    
+            
                 channel = self.index2channel[
-                    i + len(self.gate2index) + 1
+                    idx + len(self.gate2index) + 1
                 ]
-            #add here lam=channel[i]?
+            
                 if channel is gates.channels.ThermalRelaxationChannel:
+                    time=channel_arr[idx]
                     channel = channel(q=qubit,t1=1,t2=1, time=time)
                 elif channel is gates.channels.DepolarizingChannel:
+                    lam=channel_arr[idx]
                     channel = channel([qubit], lam=lam)
+                channel_list.append(channel)
         else:
-            channel = None
-        return (gate, channel)
+            channel_list = None
+        return (gate, channel_list)
 
 
     def rep_to_circuit(self,rep_array):
@@ -327,33 +338,32 @@ class CircuitRepresentation(object):
         for moment in range(len(rep_array)):
             count=-1
             for qubit, row in enumerate(rep_array[moment]):
-                if len(np.nonzero(row[:num_gates])[0]) == 0:
-                    pass
-                elif self.gate2index.get(gates.CZ) is not None and row[int(self.gate2index.get(gates.CZ))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
+   
+                if self.gate2index.get(gates.CZ) is not None and row[int(self.gate2index.get(gates.CZ))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
                     if count == -1:
                         count=qubit
+                        lam1=row[-2]
+                        time1=row[-1]
                         #lambda qui scrivilo come la colonna -1 della rappresentazione
                         pass
                     elif count!=-1:
-                        gate, channel=self.array_to_gate(row,qubit,count) 
+                        gate, channels=self.array_to_gate(row,qubit,count) 
                         c.add(gate)
-                        if channel is not None:     
-                            #METTI COME PARAMETRO LAMBDA LA MEDIA TRA IL PRIMO E IL SECONDO       
-                            c.add(channel.__class__((qubit,count),lam=channel.init_kwargs['lam']))
-                elif self.gate2index.get(gates.CNOT) is not None and row[int(self.gate2index.get(gates.CNOT))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
-                    if count == -1:
-                        count=qubit
-                        #lambda qui scrivilo come la colonna -1 della rappresentazione
-                        pass
-                    elif count!=-1:
-                        gate, channel=self.array_to_gate(row,qubit,count) 
-                        c.add(gate)
-                        if channel is not None:     
-                            #METTI COME PARAMETRO LAMBDA LA MEDIA TRA IL PRIMO E IL SECONDO       
-                            c.add(channel.__class__((qubit,count),lam=channel.init_kwargs['lam']))               
+                        if time1 !=0:
+                            c.add(channel.__class__(q=count,t1=1,t2=1,time=time1))
+                        if channels is not None:
+                            for channel in channels:
+                                if channel.__class__ is gates.channels.DepolarizingChannel:
+                                    #print('added depolar')
+                                    c.add(channel.__class__((qubit,count),lam=(lam1+channel.init_kwargs['lam'])/2))
+                                elif channel.__class__ is gates.channels.ThermalRelaxationChannel:
+                                    #print('added thermal relax')
+                                    c.add(channel.__class__(q=qubit,t1=1,t2=1,time=channel.init_args[-1]))
+        
                 else:
                     gate, channel = self.array_to_gate(row, qubit)
-                    c.add(gate)
+                    if gate is not None:
+                        c.add(gate)
                     if channel is not None:
                         c.add(channel)
 
