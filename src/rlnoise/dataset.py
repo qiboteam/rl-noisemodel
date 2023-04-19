@@ -198,20 +198,27 @@ class CircuitRepresentation(object):
             getattr(gates, c): i + len(self.gate2index) + 1
             for i,c in enumerate(noise_channels)
         }
+        print(self.channel2index)
         self.index2channel = { v: k for k,v in self.channel2index.items() }
-        self.encoding_dim = len(primitive_gates) + 1 + len(noise_channels) + 1
+        self.encoding_dim = len(primitive_gates) + 1 + len(noise_channels) #+1
         self.shape = shape
 
     # DOESN'T WORK WITH CX AND CZ
     def gate_to_array(self, gate):
         """Provide the one-hot encoding of a gate."""
         one_hot = np.zeros(self.encoding_dim)
-        if type(gate) in self.channel2index.keys():
-            gate_idx = self.channel2index[type(gate)]
-            param_idx = self.encoding_dim - 1
-            param_val = gate.init_kwargs['lam']
+        if type(gate) in self.channel2index.keys():            
+            #gate_idx = self.channel2index[type(gate)]
+            #param_idx = self.encoding_dim - 1
+            param_idx = self.channel2index[type(gate)]
+            if type(gate) is gates.channels.DepolarizingChannel:               
+                param_val = gate.init_kwargs['lam']
+            if type(gate) is gates.channels.ThermalRelaxationChannel:
+                param_val = gate.init_args[-1]#the last element is the time parameter
+                
         elif type(gate) in self.gate2index.keys():
             gate_idx = self.gate2index[type(gate)]
+            one_hot[gate_idx] = 1
             param_idx = len(self.gate2index)
             if 'theta' in gate.init_kwargs:
                 param_val = gate.init_kwargs['theta'] / (2 * np.pi)
@@ -219,7 +226,7 @@ class CircuitRepresentation(object):
                 param_val=0
         elif gate is None:
             return one_hot
-        one_hot[gate_idx] = 1
+        
         one_hot[param_idx] = param_val
         return one_hot
 
@@ -279,7 +286,7 @@ class CircuitRepresentation(object):
         # extract parameters and objects
         theta = gate_arr[-1]
         gate_idx=gate_arr[:-1].nonzero()[0]
-        if gate_arr[self.gate2index.get(gates.CZ)]==1: 
+        if (self.gate2index.get(gates.CZ) is not None and gate_arr[self.gate2index.get(gates.CZ)]==1) or (self.gate2index.get(gates.CNOT) is not None and gate_arr[self.gate2index.get(gates.CNOT)]==1): 
             gate = self.index2gate[ int(gate_idx) ]
             gate = gate(qubit,qubit2)
         elif gate_arr[self.gate2index.get(gates.RZ)]==1 or gate_arr[self.gate2index.get(gates.RX)]==1: 
@@ -288,11 +295,18 @@ class CircuitRepresentation(object):
 
         # check whether there is a noisy channel
         if len(channel.nonzero()[0]) > 0:
-            lam = channel[-1]
-            channel = self.index2channel[
-                int(channel[:-1].nonzero()[0]) + len(self.gate2index) + 1
-            ]
-            channel = channel([qubit], lam=lam)
+
+            lam = channel[-2]
+            time=channel[-1]
+            for i in channel.nonzero()[0]:
+                channel = self.index2channel[
+                    i + len(self.gate2index) + 1
+                ]
+            #add here lam=channel[i]?
+                if channel is gates.channels.ThermalRelaxationChannel:
+                    channel = channel(q=qubit,t1=1,t2=1, time=time)
+                elif channel is gates.channels.DepolarizingChannel:
+                    channel = channel([qubit], lam=lam)
         else:
             channel = None
         return (gate, channel)
@@ -309,12 +323,13 @@ class CircuitRepresentation(object):
         nqubits = rep_array.shape[1]      
         c = Circuit(nqubits, density_matrix=True)
         num_gates=int(len(self.gate2index))
+        print('test: ',self.gate2index.get(gates.CNOT))
         for moment in range(len(rep_array)):
             count=-1
             for qubit, row in enumerate(rep_array[moment]):
                 if len(np.nonzero(row[:num_gates])[0]) == 0:
                     pass
-                elif row[int(self.gate2index.get(gates.CZ))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
+                elif self.gate2index.get(gates.CZ) is not None and row[int(self.gate2index.get(gates.CZ))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
                     if count == -1:
                         count=qubit
                         #lambda qui scrivilo come la colonna -1 della rappresentazione
@@ -325,6 +340,17 @@ class CircuitRepresentation(object):
                         if channel is not None:     
                             #METTI COME PARAMETRO LAMBDA LA MEDIA TRA IL PRIMO E IL SECONDO       
                             c.add(channel.__class__((qubit,count),lam=channel.init_kwargs['lam']))
+                elif self.gate2index.get(gates.CNOT) is not None and row[int(self.gate2index.get(gates.CNOT))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
+                    if count == -1:
+                        count=qubit
+                        #lambda qui scrivilo come la colonna -1 della rappresentazione
+                        pass
+                    elif count!=-1:
+                        gate, channel=self.array_to_gate(row,qubit,count) 
+                        c.add(gate)
+                        if channel is not None:     
+                            #METTI COME PARAMETRO LAMBDA LA MEDIA TRA IL PRIMO E IL SECONDO       
+                            c.add(channel.__class__((qubit,count),lam=channel.init_kwargs['lam']))               
                 else:
                     gate, channel = self.array_to_gate(row, qubit)
                     c.add(gate)

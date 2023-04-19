@@ -66,7 +66,7 @@ class QuantumCircuit(gym.Env):
         )
         self.action_space = spaces.Box( low=0., high=1,shape=(self.n_qubits,2), dtype=np.float32)
         '''
-        self.action_space = spaces.Box( low=0., high=0.2,shape=(self.n_qubits,1), dtype=np.float32)
+        self.action_space = spaces.Box( low=0., high=0.2,shape=(self.n_qubits,2), dtype=np.float32)
         # doesn't work with stable baselines
         #self.action_space = spaces.Dict({
         #    "channel": spaces.MultiDiscrete([ self.n_channel_types for i in range(self.n_qubits) ]),
@@ -171,3 +171,5 @@ class QuantumCircuit(gym.Env):
 
 
     
+#Riscrivere rappresentazione in modo che solo 2 colonne rappresentano i channel: se diverse da zero indicano direttamente il valore del parametro del canale (time o lambda)
+#eliminare colonna della posizione
