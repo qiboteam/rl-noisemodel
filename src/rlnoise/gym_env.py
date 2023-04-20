@@ -3,7 +3,6 @@ import gym, random
 from gym import spaces
 from qibo import gates
 from qibo.models import Circuit
-from rlnoise.utils import mse 
 # currently working just for single qubit circuits
 # TO DO:
 # - Adapt to multi-qubits circuits
@@ -116,7 +115,7 @@ class QuantumCircuit(gym.Env):
         reward=0.
         position = self.get_position()
         if self.step_reward:
-            previous_mse=mse(self.current_target,self.get_qibo_circuit()().state())
+            previous_mse=self.mse(self.current_target,self.get_qibo_circuit()().state())
         #print('> State:\n', self._get_obs())
         
         for q, a in enumerate(action):
@@ -128,7 +127,7 @@ class QuantumCircuit(gym.Env):
                 #print('added noise on qubit %d with lambda=%f'%(q,action[q]))
                 self.current_state[:-1,q, position] += self.rep.gate_to_array(channel)
                 if self.step_reward:
-                    actual_mse=mse(self.current_target,self.get_qibo_circuit()().state())
+                    actual_mse=self.mse(self.current_target,self.get_qibo_circuit()().state())
                     if actual_mse>previous_mse:
                         reward-=0.05
                     else:
@@ -168,8 +167,7 @@ class QuantumCircuit(gym.Env):
         
         return np.asarray(kernel,dtype='float32')
         
-
-
-    
+    def mse(x,y):
+        return np.sqrt(np.abs(((x-y)**2)).mean())
 #Riscrivere rappresentazione in modo che solo 2 colonne rappresentano i channel: se diverse da zero indicano direttamente il valore del parametro del canale (time o lambda)
 #eliminare colonna della posizione

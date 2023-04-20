@@ -140,8 +140,7 @@ return: average reward (total reward/n_circuits)
     
     return avg_rew/n_circ
 
-def mse(x,y):
-    return np.sqrt(np.abs(((x-y)**2)).mean())
+
     
 '''
 def test_representation():
