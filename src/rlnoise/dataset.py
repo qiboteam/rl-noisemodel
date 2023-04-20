@@ -198,18 +198,19 @@ class CircuitRepresentation(object):
             getattr(gates, c): i + len(self.gate2index) + 1
             for i,c in enumerate(noise_channels)
         }
-        print(self.channel2index)
         self.index2channel = { v: k for k,v in self.channel2index.items() }
         self.encoding_dim = len(primitive_gates) + 1 + len(noise_channels) #+1
         self.shape = shape
 
     # DOESN'T WORK WITH CX AND CZ
     def gate_to_array(self, gate):
+        
         """Provide the one-hot encoding of a gate."""
         one_hot = np.zeros(self.encoding_dim)
         if type(gate) in self.channel2index.keys():            
             #gate_idx = self.channel2index[type(gate)]
             #param_idx = self.encoding_dim - 1
+            
             param_idx = self.channel2index[type(gate)]
             if type(gate) is gates.channels.DepolarizingChannel:               
                 param_val = gate.init_kwargs['lam']
@@ -334,7 +335,6 @@ class CircuitRepresentation(object):
         nqubits = rep_array.shape[1]      
         c = Circuit(nqubits, density_matrix=True)
         num_gates=int(len(self.gate2index))
-        print('test: ',self.gate2index.get(gates.CNOT))
         for moment in range(len(rep_array)):
             count=-1
             for qubit, row in enumerate(rep_array[moment]):
@@ -350,7 +350,8 @@ class CircuitRepresentation(object):
                         gate, channels=self.array_to_gate(row,qubit,count) 
                         c.add(gate)
                         if time1 !=0:
-                            c.add(channel.__class__(q=count,t1=1,t2=1,time=time1))
+
+                            c.add(gates.ThermalRelaxationChannel(q=count,t1=1,t2=1,time=time1))
                         if channels is not None:
                             for channel in channels:
                                 if channel.__class__ is gates.channels.DepolarizingChannel:

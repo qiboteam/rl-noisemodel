@@ -24,13 +24,13 @@ f.close()
 #Setting up training env and policy model
 nqubits=2
 noise_model = NoiseModel()
-lam = 0.01
-lamCZ=0.1
+lam = 0.1
+lamCZ=0.2
 noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_model.add(DepolarizingError(lamCZ), gates.CZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
 primitive_gates = ['RZ', 'RX','CZ']
-channels = ['DepolarizingChannel']
+channels = ['DepolarizingChannel','ThermalRelaxationChannel']
 reward = DensityMatrixReward()
 kernel_size=3
 
@@ -64,8 +64,8 @@ print('Train dataset circuit shape: ',train_set.shape,'number of qubits: ',train
 print('train label shape: ',train_label.shape)
 #model=PPO.load(model_path+"trained_model_D7_box_600k")
 val_avg_rew_untrained=(model_evaluation(val_set,val_label,circuit_env_training,model))
-
-model.learn(50000, progress_bar=True) 
+print('\nUntrained average reward: ',val_avg_rew_untrained)
+model.learn(10000, progress_bar=True) 
 model.save(model_path+"rew_each_step_D7_box")
 val_avg_rew_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 del model

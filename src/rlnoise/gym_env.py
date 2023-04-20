@@ -42,7 +42,8 @@ class QuantumCircuit(gym.Env):
         self.reward = reward
         self.current_state, self.current_target = self.init_state()
         #self.n_qubits = int(self.shape[-1] / self.rep.encoding_dim)
-
+        self.actual_mse=None
+        self.previous_mse=None
         if kernel_size is not None:
             assert kernel_size % 2 == 1, "Kernel_size must be odd"
             self.shape[2] = kernel_size
@@ -114,24 +115,28 @@ class QuantumCircuit(gym.Env):
     def step(self, action):
         reward=0.
         position = self.get_position()
+       # print('current state BEFORE action: \n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
         if self.step_reward:
-            previous_mse=self.mse(self.current_target,self.get_qibo_circuit()().state())
+            self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
         #print('> State:\n', self._get_obs())
         
-        for q, a in enumerate(action):
+        for q in range(len(action)):
+            
+            for idx,a in enumerate(action[q]):
             #a=int(np.round(a))
-            #print('considering qubit: ',q,'and action: ',a, 'at position: ',position)
-            if a !=0:
-                #lam = self.noise_par_space['range'][0] + a[1] * self.noise_incr         
-                channel = self.noise_channels[0](q, lam=action[q]) # -1 cause there is no identity channel in self.noise_channels
-                #print('added noise on qubit %d with lambda=%f'%(q,action[q]))
-                self.current_state[:-1,q, position] += self.rep.gate_to_array(channel)
-                if self.step_reward:
-                    actual_mse=self.mse(self.current_target,self.get_qibo_circuit()().state())
-                    if actual_mse>previous_mse:
-                        reward-=0.05
-                    else:
-                        reward+=0.1
+               # print('considering qubit: ',q,'and action: ',action, a, 'at position: ',position)
+                if a !=0:
+                    #lam = self.noise_par_space['range'][0] + a[1] * self.noise_incr     
+                    #print('noise channel: ',self.noise_channels[0](q, lam=a))   
+                    if idx is 1:#to be generalized with channel2index
+                        channel = self.noise_channels[idx](q,t1=1,t2=1, time=a) # -1 cause there is no identity channel in self.noise_channels
+                    if idx is 0:
+                        channel = self.noise_channels[idx](q,lam=a)
+                    #print('added noise on qubit %d with lambda=%f'%(q,action[q]))
+                    self.current_state[:-1,q, position] += self.rep.gate_to_array(channel)
+                    if self.step_reward:
+                        reward+=self.step_reward_fun()
+
                 #self.current_state[0, position, idx:idx+self.rep.encoding_dim] += self.rep.gate_to_array(channel)
         #print(f'> New State: \n{self._get_obs()}')
         if position == self.circuit_lenght - 1:
@@ -142,10 +147,16 @@ class QuantumCircuit(gym.Env):
             self.position+=1
             terminated = False
         reward+=self.reward(self.get_qibo_circuit(), self.current_target, terminated)
-        #print('current state AFTER action: \n',self.current_state.transpose(1,2,0))
+        #print('current state AFTER action: \n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
         #print('current state shape: ',self.current_state.transpose(1,2,0).shape)
         return self._get_obs(), reward, terminated, self._get_info()
-
+    def step_reward_fun(self):
+        self.actual_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
+        if self.actual_mse>self.previous_mse:
+            reward=0.05
+        else:
+            reward=0.1
+        return reward
     def render(self):
         print(self.get_qibo_circuit().draw(), end='\r')
             
@@ -167,7 +178,7 @@ class QuantumCircuit(gym.Env):
         
         return np.asarray(kernel,dtype='float32')
         
-    def mse(x,y):
-        return np.sqrt(np.abs(((x-y)**2)).mean())
+def mse(x,y):
+    return np.sqrt(np.abs(((x-y)**2)).mean())
 #Riscrivere rappresentazione in modo che solo 2 colonne rappresentano i channel: se diverse da zero indicano direttamente il valore del parametro del canale (time o lambda)
 #eliminare colonna della posizione

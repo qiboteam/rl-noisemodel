@@ -118,6 +118,7 @@ return: average reward (total reward/n_circuits)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
+            #print('action shape:' ,action.shape)
             action=action[0]
            
             obs, rewards, done, info = environment.step(action)

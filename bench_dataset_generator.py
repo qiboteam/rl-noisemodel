@@ -5,13 +5,13 @@ from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
 
 noise_model = NoiseModel()
-lam = 0.01
-lamCZ=0.1
+lam = 0.1
+lamCZ=0.2
 noise_model.add(DepolarizingError(lam), gates.RZ)
 noise_model.add(DepolarizingError(lamCZ), gates.CZ)
 noise_channel = gates.DepolarizingChannel((0,), lam=lam)
 primitive_gates = ['RZ', 'RX','CZ']
-channels = ['DepolarizingChannel']
+channels = ['DepolarizingChannel','ThermalRelaxationChannel']
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models'
