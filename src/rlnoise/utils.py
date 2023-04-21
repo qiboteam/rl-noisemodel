@@ -3,6 +3,10 @@ from IPython import display
 import numpy as np
 import os
 from rlnoise.gym_env import QuantumCircuit
+from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
+from qibo import gates
+
+np.set_printoptions(precision=3, suppress=True)
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
     return folder
@@ -126,17 +130,21 @@ return: average reward (total reward/n_circuits)
         dm_untrained=np.array(predicted_circ().state())
         avg_rew += rewards
         if i==1 and debug:
-            from qibo.noise import DepolarizingError, NoiseModel
-            from qibo import gates
+
             noise_model = NoiseModel()
-            lam = 0.01
-            lamCZ=0.1
-            noise_model.add(DepolarizingError(lam), gates.RZ)
+            time = 0.07
+            lamCZ=0.15
+            noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=time), gates.RZ)
             noise_model.add(DepolarizingError(lamCZ), gates.CZ)
             predicted_rep=train_environment.rep.circuit_to_array(predicted_circ)
-            true_rep=train_environment.rep.circuit_to_array(noise_model.apply(train_environment.rep.rep_to_circuit(evaluation_circ[i])))
+            true_circ=noise_model.apply(train_environment.rep.rep_to_circuit(evaluation_circ[i]))
+            true_rep=train_environment.rep.circuit_to_array(true_circ)
             print("True representation: \n", true_rep)
             print("Predicted representation: \n", predicted_rep)
+            print('true circ: ')
+            print(true_circ.draw())
+            print('Predicted circ: ')
+            print(predicted_circ.draw())
 
     
     return avg_rew/n_circ

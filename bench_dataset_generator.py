@@ -1,15 +1,15 @@
 import os
 import numpy as np
 from rlnoise.dataset import Dataset, CircuitRepresentation
-from qibo.noise import DepolarizingError, NoiseModel
+from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
 from qibo import gates
 
 noise_model = NoiseModel()
-lam = 0.1
-lamCZ=0.2
-noise_model.add(DepolarizingError(lam), gates.RZ)
+time = 0.07
+lamCZ=0.15
+noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=time), gates.RZ)
 noise_model.add(DepolarizingError(lamCZ), gates.CZ)
-noise_channel = gates.DepolarizingChannel((0,), lam=lam)
+
 primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel','ThermalRelaxationChannel']
 
@@ -30,7 +30,7 @@ depths=[7]
 
 for i in depths:
     f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
-    nqubits = 2
+    nqubits = 3
     depth = i
     ncirc = 100
     dataset = Dataset(

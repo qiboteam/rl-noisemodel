@@ -10,7 +10,8 @@ from qibo.models import Circuit
 # - Write a reward that makes sense
 # - Adapt it for working with the 3d representation
 
-
+NEG_REWARD=-0.05
+POS_REWARD=0.1
 class QuantumCircuit(gym.Env):
     
     def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None,step_reward=True):
@@ -115,13 +116,13 @@ class QuantumCircuit(gym.Env):
     def step(self, action):
         reward=0.
         position = self.get_position()
-       # print('current state BEFORE action: \n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
+        #print('current state BEFORE action: \n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
         if self.step_reward:
             self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
         #print('> State:\n', self._get_obs())
         
         for q in range(len(action)):
-            
+            #print('action: ',action)
             for idx,a in enumerate(action[q]):
             #a=int(np.round(a))
                # print('considering qubit: ',q,'and action: ',action, a, 'at position: ',position)
@@ -150,12 +151,14 @@ class QuantumCircuit(gym.Env):
         #print('current state AFTER action: \n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
         #print('current state shape: ',self.current_state.transpose(1,2,0).shape)
         return self._get_obs(), reward, terminated, self._get_info()
+    
     def step_reward_fun(self):
+        
         self.actual_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
         if self.actual_mse>self.previous_mse:
-            reward=0.05
+            reward=NEG_REWARD
         else:
-            reward=0.1
+            reward=POS_REWARD
         return reward
     def render(self):
         print(self.get_qibo_circuit().draw(), end='\r')

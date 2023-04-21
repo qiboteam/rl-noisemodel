@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from rlnoise.dataset import Dataset, CircuitRepresentation
-from qibo.noise import DepolarizingError, NoiseModel
+from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
 from qibo import gates
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor
@@ -24,11 +24,11 @@ f.close()
 #Setting up training env and policy model
 nqubits=2
 noise_model = NoiseModel()
-lam = 0.1
-lamCZ=0.2
-noise_model.add(DepolarizingError(lam), gates.RZ)
+time = 0.07
+lamCZ=0.15
+noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=time), gates.RZ)
 noise_model.add(DepolarizingError(lamCZ), gates.CZ)
-noise_channel = gates.DepolarizingChannel((0,), lam=lam)
+
 primitive_gates = ['RZ', 'RX','CZ']
 channels = ['DepolarizingChannel','ThermalRelaxationChannel']
 reward = DensityMatrixReward()
@@ -62,11 +62,11 @@ model = PPO(
 )
 print('Train dataset circuit shape: ',train_set.shape,'number of qubits: ',train_set[0].shape)
 print('train label shape: ',train_label.shape)
-#model=PPO.load(model_path+"trained_model_D7_box_600k")
+#model=PPO.load(model_path+"rew_each_step_D7_box")
 val_avg_rew_untrained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 print('\nUntrained average reward: ',val_avg_rew_untrained)
-model.learn(10000, progress_bar=True) 
-model.save(model_path+"rew_each_step_D7_box")
+model.learn(150000, progress_bar=True) 
+model.save(model_path+"rew_each_step_D7_box_150k")
 val_avg_rew_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 del model
 print('The RL model was trained on %d circuits with depth %d'%(train_set.shape[0],30))
