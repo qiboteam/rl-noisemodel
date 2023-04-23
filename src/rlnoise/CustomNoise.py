@@ -8,8 +8,10 @@ class CustomNoiseModel(object):
         self.primitive_gates= ['RZ', 'RX','CZ']
         self.channels=['DepolarizingChannel','ThermalRelaxationChannel']
         self.qibo_noise_model=NoiseModel()
-        self.qibo_noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=time), gates.RZ)
-        self.qibo_noise_model.add(DepolarizingError(lam), gates.CZ)
+        self.Therm_on_gate=gates.RZ
+        self.Depol_on_gate=gates.CZ
+        self.qibo_noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=time), self.Therm_on_gate)
+        self.qibo_noise_model.add(DepolarizingError(lam),self.Depol_on_gate )
         self.coherent_err=coherent_err
         self.rep=CircuitRepresentation(primitive_gates=self.primitive_gates,noise_channels=self.channels,shape='3d')
     
@@ -28,6 +30,11 @@ class CustomNoiseModel(object):
                     if len(gate_idx) is not 0:
                         print('gate idx: ',gate_idx)
                         print('gate of type: ',self.rep.index2gate[int(gate_idx)])
+                        if self.rep.index2gate[int(gate_idx)] is gates.RZ:
+                            print('no noise BEFORE\n',no_noise_circ_rep)
+                            no_noise_circ_rep[moment,qubit,-2]=1
+                            print('no noise After\n',no_noise_circ_rep)
+
 
 
 
