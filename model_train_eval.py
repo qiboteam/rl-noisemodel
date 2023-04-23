@@ -1,16 +1,16 @@
 import numpy as np
 import os
 from rlnoise.dataset import Dataset, CircuitRepresentation
-from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
 from qibo import gates
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO,DQN
 from rlnoise.utils import model_evaluation
+from rlnoise.CustomNoise import CustomNoiseModel
 
-#loading benchmark datasets
-circuits_depth=7
+#loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
+circuits_depth=3
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 f = open(benchmark_circ_path+"/depth_%d.npz"%(circuits_depth),"rb")
@@ -23,20 +23,14 @@ f.close()
 
 #Setting up training env and policy model
 nqubits=2
-noise_model = NoiseModel()
-time = 0.07
-lamCZ=0.15
-noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=time), gates.RZ)
-noise_model.add(DepolarizingError(lamCZ), gates.CZ)
+noise_model = CustomNoiseModel()
 
-primitive_gates = ['RZ', 'RX','CZ']
-channels = ['DepolarizingChannel','ThermalRelaxationChannel']
 reward = DensityMatrixReward()
 kernel_size=3
 
 rep = CircuitRepresentation(
-    primitive_gates = primitive_gates,
-    noise_channels = channels,
+    primitive_gates = noise_model.primitive_gates,
+    noise_channels = noise_model.channels,
     shape = '3d'
 )
 circuit_env_training = QuantumCircuit(

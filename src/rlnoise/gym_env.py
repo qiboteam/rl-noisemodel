@@ -80,22 +80,18 @@ class QuantumCircuit(gym.Env):
             i = random.randint(0, self.n_circ - 1)
         self.circuit_lenght=self.circuits[i].shape[0]
         #print('circuit shape: ',self.circuits[i].shape)
-        state = np.concatenate(
-            ( self.circuits[i], np.zeros((self.circuit_lenght,self.n_qubits, 1)) ),axis=2
-        )
-        state[0,:,-1] = 1
-        #print('state: ',state.shape)
-        state = state[:,:,:]
+        state=self.circuits[i]
         state=state.transpose(2,1,0) #rearranged in shape (1, num_qubits, depth, encoding_dim+1)
         #print('state shape: ',state.shape)
-        self.shape = np.array(state[:-1,:,:].shape)
+        self.shape = np.array(state.shape)
         #print('self.shape: ',self.shape)
         assert (self.shape[0]) % (self.rep.encoding_dim) == 0
 
         if self.kernel_size is not None:
-            padding = np.zeros(( self.shape[0]+1,self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
+            padding = np.zeros(( self.shape[0],self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
             self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
             #print('padding shape: ',self.padded_circuit.shape)
+            
         return state, self.labels[i]
     
     def _get_obs(self):
@@ -134,7 +130,7 @@ class QuantumCircuit(gym.Env):
                     if idx is 0:
                         channel = self.noise_channels[idx](q,lam=a)
                     #print('added noise on qubit %d with lambda=%f'%(q,action[q]))
-                    self.current_state[:-1,q, position] += self.rep.gate_to_array(channel)
+                    self.current_state[:,q, position] += self.rep.gate_to_array(channel)
                     if self.step_reward:
                         reward+=self.step_reward_fun()
 
@@ -168,7 +164,7 @@ class QuantumCircuit(gym.Env):
         return self.position
 
     def get_qibo_circuit(self):
-        return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0)[:,:,:-1])
+        return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0)[:,:,:])
 
     def get_kernel(self):
         pos = int(self.get_position())
@@ -177,7 +173,7 @@ class QuantumCircuit(gym.Env):
         self.padded_circuit[:,:,r:-r]=self.current_state
         #print(self.padded_circuit)
          
-        kernel.append(self.padded_circuit[:-1,:,pos:pos+self.kernel_size])
+        kernel.append(self.padded_circuit[:,:,pos:pos+self.kernel_size])
         
         return np.asarray(kernel,dtype='float32')
         

@@ -4,24 +4,17 @@ from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
 from qibo import gates
-
+from rlnoise.CustomNoise import CustomNoiseModel
 
 nqubits = 3
 depth = 3
 ncirc = 1
 
-noise_model = NoiseModel()
-
-lamCZ=0.1
-noise_model.add(DepolarizingError(lamCZ), gates.CZ)
-noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=0.05),gates.CZ)
-
-primitive_gates = ['RZ', 'RX','CZ']
-channels = ['DepolarizingChannel','ThermalRelaxationChannel']
+noise_model = CustomNoiseModel()
 
 rep = CircuitRepresentation(
-    primitive_gates = primitive_gates,
-    noise_channels = channels,
+    primitive_gates = noise_model.primitive_gates,
+    noise_channels = noise_model.channels,
     shape = '3d'
 )
 start_time=time.time()
@@ -75,7 +68,7 @@ for i in range(len(dataset[:])):
     #print(test_circ.draw())
     print('------noisy test circ %d------ \n\n'%(i))
     print(noisy_test_circ.draw())
-    #print('------test rep %d ------\n'%(i),test_rep)
+    print('------test rep %d ------\n'%(i),test_rep)
     #print('------noisy test rep %d------ \n'%(i),noisy_test_rep)   
     #print('reconstructed_circuit:\n')
     #print(reconstructed_circuit.draw())

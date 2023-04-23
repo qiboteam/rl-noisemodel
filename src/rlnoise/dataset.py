@@ -36,6 +36,7 @@ class Dataset(object):
                 self.noise_model.apply(c)
                 for c in self.circuits
             ]
+            
         self.circ_rep = np.asarray([
             self.rep.circuit_to_array(c)
             for c in self.circuits
@@ -116,7 +117,6 @@ class Dataset(object):
         train_label=[self.get_dm_labels()[i] for i in range(self.__len__()) if i not in idx]
         val_circuits = np.asarray(val_circuits,dtype=object)
         train_circuits = np.asarray(train_circuits,dtype=object)
-
         return train_circuits, val_circuits,train_label,val_label 
         
     def get_train_loader(self):
@@ -199,7 +199,7 @@ class CircuitRepresentation(object):
             for i,c in enumerate(noise_channels)
         }
         self.index2channel = { v: k for k,v in self.channel2index.items() }
-        self.encoding_dim = len(primitive_gates) + 1 + len(noise_channels) #+1
+        self.encoding_dim = len(primitive_gates) + 1 + len(noise_channels) +2#(epsilon_Z,epsilon_X)
         self.shape = shape
 
     # DOESN'T WORK WITH CX AND CZ
@@ -286,7 +286,7 @@ class CircuitRepresentation(object):
         """Build pair of qibo (gate,channel) starting from the encoding."""
         # separate gate part and channel part
         gate_arr = array[:len(self.gate2index) + 1]
-        channel_arr = array[len(self.gate2index) + 1:]
+        channel_arr = array[len(self.gate2index) + 1:]#ATTENTION if added epsilonz,epsilonX can create problem, probably must add :-2
         # extract parameters and objects
         theta = gate_arr[-1]
         gate_idx=gate_arr[:-1].nonzero()[0]
@@ -343,8 +343,8 @@ class CircuitRepresentation(object):
                     if count == -1:
                         count=qubit
                         lam1=row[-2]
-                        time1=row[-1]
-                        #lambda qui scrivilo come la colonna -1 della rappresentazione
+                        time1=row[-1]#CAN ORIGINATE PROBLEM WHEN ADDING EPSILON
+                        
                         pass
                     elif count!=-1:
                         gate, channels=self.array_to_gate(row,qubit,count) 
@@ -397,3 +397,4 @@ class CircuitRepresentation(object):
 #2) If we want to add more primitive gates we must modify line 284 and 311
 
 #CHECK IF THE LABEL ARE CALCULATED CORRECTLY: generate the true label form qibo then generate the circ_rep convert in circ thanks to method in class and extraxt the label
+
