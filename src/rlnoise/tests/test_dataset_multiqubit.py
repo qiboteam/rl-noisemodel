@@ -1,6 +1,6 @@
 
 import time
-from rlnoise.dataset import Dataset, CircuitRepresentation
+from rlnoise.datasetv2 import Dataset, CircuitRepresentation
 import numpy as np
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
 from qibo import gates
@@ -8,7 +8,7 @@ from rlnoise.CustomNoise import CustomNoiseModel
 
 nqubits = 3
 depth = 3
-ncirc = 1
+ncirc = 10
 
 noise_model = CustomNoiseModel()
 
@@ -60,7 +60,26 @@ for i in range(len(dataset[:])):
         ],
         ]
     )
-    reconstructed_test=rep.rep_to_circuit(noisy_test_rep)
+    noisy_test_rep2=np.asarray(
+        [
+        [
+        [1, 0, 0, 0.5, 0.1, 0.05,0,0],
+        [0, 0, 0, 0, 0, 0,0,0], 
+        [0, 1, 0, 0.5, 0, 0.05,0,0]
+        ],
+        [
+        [0, 0, 1, 0, 0.1, 0,0,0], #IT DOESENT ADD THE EPSILON GATES ON THE FIRST QUBIT OF CZ, SEE LINE 366 OF DATASETV2
+        [0, 0, 0, 0, 0, 0,0,0], 
+        [0, 0, 1, 0, 0.1, 0.05,0,0]
+        ],
+        [
+        [0, 0, 0, 0, 0.1, 0,0,0],
+        [0, 1, 0, 0.5, 0.1, 0.05,0,0], 
+        [0, 0, 0, 0, 0, 0.05,1,1]
+        ],
+        ]
+    )
+    reconstructed_test=rep.rep_to_circuit(noisy_test_rep2)
     
     #reconstructed_noisy_circuit=rep.rep_to_circuit(noisy_test_rep)
     

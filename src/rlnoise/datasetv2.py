@@ -288,29 +288,35 @@ class CircuitRepresentation(object):
         """Build pair of qibo (gate,channel) starting from the encoding."""
         # separate gate part and channel part
         gate_arr = array[:len(self.gate2index) + 1]
-        gate_coher_err=None
+        coherent_err_Z=None
+        coherent_err_X=None
         if self.coherent_noise is True:
             channel_arr = array[len(self.gate2index) + 1:-2]#ATTENTION if added epsilonz,epsilonX can create problem, probably must add :-2
-            
+            epsilonZ=array[-2]#to be generalized
+            epsilonX=array[-1]
         else:
             channel_arr = array[len(self.gate2index) + 1:]
+            epsilonZ=None
+            epsilonX=None
         # extract parameters and objects
         theta = gate_arr[-1]
+        
         gate_idx=gate_arr[:-1].nonzero()[0]
+
         if (self.gate2index.get(gates.CZ) is not None and gate_arr[self.gate2index.get(gates.CZ)]==1) or (self.gate2index.get(gates.CNOT) is not None and gate_arr[self.gate2index.get(gates.CNOT)]==1): 
             gate = self.index2gate[ int(gate_idx) ]
             gate = gate(qubit,qubit2)
         elif gate_arr[self.gate2index.get(gates.RZ)]==1: 
             gate = self.index2gate[ int(gate_idx) ]
             gate = gate(qubit, theta=theta * 2*np.pi)    
-            if self.coherent_noise is True:
-                gate_coher_err= gates.RZ(qubit, theta=array[-2] * 2*np.pi) 
+           # if self.coherent_noise is True:
+           #     gate_coher_err= gates.RZ(qubit, theta=array[-2] * 2*np.pi) 
            
         elif  gate_arr[self.gate2index.get(gates.RX)]==1:
             gate = self.index2gate[ int(gate_idx) ]
             gate = gate(qubit, theta=theta * 2*np.pi)
-            if self.coherent_noise is True:
-                gate_coher_err= gates.RX(qubit, theta=array[-1] * 2*np.pi) 
+            #if self.coherent_noise is True:
+            #    gate_coher_err= gates.RX(qubit, theta=array[-1] * 2*np.pi) 
          
         else:
             gate=None
@@ -332,8 +338,12 @@ class CircuitRepresentation(object):
                 channel_list.append(channel)
         else:
             channel_list = None
-            
-        return ((gate,gate_coher_err), channel_list)
+        if epsilonZ is not None and epsilonZ!=0 :
+            coherent_err_Z=gates.RZ(q=qubit,theta=epsilonZ)
+        if epsilonX is not None and epsilonX!=0 :
+            coherent_err_X=gates.RX(q=qubit,theta=epsilonX)
+        gates_arr=[gate,coherent_err_Z,coherent_err_X]
+        return (gates_arr, channel_list)
 
 
     def rep_to_circuit(self,rep_array):
@@ -353,6 +363,7 @@ class CircuitRepresentation(object):
    
                 if self.gate2index.get(gates.CZ) is not None and row[int(self.gate2index.get(gates.CZ))]==1: #it should be generalized such that if we add other gates eg. CNOT it will work without adding code manually
                     if count == -1:
+                        #gate, channels=self.array_to_gate(row,qubit,count) 
                         count=qubit
                         if self.coherent_noise is not True:
                             lam1=row[-2]
@@ -363,7 +374,9 @@ class CircuitRepresentation(object):
                         pass
                     elif count!=-1:
                         gate, channels=self.array_to_gate(row,qubit,count) 
-                        c.add(gate[0]) #now gate is a tuple (gate,coherent_error_gate)
+                        for i in gate:
+                            if i is not None:
+                                c.add(i) #now gate is a tuple (gate,coherent_error_gate)
                         if time1 !=0:
 
                             c.add(gates.ThermalRelaxationChannel(q=count,t1=1,t2=1,time=time1))
