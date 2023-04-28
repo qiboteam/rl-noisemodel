@@ -1,7 +1,6 @@
 import os
 import numpy as np
-from rlnoise.dataset import Dataset, CircuitRepresentation
-from qibo import gates
+from rlnoise.datasetv2 import Dataset, CircuitRepresentation
 from rlnoise.CustomNoise import CustomNoiseModel
 
 noise_model = CustomNoiseModel()
@@ -16,16 +15,17 @@ if not os.path.exists(model_path):
 rep = CircuitRepresentation(
     primitive_gates = noise_model.primitive_gates,
     noise_channels = noise_model.channels,
-    shape = '3d'
+    shape = '3d',
+    coherent_noise=False
 )
 
-depths=[3]
+depths=[5]
 
 for i in depths:
     f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
     nqubits = 3
     depth = i
-    ncirc = 100
+    ncirc = 200
     dataset = Dataset(
         n_circuits = ncirc,
         n_gates = depth,

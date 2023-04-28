@@ -1,8 +1,7 @@
 import numpy as np
 import gym, random
 from gym import spaces
-from qibo import gates
-from qibo.models import Circuit
+
 # currently working just for single qubit circuits
 # TO DO:
 # - Adapt to multi-qubits circuits
@@ -10,7 +9,7 @@ from qibo.models import Circuit
 # - Write a reward that makes sense
 # - Adapt it for working with the 3d representation
 
-NEG_REWARD=-0.05
+NEG_REWARD=-0.1
 POS_REWARD=0.1
 class QuantumCircuit(gym.Env):
     
@@ -112,7 +111,9 @@ class QuantumCircuit(gym.Env):
     def step(self, action):
         reward=0.
         position = self.get_position()
-        #print('current state BEFORE action: \n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
+        std_noise=True
+        coherent_noise=False
+        #print('current state BEFORE action: \n',action,'\n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
         if self.step_reward:
             self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
         #print('> State:\n', self._get_obs())
@@ -120,17 +121,27 @@ class QuantumCircuit(gym.Env):
         for q in range(len(action)):
             #print('action: ',action)
             for idx,a in enumerate(action[q]):
-            #a=int(np.round(a))
+
                # print('considering qubit: ',q,'and action: ',action, a, 'at position: ',position)
-                if a !=0:
-                    #lam = self.noise_par_space['range'][0] + a[1] * self.noise_incr     
-                    #print('noise channel: ',self.noise_channels[0](q, lam=a))   
-                    if idx is 1:#to be generalized with channel2index
-                        channel = self.noise_channels[idx](q,t1=1,t2=1, time=a) # -1 cause there is no identity channel in self.noise_channels
-                    if idx is 0:
-                        channel = self.noise_channels[idx](q,lam=a)
-                    #print('added noise on qubit %d with lambda=%f'%(q,action[q]))
-                    self.current_state[:,q, position] += self.rep.gate_to_array(channel)
+                if a !=0  : #add gate only if action > of something
+                    reward-=0.01
+                    if std_noise is True:
+                        if idx == 1:#to be generalized with channel2index
+                            channel = self.noise_channels[idx](q,t1=1,t2=1, time=a) # -1 cause there is no identity channel in self.noise_channels
+                        if idx == 0:
+                            channel = self.noise_channels[idx](q,lam=a)
+
+                        #self.current_state[:,q, position] += self.rep.gate_to_array(channel)
+                        self.current_state[self.rep.channel2index[type(channel)],q, position]=a
+                    if coherent_noise is True and std_noise is False:
+                        if idx == 1:#to be generalized with channel2index
+                            #gate = gates.RX(q,theta=a) # -1 cause there is no identity channel in self.noise_channels
+                            self.current_state[-1,q, position]=a
+                           
+                        if idx == 0:
+                            #gate = gates.RZ(q,theta=a)    
+                            self.current_state[-2,q, position]=a                    
+
                     if self.step_reward:
                         reward+=self.step_reward_fun()
 
@@ -165,6 +176,9 @@ class QuantumCircuit(gym.Env):
 
     def get_qibo_circuit(self):
         return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0)[:,:,:])
+    
+    def get_circuit_rep(self):
+        return self.current_state.transpose(1,2,0)
 
     def get_kernel(self):
         pos = int(self.get_position())

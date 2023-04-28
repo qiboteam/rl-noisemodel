@@ -3,9 +3,8 @@ from IPython import display
 import numpy as np
 import os
 from rlnoise.gym_env import QuantumCircuit
-from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
-from qibo import gates
-
+import copy
+from rlnoise.CustomNoise import CustomNoiseModel
 np.set_printoptions(precision=3, suppress=True)
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
@@ -100,6 +99,10 @@ def plot_results(train_history, val_history, n_steps=20, filename="train_info.pn
     plt.savefig(figures_folder()+ '/' +filename)
 
 def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
+    
+  
+    
+    
     '''
 evaluation_circ: circuit in array form where evaluate the model
 evaluation_labels: labels of the noisy circuit 
@@ -107,47 +110,46 @@ train_environment: environment used to train agent
 model: model to test \n
 return: average reward (total reward/n_circuits)
     '''
+    circuits=copy.deepcopy(evaluation_circ)
     debug=True
     environment = QuantumCircuit(
-    circuits = evaluation_circ,
+    circuits = circuits,
     representation = train_environment.rep,
     labels = evaluation_labels,
     reward = train_environment.reward,
     kernel_size=train_environment.kernel_size   
     )
     avg_rew=0
+    mae=0.
     n_circ=len(evaluation_circ)
+    
     for i in range(n_circ):
+        
         obs = environment.reset(i=i)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            #print('action shape:' ,action.shape)
-            action=action[0]
-           
+            action=action[0]          
             obs, rewards, done, info = environment.step(action)
         predicted_circ = environment.get_qibo_circuit()
+        predicted_rep=environment.get_circuit_rep()
         dm_untrained=np.array(predicted_circ().state())
         avg_rew += rewards
-        if i==1 and debug:
-
-            noise_model = NoiseModel()
-            time = 0.07
-            lamCZ=0.15
-            noise_model.add(ThermalRelaxationError(t1=1,t2=1,time=time), gates.RZ)
-            noise_model.add(DepolarizingError(lamCZ), gates.CZ)
-            predicted_rep=train_environment.rep.circuit_to_array(predicted_circ)
-            true_circ=noise_model.apply(train_environment.rep.rep_to_circuit(evaluation_circ[i]))
-            true_rep=train_environment.rep.circuit_to_array(true_circ)
-            print("True representation: \n", true_rep)
-            print("Predicted representation: \n", predicted_rep)
-            print('true circ: ')
-            print(true_circ.draw())
-            print('Predicted circ: ')
+        mae+=(np.abs(evaluation_labels[i]-dm_untrained)).mean()
+        if i==0 and debug:
+            noise_model=CustomNoiseModel()
+            test_rep=evaluation_circ[0]
+            test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
+           
+            print('true circ rep: ',test_rep)
+            print('\nTrue noisy circuit')
+            print(test_circ.draw())
+            print('\nPredicted noisy circ: ')
             print(predicted_circ.draw())
+            print("Predicted representation: \n", predicted_rep)
 
     
-    return avg_rew/n_circ
+    return avg_rew/n_circ,mae*100/n_circ
 
 
     
