@@ -1,17 +1,9 @@
 import os
 import numpy as np
-from rlnoise.dataset import Dataset, CircuitRepresentation
-from qibo.noise import DepolarizingError, NoiseModel
-from qibo import gates
+from rlnoise.datasetv2 import Dataset, CircuitRepresentation
+from rlnoise.CustomNoise import CustomNoiseModel
 
-noise_model = NoiseModel()
-lam = 0.01
-lamCZ=0.1
-noise_model.add(DepolarizingError(lam), gates.RZ)
-noise_model.add(DepolarizingError(lamCZ), gates.CZ)
-noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-primitive_gates = ['RZ', 'RX','CZ']
-channels = ['DepolarizingChannel']
+noise_model = CustomNoiseModel()
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models'
@@ -21,25 +13,26 @@ if not os.path.exists(model_path):
     os.makedirs(model_path)
 
 rep = CircuitRepresentation(
-    primitive_gates = primitive_gates,
-    noise_channels = channels,
-    shape = '3d'
+    primitive_gates = noise_model.primitive_gates,
+    noise_channels = noise_model.channels,
+    shape = '3d',
+    coherent_noise=False
 )
 
-depths=[7]
+depths=[5]
 
 for i in depths:
-    f = open(benchmark_circ_path+"/depth_"+str(i)+"_CS.npz","wb")
-    nqubits = 2
+    f = open(benchmark_circ_path+"/depth_"+str(i)+".npz","wb")
+    nqubits = 3
     depth = i
-    ncirc = 100
+    ncirc = 200
     dataset = Dataset(
         n_circuits = ncirc,
         n_gates = depth,
         n_qubits = nqubits,
         representation = rep,
         clifford = True,
-        shadows = True,
+        shadows = False,
         noise_model = noise_model,
         mode = 'rep'
     )

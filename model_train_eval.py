@@ -1,16 +1,18 @@
 import numpy as np
 import os
-from rlnoise.dataset import Dataset, CircuitRepresentation
-from qibo.noise import DepolarizingError, NoiseModel
+from rlnoise.datasetv2 import Dataset, CircuitRepresentation
 from qibo import gates
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor
 from rlnoise.gym_env import QuantumCircuit
-from stable_baselines3 import PPO,DQN
+from stable_baselines3 import PPO,DQN,DDPG #not bad
+from stable_baselines3 import DQN,A2C,TD3
 from rlnoise.utils import model_evaluation
+from rlnoise.CustomNoise import CustomNoiseModel
 
-#loading benchmark datasets
-circuits_depth=7
+#loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
+circuits_depth=5
+
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 f = open(benchmark_circ_path+"/depth_%d.npz"%(circuits_depth),"rb")
@@ -22,22 +24,17 @@ val_label=tmp['val_label']
 f.close()
 
 #Setting up training env and policy model
-nqubits=2
-noise_model = NoiseModel()
-lam = 0.01
-lamCZ=0.1
-noise_model.add(DepolarizingError(lam), gates.RZ)
-noise_model.add(DepolarizingError(lamCZ), gates.CZ)
-noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-primitive_gates = ['RZ', 'RX','CZ']
-channels = ['DepolarizingChannel']
+nqubits=3
+noise_model = CustomNoiseModel()
+
 reward = DensityMatrixReward()
 kernel_size=3
 
 rep = CircuitRepresentation(
-    primitive_gates = primitive_gates,
-    noise_channels = channels,
-    shape = '3d'
+    primitive_gates = noise_model.primitive_gates,
+    noise_channels = noise_model.channels,
+    shape = '3d',
+    coherent_noise=False
 )
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
@@ -57,19 +54,20 @@ policy_kwargs = dict(
 model = PPO(
     policy,
     circuit_env_training,
-    policy_kwargs=policy_kwargs,
+    policy_kwargs=policy_kwargs, 
     verbose=1,
+    device='cuda'
 )
-print('Train dataset circuit shape: ',train_set.shape,'number of qubits: ',train_set[0].shape)
-print('train label shape: ',train_label.shape)
-#model=PPO.load(model_path+"trained_model_D7_box_600k")
-val_avg_rew_untrained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 
-model.learn(50000, progress_bar=True) 
-model.save(model_path+"rew_each_step_D7_box")
-val_avg_rew_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
+#model=PPO.load(model_path+"rew_each_step_D7_box")
+
+val_avg_rew_untrained,mea_untrained=(model_evaluation(val_set,val_label,circuit_env_training,model))
+
+model.learn(1000, progress_bar=True) 
+#model.save(model_path+"rew_each_step_D7_box_150k")
+
+val_avg_rew_trained,mae_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
 del model
-print('The RL model was trained on %d circuits with depth %d'%(train_set.shape[0],30))
-print('The validation performed on %d circuits with depth %d has produced this rewards: '%(val_set.shape[0],30))
-print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 
+print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
+print('avg MAE from untrained model: %f\n'%(mea_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))

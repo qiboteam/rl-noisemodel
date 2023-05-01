@@ -17,7 +17,8 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         sample = torch.as_tensor(observation_space.sample()[None]).float()
         #print('indim: ',indim)
         #print('filter shape: ',filter_shape)
-        conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=n_filters, kernel_size=filter_shape)
+        filter_shape=(2,2)
+        conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=32, kernel_size=filter_shape) #adding pooling layer?
         
         # Compute shape by doing one forward pass
         with torch.no_grad():
