@@ -9,13 +9,15 @@ from stable_baselines3 import PPO,DQN,DDPG #not bad
 from stable_baselines3 import DQN,A2C,TD3
 from rlnoise.utils import model_evaluation
 from rlnoise.CustomNoise import CustomNoiseModel
-
+from rlnoise.MlpPolicy import MlPFeaturesExtractor
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=5
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
-f = open(benchmark_circ_path+"/depth_%d.npz"%(circuits_depth),"rb")
+
+bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
+f = open(benchmark_circ_path+"/depth_%dDep_only_1Q.npz"%(circuits_depth),"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=tmp['train_set']
 train_label=tmp['train_label']
@@ -24,7 +26,7 @@ val_label=tmp['val_label']
 f.close()
 
 #Setting up training env and policy model
-nqubits=3
+nqubits=1
 noise_model = CustomNoiseModel()
 
 reward = DensityMatrixReward()
@@ -51,23 +53,57 @@ policy_kwargs = dict(
         filter_shape = (nqubits,1)
     )
 )
-model = PPO(
+Rew_Mae_TraceD_untrained=[]
+Rew_Mae_TraceD_trained=[]
+
+#model=PPO.load(model_path+"rew_each_step_D7_box")
+'''                                                 #TRAIN & TEST ON SAME DEPTH
+time_step=[10000,15000,20000,25000,30000,40000]
+print(str(time_step))
+for total_timesteps in time_step:
+    model = PPO(
     policy,
     circuit_env_training,
     policy_kwargs=policy_kwargs, 
-    verbose=1,
-    device='cuda'
-)
+    verbose=0,
+    )
+    val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
+    Rew_Mae_TraceD_untrained.append([val_avg_rew_untrained,mae_untrained,trace_dist_untr])
 
-#model=PPO.load(model_path+"rew_each_step_D7_box")
+    model.learn(total_timesteps, progress_bar=True) 
 
-val_avg_rew_untrained,mea_untrained=(model_evaluation(val_set,val_label,circuit_env_training,model))
+    val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
+    Rew_Mae_TraceD_trained.append([val_avg_rew_trained,mae_trained,trace_dist_train])
+    del model
+Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
+Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 
-model.learn(1000, progress_bar=True) 
-#model.save(model_path+"rew_each_step_D7_box_150k")
+f = open(bench_results_path+"/Depol_only_D5_Q1_K3_SR-off_ts"+str(time_step),"wb")
+np.savez(f,untrained=Rew_Mae_TraceD_untrained,trained=Rew_Mae_TraceD_trained)
+f.close()
+'''
+model=PPO.load(model_path+"D5_SR_K3_1Q_Dep_only_30k")
+depth_list=[5,10,15,20]
+for d in depth_list:
+    f = open(benchmark_circ_path+"/depth_%dDep_only_1Q.npz"%(d),"rb")
+    tmp=np.load(f,allow_pickle=True)
+    val_set=tmp['val_set']
+    val_label=tmp['val_label']
+    f.close()
+    val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
+    Rew_Mae_TraceD_trained.append([val_avg_rew_trained,mae_trained,trace_dist_train])
 
-val_avg_rew_trained,mae_trained=(model_evaluation(val_set,val_label,circuit_env_training,model))
-del model
+Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
+f = open(bench_results_path+"/Depol_only_D5(train)_Q1_K3_SR-off_Test"+str(depth_list),"wb")
+np.savez(f,trained=Rew_Mae_TraceD_trained)
+f.close()
+#print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
+#print('avg MAE from untrained model: %f\n'%(mea_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
+#print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
 
-print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
-print('avg MAE from untrained model: %f\n'%(mea_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
+
+
+
+#DEBUG CONSIDERATIONS:
+#1) rep_to _circuit seems to work well with 1 qubit and only depolarizing noise. It seems to work also for more qubit (max 3) and with thermal and also coherent noise.
+#2) CustumNoise is working properly on 1 qubit with depolarizing and/or tehrmal. Also coherent noise is added correctly and NEEDS TO BE ADDDED A METHOD TO GET THE NOISY_REPRESENTATION also to better test 1)

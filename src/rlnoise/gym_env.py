@@ -1,7 +1,7 @@
 import numpy as np
 import gym, random
 from gym import spaces
-
+import copy
 # currently working just for single qubit circuits
 # TO DO:
 # - Adapt to multi-qubits circuits
@@ -10,16 +10,20 @@ from gym import spaces
 # - Adapt it for working with the 3d representation
 
 NEG_REWARD=-0.1
-POS_REWARD=0.1
+POS_REWARD=0.05
 class QuantumCircuit(gym.Env):
     
-    def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None,step_reward=True):
+    def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None,step_reward=False):
         '''
         Args: 
             circuits (list): list of circuit represented as numpy vectors
         
         '''
         super(QuantumCircuit, self).__init__()
+
+        self.std_noise=True
+        self.coherent_noise=False
+
         self.position=None
         self.circuits = circuits
         self.n_circ = len(self.circuits)
@@ -55,18 +59,21 @@ class QuantumCircuit(gym.Env):
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
-            shape = tuple(self.shape),
+            #shape = tuple(self.shape),
+            shape =(4,1,3),
             dtype = np.float32
         )
         #action_shape=([ self.n_channel_types + 1 for i in range(self.n_qubits) ] +  [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ])
-        '''
-        self.action_space = spaces.MultiDiscrete(
-            [self.n_qubits, 2]     # +1 for the no ch.annel option 
-            
+        action_shape=np.ones((self.n_qubits*2),dtype=np.int64)*10
+        #print('action shape: ',action_shape.shape)
+        self.action_space = spaces.Discrete(
+            #action_shape     # +1 for the no ch.annel option 
+            2
         )
-        self.action_space = spaces.Box( low=0., high=1,shape=(self.n_qubits,2), dtype=np.float32)
-        '''
-        self.action_space = spaces.Box( low=0., high=0.2,shape=(self.n_qubits,2), dtype=np.float32)
+
+        #self.action_space = spaces.Box( low=0, high=100,shape=(self.n_qubits,2), dtype=np.float32)
+        
+        #self.action_space = spaces.Box( low=0., high=0.2,shape=(self.n_qubits,2), dtype=np.float32)
         # doesn't work with stable baselines
         #self.action_space = spaces.Dict({
         #    "channel": spaces.MultiDiscrete([ self.n_channel_types for i in range(self.n_qubits) ]),
@@ -79,7 +86,8 @@ class QuantumCircuit(gym.Env):
             i = random.randint(0, self.n_circ - 1)
         self.circuit_lenght=self.circuits[i].shape[0]
         #print('circuit shape: ',self.circuits[i].shape)
-        state=self.circuits[i]
+        state=copy.deepcopy(self.circuits[i])
+        
         state=state.transpose(2,1,0) #rearranged in shape (1, num_qubits, depth, encoding_dim+1)
         #print('state shape: ',state.shape)
         self.shape = np.array(state.shape)
@@ -90,7 +98,7 @@ class QuantumCircuit(gym.Env):
             padding = np.zeros(( self.shape[0],self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
             self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
             #print('padding shape: ',self.padded_circuit.shape)
-            
+        #print('state shape: ',self.circuits[i].shape)
         return state, self.labels[i]
     
     def _get_obs(self):
@@ -105,42 +113,47 @@ class QuantumCircuit(gym.Env):
     def reset(self, i=None):
         self.position=0
         self.current_state, self.current_target = self.init_state(i)
-        #print('current state shape: ', self.current_state.shape)
+        
         return self._get_obs()
 
     def step(self, action):
+        #print('action : ',action)
+        #action=action.reshape((self.n_qubits,2))
         reward=0.
         position = self.get_position()
-        std_noise=True
-        coherent_noise=False
-        #print('current state BEFORE action: \n',action,'\n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
+        action=[action]
+        #print('\n \n current state BEFORE action: \n',self.current_state.transpose(1,2,0))
         if self.step_reward:
             self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
         #print('> State:\n', self._get_obs())
         
-        for q in range(len(action)):
-            #print('action: ',action)
-            for idx,a in enumerate(action[q]):
+        for q in range(self.n_qubits):
+           
+            for idx,a in enumerate(action):
+                
 
-               # print('considering qubit: ',q,'and action: ',action, a, 'at position: ',position)
+                #print('considering qubit: ',q,'and action: ',action, 'at position: ',position)
                 if a !=0  : #add gate only if action > of something
-                    reward-=0.01
-                    if std_noise is True:
+                    #reward-=0.01
+                    #if a< 0.05:
+                    #reward-=0.008
+                    if self.std_noise is True:
                         if idx == 1:#to be generalized with channel2index
-                            channel = self.noise_channels[idx](q,t1=1,t2=1, time=a) # -1 cause there is no identity channel in self.noise_channels
+                            channel = self.noise_channels[idx](q,t1=1,t2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
                         if idx == 0:
-                            channel = self.noise_channels[idx](q,lam=a)
+                            channel = self.noise_channels[idx](q,lam=0.15)
 
                         #self.current_state[:,q, position] += self.rep.gate_to_array(channel)
-                        self.current_state[self.rep.channel2index[type(channel)],q, position]=a
-                    if coherent_noise is True and std_noise is False:
+                        self.current_state[self.rep.channel2index[type(channel)],q, position]=0.15
+                    if self.coherent_noise is True and self.std_noise is False:
                         if idx == 1:#to be generalized with channel2index
                             #gate = gates.RX(q,theta=a) # -1 cause there is no identity channel in self.noise_channels
-                            self.current_state[-1,q, position]=a
-                           
+                            #self.current_state[-1,q, position]=a/7.6 #epsilonX
+                            self.current_state[-1,q, position]=0.3
                         if idx == 0:
                             #gate = gates.RZ(q,theta=a)    
-                            self.current_state[-2,q, position]=a                    
+                            #self.current_state[-2,q, position]=a/7.6 #epsilonZ  
+                            self.current_state[-2,q, position]=0.15                  
 
                     if self.step_reward:
                         reward+=self.step_reward_fun()
@@ -155,7 +168,7 @@ class QuantumCircuit(gym.Env):
             self.position+=1
             terminated = False
         reward+=self.reward(self.get_qibo_circuit(), self.current_target, terminated)
-        #print('current state AFTER action: \n',np.round((self.current_state.transpose(1,2,0)),decimals=4))
+        #print('current state AFTER action: \n',self.current_state.transpose(1,2,0))
         #print('current state shape: ',self.current_state.transpose(1,2,0).shape)
         return self._get_obs(), reward, terminated, self._get_info()
     
@@ -187,9 +200,17 @@ class QuantumCircuit(gym.Env):
         self.padded_circuit[:,:,r:-r]=self.current_state
         #print(self.padded_circuit)
          
+        '''
+        if self.coherent_noise is True and self.std_noise is False: #sbagliato
+           [ kernel.append(self.padded_circuit[i,:,pos:pos+self.kernel_size]) for i in range(self.padded_circuit.shape[0]) if i<4  ]
+            
+        else:
+            kernel.append(self.padded_circuit[:,:,pos:pos+self.kernel_size])
+        '''
         kernel.append(self.padded_circuit[:,:,pos:pos+self.kernel_size])
         
-        return np.asarray(kernel,dtype='float32')
+        #print('kernel shape:\n ',kernel[0].shape)
+        return np.asarray(kernel,dtype=np.float32)
         
 def mse(x,y):
     return np.sqrt(np.abs(((x-y)**2)).mean())

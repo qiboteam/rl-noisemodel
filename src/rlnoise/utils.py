@@ -5,6 +5,7 @@ import os
 from rlnoise.gym_env import QuantumCircuit
 import copy
 from rlnoise.CustomNoise import CustomNoiseModel
+from qibo.quantum_info import trace_distance
 np.set_printoptions(precision=3, suppress=True)
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
@@ -119,8 +120,9 @@ return: average reward (total reward/n_circuits)
     reward = train_environment.reward,
     kernel_size=train_environment.kernel_size   
     )
-    avg_rew=0
+    avg_rew=0.
     mae=0.
+    avg_trace_distance=0.
     n_circ=len(evaluation_circ)
     
     for i in range(n_circ):
@@ -129,13 +131,14 @@ return: average reward (total reward/n_circuits)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            action=action[0]          
+            #action=action[0]          
             obs, rewards, done, info = environment.step(action)
         predicted_circ = environment.get_qibo_circuit()
         predicted_rep=environment.get_circuit_rep()
         dm_untrained=np.array(predicted_circ().state())
         avg_rew += rewards
         mae+=(np.abs(evaluation_labels[i]-dm_untrained)).mean()
+        avg_trace_distance+=trace_distance(evaluation_labels[i],dm_untrained)
         if i==0 and debug:
             noise_model=CustomNoiseModel()
             test_rep=evaluation_circ[0]
@@ -147,9 +150,10 @@ return: average reward (total reward/n_circuits)
             print('\nPredicted noisy circ: ')
             print(predicted_circ.draw())
             print("Predicted representation: \n", predicted_rep)
+            print('\n DM MSE: ',10*(np.sqrt(np.abs((test_circ().state()-dm_untrained)**2))).mean())
 
     
-    return avg_rew/n_circ,mae*100/n_circ
+    return avg_rew/n_circ,mae/n_circ,avg_trace_distance/n_circ
 
 
     

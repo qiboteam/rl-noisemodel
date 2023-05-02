@@ -322,7 +322,7 @@ class CircuitRepresentation(object):
         else:
             gate=None
         # check whether there is a noisy channel
-        if len(channel_arr.nonzero()[0]) > 0:
+        if len(channel_arr.nonzero()[0]) > 0:           
             channel_list=[]
             channel_idx=channel_arr.nonzero()[0]
             for idx in channel_idx:        
@@ -336,19 +336,19 @@ class CircuitRepresentation(object):
                 elif channel is gates.channels.DepolarizingChannel:
                     
                     lam=channel_arr[idx]
-                    #print('lam: ',lam)
-                    if lam <1.33: #BUG fix
-                        channel = channel([qubit], lam=lam)
-                    else:
-                        lam=0.2
-                        channel=channel([qubit], lam=lam) 
+                    channel = channel([qubit], lam=lam)
+
                 channel_list.append(channel)
         else:
             channel_list = None
         if epsilonZ is not None and epsilonZ!=0 :
             coherent_err_Z=gates.RZ(q=qubit,theta=epsilonZ)
+        else: 
+            coherent_err_Z=None
         if epsilonX is not None and epsilonX!=0 :
             coherent_err_X=gates.RX(q=qubit,theta=epsilonX)
+        else:
+            coherent_err_X=None
         gates_arr=[gate,coherent_err_Z,coherent_err_X]
         return (gates_arr, channel_list)
 

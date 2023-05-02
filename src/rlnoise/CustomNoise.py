@@ -7,8 +7,8 @@ from qibo.models import Circuit
 class CustomNoiseModel(object):
 
     def __init__(self,time=0.07,lam=0.15, coherent_err=False,std_noise=True):
-        self.primitive_gates= ['RZ', 'RX','CZ']
-        self.channels=['DepolarizingChannel','ThermalRelaxationChannel']
+        self.primitive_gates= ['RZ', 'RX']#,'RY']
+        self.channels=['DepolarizingChannel']#,'ThermalRelaxationChannel']
         self.time=time
         self.t1=1
         self.t2=1
@@ -28,8 +28,8 @@ class CustomNoiseModel(object):
         self.coherent_err=coherent_err
         self.rep=CircuitRepresentation(primitive_gates=self.primitive_gates,noise_channels=self.channels,shape='3d')
 
-        self.epsilonZ=0.1
-        self.epsilonX=0.
+        self.epsilonZ=0.15
+        self.epsilonX=0.3
         
     def apply(self,circuit):
         no_noise_circ_rep=self.rep.circuit_to_array(circuit)#SHAPE: (n_moments,n_qubits,encoding_dim=8)
