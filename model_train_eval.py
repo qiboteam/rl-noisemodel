@@ -11,13 +11,13 @@ from rlnoise.utils import model_evaluation
 from rlnoise.CustomNoise import CustomNoiseModel
 from rlnoise.MlpPolicy import MlPFeaturesExtractor
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=7
+circuits_depth=5
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
-f = open(benchmark_circ_path+"/depth_%dDep-Term_1Q.npz"%(circuits_depth),"rb")
+f = open(benchmark_circ_path+"/depth_%dDep-Term_3Q.npz"%(circuits_depth),"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=tmp['train_set']
 train_label=tmp['train_label']
@@ -58,8 +58,8 @@ Rew_Mae_TraceD_trained=[]
 
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
-                                                #SIMPLE TRAIN AND VALID
-                                               
+                                                #SINGLE TRAIN AND VALID
+'''                                               
 model = PPO(
 policy,
 circuit_env_training,
@@ -74,8 +74,9 @@ print('avg MAE from untrained model: %f\n'%(mae_untrained*10),'avg MAE from trai
 print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
 if trace_dist_train ==0:
     model.save(model_path+"D5_K3_1Q_Dep_Therm_30k")
-model.save(model_path+"D7_K3_1Q_Dep0.005_Therm0.07_30k")
-                                                 #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
+model.save(model_path+"D7_K3_3Q_Dep0.005_Therm0.07_80k")
+'''
+                                        #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
 '''
 time_step=[10000,15000,20000,30000,40000,50000]
 time_step=[60000]
@@ -103,17 +104,17 @@ np.savez(f,untrained=Rew_Mae_TraceD_untrained,trained=Rew_Mae_TraceD_trained)
 f.close()
 '''
                                             #TRAIN AND TEST ON DIFFERENT DEPTHS
-'''                                  
+                                  
 model1= PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 )
-model=PPO.load(model_path+"/D7_K3_1Q_Dep-Therm_60k")
-depth_list=[7,10,15,20,30]
+model=PPO.load(model_path+"/D7_K3_3Q_Dep0.005_Therm0.07_80k")
+depth_list=[5,10,20]
 for d in depth_list:
-    f = open(benchmark_circ_path+"/depth_%dDep-Term_1Q.npz"%(d),"rb")
+    f = open(benchmark_circ_path+"/depth_%dDep-Term_3Q.npz"%(d),"rb")
     tmp=np.load(f,allow_pickle=True)
     val_set=tmp['val_set']
     val_label=tmp['val_label']
@@ -125,10 +126,10 @@ for d in depth_list:
 
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
-f = open(bench_results_path+"/D7_K3_1Q_Dep-Therm_60k_Test"+str(depth_list),"wb")
+f = open(bench_results_path+"/D7_K3_3Q_Dep0.005_Therm0.07_80k"+str(depth_list),"wb")
 np.savez(f,trained=Rew_Mae_TraceD_trained,untrained=Rew_Mae_TraceD_untrained)
 f.close()
-'''
+
 
 
 #print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))

@@ -64,11 +64,11 @@ class QuantumCircuit(gym.Env):
             dtype = np.float32
         )
         #action_shape=([ self.n_channel_types + 1 for i in range(self.n_qubits) ] +  [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ])
-        action_shape=np.ones((self.n_qubits*2),dtype=np.int64)*10
+        action_shape=[2,2,2,2,2,2]
         #print('action shape: ',action_shape.shape)
         self.action_space = spaces.MultiDiscrete(
             #action_shape     # +1 for the no ch.annel option 
-            [2,2]
+            action_shape
         )
 
         #self.action_space = spaces.Box( low=0, high=100,shape=(self.n_qubits,2), dtype=np.float32)
@@ -118,7 +118,7 @@ class QuantumCircuit(gym.Env):
 
     def step(self, action):
         #print('action : ',action)
-        #action=action.reshape((self.n_qubits,2))
+        action=action.reshape((self.n_qubits,2))
         reward=0.
         position = self.get_position()
         #action=[action]
@@ -129,7 +129,7 @@ class QuantumCircuit(gym.Env):
         
         for q in range(self.n_qubits):
            
-            for idx,a in enumerate(action):
+            for idx,a in enumerate(action[q]):
                 
 
                 #print('considering qubit: ',q,'and action: ',action, 'at position: ',position)

@@ -19,11 +19,11 @@ rep = CircuitRepresentation(
     coherent_noise=False
 )
 
-depths=[7]
+depths=[5,10,20]
 
 for i in depths:
-    f = open(benchmark_circ_path+"/depth_"+str(i)+"Dep-Term_1Q.npz","wb")
-    nqubits = 1
+    f = open(benchmark_circ_path+"/depth_"+str(i)+"Dep-Term_3Q.npz","wb")
+    nqubits = 3
     depth = i
     ncirc = 100
     dataset = Dataset(

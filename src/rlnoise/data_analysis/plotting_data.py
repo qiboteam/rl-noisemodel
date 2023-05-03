@@ -39,8 +39,9 @@ plt.show()
 
                                                     #DIFFERENT TRAIN AND VALID DEPTH
 
-depths=[7,10,15,20,30]                                                   
-f = open(bench_results_path+"/D7_K3_1Q_Dep-Therm_60k_Test"+str(depths),"rb")
+depths=[5,10,20]
+                                                
+f = open(bench_results_path+"/D7_K3_3Q_Dep0.005_Therm0.07_80k"+str(depths),"rb")
 tmp=np.load(f,allow_pickle=True)     
 
 results_train=tmp['trained']
@@ -48,7 +49,7 @@ results_untrain=tmp['untrained']
 f.close()
 
 fig=plt.figure()
-fig.suptitle('Train depth=7 val depths=[7,10,15,20,30],1 qubit, Depol and Thermal (fixed lambda/time), Step_reward=False, Kernel_size=3 ', fontsize=15)
+fig.suptitle('Train depth=5 val depths=[5,10,20],3 qubit, Depol and Thermal (fixed lambda=0.05/time), Step_reward=False, Kernel_size=3 ', fontsize=15)
 ax=fig.add_subplot(131)
 ax1=fig.add_subplot(132)
 ax2=fig.add_subplot(133)
