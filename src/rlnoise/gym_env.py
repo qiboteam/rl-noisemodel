@@ -1,6 +1,7 @@
 import numpy as np
 import gym, random
 from gym import spaces
+import copy
 
 # currently working just for single qubit circuits
 # TO DO:
@@ -79,7 +80,7 @@ class QuantumCircuit(gym.Env):
             i = random.randint(0, self.n_circ - 1)
         self.circuit_lenght=self.circuits[i].shape[0]
         #print('circuit shape: ',self.circuits[i].shape)
-        state=self.circuits[i]
+        state=copy.deepcopy(self.circuits[i])
         state=state.transpose(2,1,0) #rearranged in shape (1, num_qubits, depth, encoding_dim+1)
         #print('state shape: ',state.shape)
         self.shape = np.array(state.shape)
