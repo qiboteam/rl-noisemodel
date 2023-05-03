@@ -59,6 +59,7 @@ Rew_Mae_TraceD_trained=[]
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
                                                 #SIMPLE TRAIN AND VALID
+                                               
 model = PPO(
 policy,
 circuit_env_training,
@@ -66,17 +67,18 @@ policy_kwargs=policy_kwargs,
 verbose=0,
 )
 val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
-model.learn(30000)
+model.learn(80000,progress_bar=True)
 val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
 print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 print('avg MAE from untrained model: %f\n'%(mae_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
 print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
 if trace_dist_train ==0:
     model.save(model_path+"D5_K3_1Q_Dep_Therm_30k")
-
+model.save(model_path+"D7_K3_1Q_Dep0.005_Therm0.07_30k")
                                                  #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
 '''
-time_step=[10000,15000,20000,25000,30000,40000]
+time_step=[10000,15000,20000,30000,40000,50000]
+time_step=[60000]
 print(str(time_step))
 for total_timesteps in time_step:
     model = PPO(
@@ -89,29 +91,29 @@ for total_timesteps in time_step:
     Rew_Mae_TraceD_untrained.append([val_avg_rew_untrained,mae_untrained,trace_dist_untr])
 
     model.learn(total_timesteps, progress_bar=True) 
-
+    model.save(model_path+'/D7_K3_1Q_Dep-Therm_60k')
     val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
     Rew_Mae_TraceD_trained.append([val_avg_rew_trained,mae_trained,trace_dist_train])
     del model
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 
-f = open(bench_results_path+"/Depol_only_D5_Q1_K3_SR-off_ts"+str(time_step),"wb")
+f = open(bench_results_path+"/Depol-Therm_D7_Q1_K3_SR-off_ts"+str(time_step),"wb")
 np.savez(f,untrained=Rew_Mae_TraceD_untrained,trained=Rew_Mae_TraceD_trained)
 f.close()
 '''
                                             #TRAIN AND TEST ON DIFFERENT DEPTHS
-'''                                            
+'''                                  
 model1= PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 )
-model=PPO.load(model_path+"D5_SR_K3_1Q_Dep_only_30k")
-depth_list=[5,10,15,20]
+model=PPO.load(model_path+"/D7_K3_1Q_Dep-Therm_60k")
+depth_list=[7,10,15,20,30]
 for d in depth_list:
-    f = open(benchmark_circ_path+"/depth_%dDep_only_1Q.npz"%(d),"rb")
+    f = open(benchmark_circ_path+"/depth_%dDep-Term_1Q.npz"%(d),"rb")
     tmp=np.load(f,allow_pickle=True)
     val_set=tmp['val_set']
     val_label=tmp['val_label']
@@ -123,12 +125,12 @@ for d in depth_list:
 
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
-f = open(bench_results_path+"/Depol_only_D5(train)_Q1_K3_SR-off_Test"+str(depth_list),"wb")
+f = open(bench_results_path+"/D7_K3_1Q_Dep-Therm_60k_Test"+str(depth_list),"wb")
 np.savez(f,trained=Rew_Mae_TraceD_trained,untrained=Rew_Mae_TraceD_untrained)
 f.close()
-
-
 '''
+
+
 #print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 #print('avg MAE from untrained model: %f\n'%(mea_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
 #print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))

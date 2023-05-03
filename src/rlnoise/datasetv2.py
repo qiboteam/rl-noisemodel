@@ -332,7 +332,7 @@ class CircuitRepresentation(object):
                 ]          
                 if channel is gates.channels.ThermalRelaxationChannel:
                     time=channel_arr[idx]
-                    channel = channel(q=qubit,t1=1,t2=1, time=time)
+                    channel = channel(q=qubit,t_1=1,t_2=1, time=time)
                 elif channel is gates.channels.DepolarizingChannel:
                     
                     lam=channel_arr[idx]

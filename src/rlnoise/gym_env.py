@@ -129,7 +129,7 @@ class QuantumCircuit(gym.Env):
         
         for q in range(self.n_qubits):
            
-            for idx,a in enumerate(action[q]):
+            for idx,a in enumerate(action):
                 
 
                 #print('considering qubit: ',q,'and action: ',action, 'at position: ',position)
@@ -139,13 +139,13 @@ class QuantumCircuit(gym.Env):
                     #reward-=0.008
                     if self.std_noise is True:
                         if idx == 1:#to be generalized with channel2index
-                            channel = self.noise_channels[idx](q,t1=1,t2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
+                            channel = self.noise_channels[idx](q,t_1=1,t_2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
                             self.current_state[self.rep.channel2index[type(channel)],q, position]=0.07
                         if idx == 0:
                             channel = self.noise_channels[idx](q,lam=0.15)
 
                         #self.current_state[:,q, position] += self.rep.gate_to_array(channel)
-                        self.current_state[self.rep.channel2index[type(channel)],q, position]=0.15
+                            self.current_state[self.rep.channel2index[type(channel)],q, position]=0.05
                     if self.coherent_noise is True and self.std_noise is False:
                         if idx == 1:#to be generalized with channel2index
                             #gate = gates.RX(q,theta=a) # -1 cause there is no identity channel in self.noise_channels

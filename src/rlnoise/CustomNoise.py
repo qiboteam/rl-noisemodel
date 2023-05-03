@@ -6,7 +6,7 @@ from rlnoise.datasetv2 import CircuitRepresentation
 from qibo.models import Circuit
 class CustomNoiseModel(object):
 
-    def __init__(self,time=0.07,lam=0.15, coherent_err=False,std_noise=True):
+    def __init__(self,time=0.07,lam=0.05, coherent_err=False,std_noise=True):
         self.primitive_gates= ['RZ', 'RX']#,'RY']
         self.channels=['DepolarizingChannel','ThermalRelaxationChannel']
         self.time=time

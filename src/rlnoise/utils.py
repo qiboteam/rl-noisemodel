@@ -130,7 +130,7 @@ return: average reward (total reward/n_circuits)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            #action=action[0]          
+            action=action[0]          
             obs, rewards, done, info = environment.step(action)
         predicted_circ = environment.get_qibo_circuit()
         predicted_rep=environment.get_circuit_rep()
