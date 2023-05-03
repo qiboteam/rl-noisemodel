@@ -59,16 +59,16 @@ class QuantumCircuit(gym.Env):
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
-            #shape = tuple(self.shape),
-            shape =(4,1,3),
+            shape = tuple(self.shape),
+            #shape =(4,1,3),
             dtype = np.float32
         )
         #action_shape=([ self.n_channel_types + 1 for i in range(self.n_qubits) ] +  [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ])
         action_shape=np.ones((self.n_qubits*2),dtype=np.int64)*10
         #print('action shape: ',action_shape.shape)
-        self.action_space = spaces.Discrete(
+        self.action_space = spaces.MultiDiscrete(
             #action_shape     # +1 for the no ch.annel option 
-            2
+            [2,2]
         )
 
         #self.action_space = spaces.Box( low=0, high=100,shape=(self.n_qubits,2), dtype=np.float32)
@@ -121,7 +121,7 @@ class QuantumCircuit(gym.Env):
         #action=action.reshape((self.n_qubits,2))
         reward=0.
         position = self.get_position()
-        action=[action]
+        #action=[action]
         #print('\n \n current state BEFORE action: \n',self.current_state.transpose(1,2,0))
         if self.step_reward:
             self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
@@ -129,7 +129,7 @@ class QuantumCircuit(gym.Env):
         
         for q in range(self.n_qubits):
            
-            for idx,a in enumerate(action):
+            for idx,a in enumerate(action[q]):
                 
 
                 #print('considering qubit: ',q,'and action: ',action, 'at position: ',position)
@@ -140,6 +140,7 @@ class QuantumCircuit(gym.Env):
                     if self.std_noise is True:
                         if idx == 1:#to be generalized with channel2index
                             channel = self.noise_channels[idx](q,t1=1,t2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
+                            self.current_state[self.rep.channel2index[type(channel)],q, position]=0.07
                         if idx == 0:
                             channel = self.noise_channels[idx](q,lam=0.15)
 

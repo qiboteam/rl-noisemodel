@@ -34,6 +34,9 @@ setup(
         "matplotlib",
         "numpy",
         "gymnasium",
+        "qibo",
+        "stable_baselines3"
+        
     ],
-    python_requires=">=3.7.0",
+    python_requires="==3.10.9",
 )

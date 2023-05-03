@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from IPython import display
 import numpy as np
 import os
 from rlnoise.gym_env import QuantumCircuit

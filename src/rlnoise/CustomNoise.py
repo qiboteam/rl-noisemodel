@@ -8,7 +8,7 @@ class CustomNoiseModel(object):
 
     def __init__(self,time=0.07,lam=0.15, coherent_err=False,std_noise=True):
         self.primitive_gates= ['RZ', 'RX']#,'RY']
-        self.channels=['DepolarizingChannel']#,'ThermalRelaxationChannel']
+        self.channels=['DepolarizingChannel','ThermalRelaxationChannel']
         self.time=time
         self.t1=1
         self.t2=1
@@ -17,9 +17,9 @@ class CustomNoiseModel(object):
         self.qibo_noise_model=NoiseModel()
 
         if self.std_noise is True: 
-            #self.Therm_on_gate=gates.RZ
+            self.Therm_on_gate=gates.RZ
             self.Depol_on_gate=gates.RX
-            #self.qibo_noise_model.add(ThermalRelaxationError(t1=self.t1,t2=self.t2,time=self.time), self.Therm_on_gate)
+            self.qibo_noise_model.add(ThermalRelaxationError(t1=self.t1,t2=self.t2,time=self.time), self.Therm_on_gate)
             self.qibo_noise_model.add(DepolarizingError(self.lam),self.Depol_on_gate )
         else:
             self.Therm_on_gate=None
