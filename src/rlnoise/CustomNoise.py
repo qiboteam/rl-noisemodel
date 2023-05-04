@@ -7,7 +7,7 @@ from qibo.models import Circuit
 class CustomNoiseModel(object):
 
     def __init__(self,time=0.07,lam=0.05, coherent_err=False,std_noise=True):
-        self.primitive_gates= ['RZ', 'RX']#,'RY']
+        self.primitive_gates= ['RZ', 'RX','CZ']#,'RY']
         self.channels=['DepolarizingChannel','ThermalRelaxationChannel']
         self.time=time
         self.t1=1
@@ -56,7 +56,7 @@ class CustomNoiseModel(object):
                             if self.Depol_on_gate is gates.RZ:
                                 noisy_circuit.add(DepolarizingChannel(lam=self.lam,q=qubit))
                             elif self.Therm_on_gate is gates.RZ:
-                                noisy_circuit.add(ThermalRelaxationChannel(t1=self.t1,t2=self.t2,time=self.time,q=qubit))
+                                noisy_circuit.add(ThermalRelaxationChannel(t_1=self.t1,t_2=self.t2,time=self.time,q=qubit))
                         elif self.rep.index2gate[int(gate_idx)] is gates.RX:
                             no_noise_circ_rep[moment,qubit,-1]=no_noise_circ_rep[moment,qubit,num_prim_gates]/2 #to be generalized (the epsilonX is the -1 column)
                             noisy_circuit.add(gates.RX(q=qubit,theta=theta))
@@ -65,7 +65,7 @@ class CustomNoiseModel(object):
                             if self.Depol_on_gate is gates.RX:
                                 noisy_circuit.add(DepolarizingChannel(lam=self.lam,q=qubit))
                             elif self.Therm_on_gate is gates.RX:
-                                noisy_circuit.add(ThermalRelaxationChannel(t1=self.t1,t2=self.t2,time=self.time,q=qubit))
+                                noisy_circuit.add(ThermalRelaxationChannel(t_1=self.t1,t_2=self.t2,time=self.time,q=qubit))
                         elif self.rep.index2gate[int(gate_idx)] is gates.CZ:
                             if count==-1:
                                 count=qubit
@@ -74,8 +74,8 @@ class CustomNoiseModel(object):
                                 if self.Depol_on_gate is gates.CZ:
                                     noisy_circuit.add(DepolarizingChannel(lam=self.lam,q=(qubit,count)))
                                 elif self.Therm_on_gate is gates.CZ:
-                                    noisy_circuit.add(ThermalRelaxationChannel(t1=self.t1,t2=self.t2,time=self.time,q=qubit))
-                                    noisy_circuit.add(ThermalRelaxationChannel(t1=self.t1,t2=self.t2,time=self.time,q=count))
+                                    noisy_circuit.add(ThermalRelaxationChannel(t_1=self.t1,t_2=self.t2,time=self.time,q=qubit))
+                                    noisy_circuit.add(ThermalRelaxationChannel(t_1=self.t1,t_2=self.t2,time=self.time,q=count))
 
             '''
             print('Applying coherent noise, Depolarizing (CZ) Thermal (RZ), on circuit: ')

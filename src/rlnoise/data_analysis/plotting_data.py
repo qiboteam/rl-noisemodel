@@ -3,18 +3,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
-time_steps=[10000,15000,20000,30000,40000,50000]
+time_steps=[5000,10000,20000,30000,50000,100000]
 
                                                     #TRAIN VS UNTRAINED PLOTS MULTIPLE TIMESTEPS
-'''                                              
-f = open(bench_results_path+"/Depol-Therm_D7_Q1_K3_SR-off_ts"+str(time_steps),"rb")
+'''                                             
+f = open(bench_results_path+"/Dep-Term_CZ_3Q"+str(time_steps),"rb")
 tmp=np.load(f,allow_pickle=True)
 
 untrained_results=tmp['untrained']
 trained_results=tmp['trained']
 f.close()
 fig=plt.figure()
-fig.suptitle('Train and validation depth=7, 1 qubit, Depolarizing and Thermal (fixed lambda and time), Step_reward=False, Kernel_size=3 ', fontsize=15)
+fig.suptitle('Train and validation depth=7, 3 qubit w CZ, Depolarizing and Thermal (fixed), Step_reward=False, Kernel_size=3 ', fontsize=15)
 ax=fig.add_subplot(131)
 ax1=fig.add_subplot(132)
 ax2=fig.add_subplot(133)
@@ -35,13 +35,13 @@ ax2.plot(time_steps,trained_results[:,2],color='orange',label='Trained',marker='
 ax.legend()
 
 plt.show()
-'''
+
 
                                                     #DIFFERENT TRAIN AND VALID DEPTH
-
-depths=[5,10,20]
+'''
+depths=[7,10,20,30]
                                                 
-f = open(bench_results_path+"/D7_K3_3Q_Dep0.005_Therm0.07_80k"+str(depths),"rb")
+f = open(bench_results_path+"/Dep-Term_CZ_3Q_100k"+str(depths),"rb")
 tmp=np.load(f,allow_pickle=True)     
 
 results_train=tmp['trained']
@@ -49,7 +49,7 @@ results_untrain=tmp['untrained']
 f.close()
 
 fig=plt.figure()
-fig.suptitle('Train depth=5 val depths=[5,10,20],3 qubit, Depol and Thermal (fixed lambda=0.05/time), Step_reward=False, Kernel_size=3 ', fontsize=15)
+fig.suptitle('Train depth=7 val depths=[7,10,20,30],3 qubit w CZ, Depol and Thermal (fixed), Step_reward=False, Kernel_size=3 ', fontsize=15)
 ax=fig.add_subplot(131)
 ax1=fig.add_subplot(132)
 ax2=fig.add_subplot(133)

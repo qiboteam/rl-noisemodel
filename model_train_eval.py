@@ -11,13 +11,13 @@ from rlnoise.utils import model_evaluation
 from rlnoise.CustomNoise import CustomNoiseModel
 from rlnoise.MlpPolicy import MlPFeaturesExtractor
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=5
+circuits_depth=7
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
-f = open(benchmark_circ_path+"/depth_%dDep-Term_3Q.npz"%(circuits_depth),"rb")
+f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q.npz"%(circuits_depth),"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=tmp['train_set']
 train_label=tmp['train_label']
@@ -26,7 +26,7 @@ val_label=tmp['val_label']
 f.close()
 
 #Setting up training env and policy model
-nqubits=1
+nqubits=3
 noise_model = CustomNoiseModel()
 
 reward = DensityMatrixReward()
@@ -78,8 +78,7 @@ model.save(model_path+"D7_K3_3Q_Dep0.005_Therm0.07_80k")
 '''
                                         #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
 '''
-time_step=[10000,15000,20000,30000,40000,50000]
-time_step=[60000]
+time_step=[5000,10000,20000,30000,50000,100000]
 print(str(time_step))
 for total_timesteps in time_step:
     model = PPO(
@@ -92,29 +91,31 @@ for total_timesteps in time_step:
     Rew_Mae_TraceD_untrained.append([val_avg_rew_untrained,mae_untrained,trace_dist_untr])
 
     model.learn(total_timesteps, progress_bar=True) 
-    model.save(model_path+'/D7_K3_1Q_Dep-Therm_60k')
+    if total_timesteps == 100000:
+        model.save(model_path+'/Dep-Term_CZ_3Q_100k')
     val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
     Rew_Mae_TraceD_trained.append([val_avg_rew_trained,mae_trained,trace_dist_train])
     del model
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 
-f = open(bench_results_path+"/Depol-Therm_D7_Q1_K3_SR-off_ts"+str(time_step),"wb")
+f = open(bench_results_path+"/Dep-Term_CZ_3Q"+str(time_step),"wb")
 np.savez(f,untrained=Rew_Mae_TraceD_untrained,trained=Rew_Mae_TraceD_trained)
 f.close()
-'''
+
                                             #TRAIN AND TEST ON DIFFERENT DEPTHS
-                                  
+'''   
+
 model1= PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 )
-model=PPO.load(model_path+"/D7_K3_3Q_Dep0.005_Therm0.07_80k")
-depth_list=[5,10,20]
+model=PPO.load(model_path+"/Dep-Term_CZ_3Q_100k")
+depth_list=[7,10,20,30]
 for d in depth_list:
-    f = open(benchmark_circ_path+"/depth_%dDep-Term_3Q.npz"%(d),"rb")
+    f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q.npz"%(d),"rb")
     tmp=np.load(f,allow_pickle=True)
     val_set=tmp['val_set']
     val_label=tmp['val_label']
@@ -126,7 +127,7 @@ for d in depth_list:
 
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
-f = open(bench_results_path+"/D7_K3_3Q_Dep0.005_Therm0.07_80k"+str(depth_list),"wb")
+f = open(bench_results_path+"/Dep-Term_CZ_3Q_100k"+str(depth_list),"wb")
 np.savez(f,trained=Rew_Mae_TraceD_trained,untrained=Rew_Mae_TraceD_untrained)
 f.close()
 

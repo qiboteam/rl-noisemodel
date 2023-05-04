@@ -4,9 +4,9 @@ from rlnoise.datasetv2 import Dataset, CircuitRepresentation
 import numpy as np
 from rlnoise.CustomNoise import CustomNoiseModel
 
-nqubits = 1
+nqubits = 2
 depth = 5
-ncirc = 10
+ncirc = 1
 
 noise_model = CustomNoiseModel()
 
@@ -14,7 +14,7 @@ rep = CircuitRepresentation(
     primitive_gates = noise_model.primitive_gates,
     noise_channels = noise_model.channels,
     shape = '3d',
-    coherent_noise=False
+    coherent_noise=True
 )
 start_time=time.time()
 # create dataset
@@ -30,7 +30,7 @@ dataset = Dataset(
 )
 end_time = time.time()
                            #testing rep_to_circuit,set_mode and getitem() of dataset
-'''
+
 for i in range(len(dataset[:])):
     dataset.set_mode('circ')
     test_circ=dataset[i]
@@ -45,7 +45,7 @@ for i in range(len(dataset[:])):
         [
         [
         [1, 0, 0, 0.5, 0.1, 0.05],
-        [0, 0, 0, 0, 0, 0], 
+        [1, 0, 0, 0.75, 0.1, 0], 
         [0, 1, 0, 0.5, 0, 0.05]
         ],
         [
@@ -64,8 +64,8 @@ for i in range(len(dataset[:])):
         [
         [
         [1, 0, 0, 0.5, 0.1, 0.05,0,0],
-        [0, 0, 0, 0, 0, 0,0,0], 
-        [0, 1, 0, 0.5, 0, 0.05,0,0]
+        [0, 1, 0, 0.75, 0, 0,0,0.1], 
+        [0, 1, 0, 0.5, 0, 0,0,0.1]
         ],
         [
         [0, 0, 1, 0, 0.1, 0,1,1], 
@@ -79,7 +79,7 @@ for i in range(len(dataset[:])):
         ],
         ]
     )
-    #reconstructed_test=rep.rep_to_circuit(noisy_test_rep2)
+    reconstructed_test=rep.rep_to_circuit(noisy_test_rep2)
     
     #reconstructed_noisy_circuit=rep.rep_to_circuit(noisy_test_rep)
     
@@ -88,9 +88,9 @@ for i in range(len(dataset[:])):
     print('------Noisy test circ %d------ '%(i))
     print(noisy_test_circ.draw())
     #print('------test rep %d ------\n'%(i),test_rep)
-    #print('------noisy test rep %d------ \n'%(i),noisy_test_rep)   
+    print('------noisy test rep ------ \n',noisy_test_rep2)   
     print('Reconstructed Noisy circuit:')
-    print(reconstructed_circuit.draw(),'\n')
+    print(reconstructed_test.draw(),'\n')
 
     #print(reconstructed_noisy_circuit.draw())
     
@@ -98,9 +98,10 @@ for i in range(len(dataset[:])):
 #print('reconstructed_noisy_circuit:\n')
 #print(reconstructed_test.draw())
 
-'''
+
 
                     #testing train and validatio split
+'''                    
 train_set=np.asarray(dataset.train_circuits)
 train_label=np.asarray(dataset.train_noisy_label)
 val_set=np.asarray(dataset.val_circuits)
@@ -117,6 +118,8 @@ if dm_difference ==0:
 
 
 print('Execution time: %f seconds'%(end_time-start_time))
+'''
+
 
 """
 # input circuit
