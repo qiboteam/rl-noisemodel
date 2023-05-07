@@ -3,7 +3,7 @@ import os
 from rlnoise.datasetv2 import Dataset, CircuitRepresentation
 from qibo import gates
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
-from rlnoise.policy import CNNFeaturesExtractor
+from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO,DQN,DDPG #not bad
 from stable_baselines3 import DQN,A2C,TD3
@@ -23,7 +23,7 @@ train_set=tmp['train_set']
 train_label=tmp['train_label']
 val_set=tmp['val_set']
 val_label=tmp['val_label']
-f.close()
+
 
 #Setting up training env and policy model
 nqubits=3
@@ -59,28 +59,38 @@ Rew_Mae_TraceD_trained=[]
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
                                                 #SINGLE TRAIN AND VALID
-'''                                               
+
+callback=CustomCallback(check_freq=2000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
 model = PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 )
-val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
-model.learn(80000,progress_bar=True)
-val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
-print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
-print('avg MAE from untrained model: %f\n'%(mae_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
-print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
-if trace_dist_train ==0:
-    model.save(model_path+"D5_K3_1Q_Dep_Therm_30k")
-model.save(model_path+"D7_K3_3Q_Dep0.005_Therm0.07_80k")
+
+
+#val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
+model.learn(200000,progress_bar=True,callback=callback)
+#val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
+#print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
+#print('avg MAE from untrained model: %f\n'%(mae_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
+#print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
+#if trace_dist_train ==0:
+#    model.save(model_path+"D5_K3_1Q_Dep_Therm_30k")
+#model.save(model_path+"D7_K3_3Q_Dep0.005_Therm0.07_80k")
 '''
                                         #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
-'''
-time_step=[5000,10000,20000,30000,50000,100000]
-print(str(time_step))
-for total_timesteps in time_step:
+
+total_timesteps=[2000,4000,6000,8000,10000,15000,20000,30000,50000,80000,130000,200000]
+
+model = PPO(
+policy,
+circuit_env_training,
+policy_kwargs=policy_kwargs, 
+verbose=0,
+)
+
+for time in total_timesteps:
     model = PPO(
     policy,
     circuit_env_training,
@@ -90,22 +100,23 @@ for total_timesteps in time_step:
     val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
     Rew_Mae_TraceD_untrained.append([val_avg_rew_untrained,mae_untrained,trace_dist_untr])
 
-    model.learn(total_timesteps, progress_bar=True) 
-    if total_timesteps == 100000:
-        model.save(model_path+'/Dep-Term_CZ_3Q_100k')
+    model.learn(time, progress_bar=True) 
+
     val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
+    if trace_dist_train <0.0001:
+        model.save(model_path+'/Dep-Term_CZ_3Q_BestMod'+str(time))
     Rew_Mae_TraceD_trained.append([val_avg_rew_trained,mae_trained,trace_dist_train])
     del model
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 
-f = open(bench_results_path+"/Dep-Term_CZ_3Q"+str(time_step),"wb")
+f = open(bench_results_path+"/Dep-Term_CZ_3Q"+str(total_timesteps),"wb")
 np.savez(f,untrained=Rew_Mae_TraceD_untrained,trained=Rew_Mae_TraceD_trained)
 f.close()
 
                                             #TRAIN AND TEST ON DIFFERENT DEPTHS
 '''   
-
+'''
 model1= PPO(
 policy,
 circuit_env_training,
@@ -137,6 +148,7 @@ f.close()
 #print('avg MAE from untrained model: %f\n'%(mea_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
 #print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
 
+'''
 
 
-
+f.close()

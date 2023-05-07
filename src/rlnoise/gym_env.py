@@ -217,3 +217,5 @@ def mse(x,y):
     return np.sqrt(np.abs(((x-y)**2)).mean())
 #Riscrivere rappresentazione in modo che solo 2 colonne rappresentano i channel: se diverse da zero indicano direttamente il valore del parametro del canale (time o lambda)
 #eliminare colonna della posizione
+
+

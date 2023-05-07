@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
-time_steps=[5000,10000,20000,30000,50000,100000]
+time_steps=[2000,4000,6000,8000,10000,15000,20000,30000,50000,80000,130000,200000]
 
                                                     #TRAIN VS UNTRAINED PLOTS MULTIPLE TIMESTEPS
-'''                                             
+                                             
 f = open(bench_results_path+"/Dep-Term_CZ_3Q"+str(time_steps),"rb")
 tmp=np.load(f,allow_pickle=True)
 
@@ -68,3 +68,4 @@ ax2.set(xlabel='Circuit Depth', ylabel='Trace Distance',title='Average trace dis
 
 
 plt.show()
+'''
