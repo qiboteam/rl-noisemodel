@@ -2,6 +2,7 @@ import numpy as np
 import gym, random
 from gym import spaces
 import copy
+
 # currently working just for single qubit circuits
 # TO DO:
 # - Adapt to multi-qubits circuits
