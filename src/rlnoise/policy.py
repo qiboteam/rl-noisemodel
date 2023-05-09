@@ -63,14 +63,15 @@ class CustomCallback(BaseCallback):
 
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
-    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=1,save_best=True,plot=True):
+    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=1,save_best=False,plot=True,test_on_data_size=True):
         super(CustomCallback, self).__init__(verbose)
         self.save_best=save_best
         self.plot=plot
+        self.test_on_data_size=test_on_data_size
         self.check_freq = check_freq
         self.log_dir = os.getcwd()+'/src/rlnoise/saved_models/'
         self.plot_dir=os.getcwd()+'/src/rlnoise/data_analysis/plots/'
-        
+        self.results_path=os.getcwd()+'/src/rlnoise/bench_results/'
         self.environment=train_environment
         self.best_mean_reward = -np.inf
         self.train_circ=evaluation_set['train_set']
@@ -78,6 +79,7 @@ class CustomCallback(BaseCallback):
         self.train_label=evaluation_set['train_label']
         self.val_circ=evaluation_set['val_set']
         self.val_label=evaluation_set['val_label']
+        self.dataset_size=len(evaluation_set)
         self.trainset_depth=trainset_depth
         self.n_qubits=self.train_circ[0].shape[1]
         self.eval_results=[]
@@ -127,13 +129,11 @@ class CustomCallback(BaseCallback):
             self.eval_results.append([avg_rew_eval,avg_hilbert_schmidt_dist_eval,avg_trace_dist_eval])
             self.train_results.append([avg_rew_train,avg_hilbert_schmidt_dist_train,avg_trace_dist_train])
             self.timestep_list.append(self.num_timesteps)
-            # Mean training reward over the last 100 episodes
            
             if self.verbose > 0:
                 print("Num timesteps: {}".format(self.num_timesteps))
                 print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, avg_rew_eval))
 
-                # New best model, you could save the agent here
             if avg_rew_eval > self.best_mean_reward:
                 self.best_mean_reward = avg_rew_eval
                 # Example for saving best model
@@ -141,7 +141,7 @@ class CustomCallback(BaseCallback):
                     if self.verbose >0:
                         print("Saving new best model at {} timesteps".format(self.num_timesteps))
                         print("Saving new best model to {}.zip".format(self.save_path))
-                    self.model.save(self.save_path)
+                    self.model.save(self.save_path+str(self.num_timesteps))
         return True
 
     def _on_rollout_end(self) -> None:
@@ -154,36 +154,41 @@ class CustomCallback(BaseCallback):
         """
         This event is triggered before exiting the `learn()` method.
         """
-
+        self.train_results=np.array(self.train_results)
+        self.eval_results=np.array(self.eval_results)
+        self.timestep_list=np.array(self.timestep_list)
         if self.plot is True:
             self.plot_results()
-
-        pass
+        if self.test_on_data_size is True:
+            f = open(self.results_path+"test_size_D_%d_Dep-Term_CZ_3Q_%d.npz"%(self.trainset_depth,self.dataset_size),"wb")
+            np.savez(f,train_results=self.train_results, val_results=self.eval_results, timesteps=self.timestep_list)
+            f.close()
+        pass 
 
     def plot_results(self):
         train_results=np.array(self.train_results)
         eval_results=np.array(self.eval_results)
-        time_steps=np.array(self.timestep_list)
+        time_steps=np.array(self.timestep_list)/1000
         
         fig=plt.figure(figsize=(15,5))
-        fig.suptitle('Training and evaluation plots', fontsize=15)
+        fig.suptitle('3Q w CZ D7 K3 SR-on (+- 0.1) Dep and Therm', fontsize=15)
         ax=fig.add_subplot(131)
         ax1=fig.add_subplot(132)
         ax2=fig.add_subplot(133)
         plt.subplots_adjust(left=0.065, bottom=None, right=0.971, top=None, wspace=0.27, hspace=None)
         ax.plot(time_steps,eval_results[:,0],label='evaluation_set',marker='x')
-        ax.set(xlabel='total_timesteps', ylabel='Reward',title='Average final reward')
+        ax.set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
         ax1.plot(time_steps,eval_results[:,1],marker='x')
-        ax1.set(xlabel='total_timesteps', ylabel='H-S distance',title='Hilbert-Schmidt distance between dm')
+        ax1.set(xlabel='timesteps/1000', ylabel='H-S distance',title='Hilbert-Schmidt distance between DM')
         ax2.plot(time_steps,eval_results[:,2],marker='x')
-        ax2.set(xlabel='total_timesteps', ylabel='Trace Distance',title='Trace distance between dm')
+        ax2.set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance between DM')
 
         ax.plot(time_steps,train_results[:,0],color='orange',label='train_set',marker='x')
         ax1.plot(time_steps,train_results[:,1],color='orange',label='train_set',marker='x')
         ax2.plot(time_steps,train_results[:,2],color='orange',label='train_set',marker='x')
         ax.legend()
         
-        fig.savefig(self.plot_dir+'Q%d_D%d_steps%d'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]))
+        fig.savefig(self.plot_dir+'Q%d_D%d_SR_steps%d'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]))
         plt.show()
 
     def generalization_test():

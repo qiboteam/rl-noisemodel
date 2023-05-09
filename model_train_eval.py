@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import copy
 from rlnoise.datasetv2 import Dataset, CircuitRepresentation
 from qibo import gates
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
@@ -10,20 +11,21 @@ from stable_baselines3 import DQN,A2C,TD3
 from rlnoise.utils import model_evaluation
 from rlnoise.CustomNoise import CustomNoiseModel
 from rlnoise.MlpPolicy import MlPFeaturesExtractor
+
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=7
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
-
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
-f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q.npz"%(circuits_depth),"rb")
-tmp=np.load(f,allow_pickle=True)
-train_set=tmp['train_set']
-train_label=tmp['train_label']
-val_set=tmp['val_set']
-val_label=tmp['val_label']
 
+f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q_100.npz"%(circuits_depth),"rb")
+tmp=np.load(f,allow_pickle=True)
+train_set=copy.deepcopy(tmp['train_set'])
+train_label=copy.deepcopy(tmp['train_label'])
+val_set=copy.deepcopy(tmp['val_set'])
+val_label=copy.deepcopy(tmp['val_label'])
+f.close()
 
 #Setting up training env and policy model
 nqubits=3
@@ -59,7 +61,7 @@ Rew_Mae_TraceD_trained=[]
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
                                                 #SINGLE TRAIN AND VALID
-
+'''
 callback=CustomCallback(check_freq=2000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
 model = PPO(
 policy,
@@ -70,7 +72,7 @@ verbose=0,
 
 
 #val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
-model.learn(200000,progress_bar=True,callback=callback)
+model.learn(300000,progress_bar=True,callback=callback)
 #val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
 #print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 #print('avg MAE from untrained model: %f\n'%(mae_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
@@ -80,7 +82,7 @@ model.learn(200000,progress_bar=True,callback=callback)
 #model.save(model_path+"D7_K3_3Q_Dep0.005_Therm0.07_80k")
 '''
                                         #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
-
+'''
 total_timesteps=[2000,4000,6000,8000,10000,15000,20000,30000,50000,80000,130000,200000]
 
 model = PPO(
@@ -113,9 +115,9 @@ Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 f = open(bench_results_path+"/Dep-Term_CZ_3Q"+str(total_timesteps),"wb")
 np.savez(f,untrained=Rew_Mae_TraceD_untrained,trained=Rew_Mae_TraceD_trained)
 f.close()
-
+'''
                                             #TRAIN AND TEST ON DIFFERENT DEPTHS
-'''   
+   
 '''
 model1= PPO(
 policy,
@@ -123,8 +125,8 @@ circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 )
-model=PPO.load(model_path+"/Dep-Term_CZ_3Q_100k")
-depth_list=[7,10,20,30]
+model=PPO.load(model_path+"/best_model_Q3_D7154000")
+depth_list=[7,10,15,20,25,30,35,40]
 for d in depth_list:
     f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q.npz"%(d),"rb")
     tmp=np.load(f,allow_pickle=True)
@@ -138,17 +140,44 @@ for d in depth_list:
 
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
-f = open(bench_results_path+"/Dep-Term_CZ_3Q_100k"+str(depth_list),"wb")
+f = open(bench_results_path+"/Dep-Term_CZ_3Q_154k_1"+str(depth_list),"wb")
 np.savez(f,trained=Rew_Mae_TraceD_trained,untrained=Rew_Mae_TraceD_untrained)
 f.close()
+'''
 
+
+                        #TRAIN & TEST ON DATASET W SAME PARAMS BUT DIFFERENT SIZE(n_circ)
+n_circ=[100,1000]
+
+for data_size in n_circ:
+
+    f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q_%d.npz"%(circuits_depth,data_size),"rb")
+    tmp=np.load(f,allow_pickle=True)
+    train_set=tmp['train_set']
+    train_label=tmp['train_label']
+    val_set=tmp['val_set']
+    val_label=tmp['val_label']
+
+    circuit_env_training = QuantumCircuit(
+    circuits = train_set,
+    representation = rep,
+    labels = train_label,
+    reward = reward,
+    kernel_size=kernel_size
+    )
+    callback=CustomCallback(check_freq=2000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
+    model = PPO(
+    policy,
+    circuit_env_training,
+    policy_kwargs=policy_kwargs, 
+    verbose=0,
+    )
+    a,b,c= model.learn(2000,callback=callback)
+    print(a,b,c)
+
+#f.close()
 
 
 #print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
 #print('avg MAE from untrained model: %f\n'%(mea_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
 #print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
-
-'''
-
-
-f.close()

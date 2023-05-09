@@ -10,7 +10,7 @@ import copy
 # - Adapt it for working with the 3d representation
 
 NEG_REWARD=-0.1
-POS_REWARD=0.05
+POS_REWARD=0.1
 class QuantumCircuit(gym.Env):
     
     def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None,step_reward=False):
