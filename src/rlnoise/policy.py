@@ -1,3 +1,4 @@
+from configparser import ConfigParser
 import os
 import torch
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
@@ -5,6 +6,9 @@ import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
 from rlnoise.utils import model_evaluation
 import matplotlib.pyplot as plt
+
+params=ConfigParser()
+params.read("src/rlnoise/config.ini")
 class CNNFeaturesExtractor(BaseFeaturesExtractor):
 
     def __init__(
@@ -63,20 +67,22 @@ class CustomCallback(BaseCallback):
 
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
-    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=1,save_best=False,plot=True,test_on_data_size=None):
+    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=1,test_on_data_size=None):
         super(CustomCallback, self).__init__(verbose)
-        self.save_best=save_best
-        self.plot=plot
-        self.test_on_data_size=test_on_data_size
-        self.check_freq = check_freq
+        self.save_best=params.getboolean('policy','save_best_model')
+        self.plot=params.getboolean('policy','plot_results')
+        self.best_model_name=params.get('policy','model_name')
+        self.plot_name=params.get('policy','plot_name')
         self.log_dir = os.getcwd()+'/src/rlnoise/saved_models/'
         self.plot_dir=os.getcwd()+'/src/rlnoise/data_analysis/plots/'
         self.results_path=os.getcwd()+'/src/rlnoise/bench_results/'
+        self.check_freq = check_freq
+        self.test_on_data_size=test_on_data_size
         self.environment=train_environment
         self.best_mean_reward = -np.inf
         if self.test_on_data_size is not None:
-            self.train_circ=evaluation_set['train_set'][:test_on_data_size]
-            self.train_label=evaluation_set['train_label'][:test_on_data_size]
+            self.train_circ=evaluation_set['train_set'][:self.test_on_data_size]
+            self.train_label=evaluation_set['train_label'][:self.test_on_data_size]
         else:
             self.train_circ=evaluation_set['train_set']
             self.train_label=evaluation_set['train_label']
@@ -89,7 +95,7 @@ class CustomCallback(BaseCallback):
         self.eval_results=[]
         self.train_results=[]
         self.timestep_list=[]
-        self.save_path = os.path.join(self.log_dir, 'best_model_set1000_Box_high0.2_Q%d_D%d'%(self.n_qubits,self.trainset_depth))
+        self.save_path = os.path.join(self.log_dir, self.best_model_name)
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -178,7 +184,7 @@ class CustomCallback(BaseCallback):
 
         if self.test_on_data_size is None:
             fig=plt.figure(figsize=(15,5))
-            fig.suptitle('3Q w CZ D7 K3 dataset len=1000 Dep and Therm', fontsize=15)
+            fig.suptitle('3Q w CZ D7 K3 Penalization-on(0.001) dataset len=1000 Dep and Therm', fontsize=15)
             ax=fig.add_subplot(131)
             ax1=fig.add_subplot(132)
             ax2=fig.add_subplot(133)
@@ -195,7 +201,7 @@ class CustomCallback(BaseCallback):
             ax2.plot(time_steps,train_results[:,2],color='orange',label='train_set',marker='x')
             ax.legend()
             
-            fig.savefig(self.plot_dir+'set1000_Q%d_D%d_SR_steps%d'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]))
+            fig.savefig(self.plot_dir+self.plot_name+'_Q%d_D%d_steps%d.png'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]))
             plt.show()
         else:
             fig=plt.figure(figsize=(5,5))

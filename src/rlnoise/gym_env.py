@@ -1,3 +1,4 @@
+from configparser import ConfigParser
 import numpy as np
 import gym, random
 from gym import spaces
@@ -10,22 +11,28 @@ from qibo.quantum_info import trace_distance
 # - Implement batches
 # - Write a reward that makes sense
 # - Adapt it for working with the 3d representation
+params=ConfigParser()
+params.read("src/rlnoise/config.ini") 
 
-NEG_REWARD=-0.1
-POS_REWARD=0.1
+
 class QuantumCircuit(gym.Env):
     
-    def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None,step_reward=True):
+    def __init__(self, circuits, representation, labels, reward, noise_param_space=None):
         '''
         Args: 
             circuits (list): list of circuit represented as numpy vectors
         
         '''
         super(QuantumCircuit, self).__init__()
-        self.step_r_metric="Trace_distance"
-        self.std_noise=True
-        self.coherent_noise=False
-        self.action_space_type="Box"
+        self.neg_reward=params.getfloat('gym_env','neg_reward')
+        self.pos_reward=params.getfloat('gym_env','pos_reward')
+        self.step_r_metric=params.get('gym_env','step_r_metric')
+        self.action_penality=params.getfloat('gym_env','action_penality')
+        self.std_noise=params.getboolean('noise','std_noise')
+        self.coherent_noise=params.getboolean('noise','coherent_noise')
+        self.action_space_type=params.get('gym_env','action_space')
+        self.kernel_size = params.getint('gym_env','kernel_size')
+        self.step_reward=params.getboolean('gym_env','step_reward')  
         self.position=None
         self.circuits = circuits
         self.n_circ = len(self.circuits)
@@ -35,8 +42,7 @@ class QuantumCircuit(gym.Env):
         self.n_gate_types = len(self.rep.gate2index)
         self.n_channel_types = len(self.rep.channel2index)
         self.noise_channels = list(self.rep.channel2index.keys())
-        self.kernel_size = kernel_size
-        self.step_reward=step_reward
+
         if noise_param_space is None:
             self.noise_par_space = { 'range': (0,0.1), 'n_steps': 100 } # convert this to a list of dict for allowing custom range and steps for the different noise channels
         else:
@@ -50,10 +56,10 @@ class QuantumCircuit(gym.Env):
         #self.n_qubits = int(self.shape[-1] / self.rep.encoding_dim)
         self.actual_mse=None
         self.previous_mse=None
-        if kernel_size is not None:
-            assert kernel_size % 2 == 1, "Kernel_size must be odd"
-            self.shape[2] = kernel_size
-            self.kernel_size = kernel_size
+        if self.kernel_size is not None:
+            assert self.kernel_size % 2 == 1, "Kernel_size must be odd"
+            self.shape[2] = self.kernel_size
+            self.kernel_size = self.kernel_size
         else:
             self.kernel_size = None
             self.shape[0] += 1
@@ -147,6 +153,7 @@ class QuantumCircuit(gym.Env):
                     #if a< 0.05:
                     #reward-=0.008
                     if self.std_noise is True:
+                        reward-=self.action_penality
                         if idx == 1:#to be generalized with channel2index
                             channel = self.noise_channels[idx](q,t_1=1,t_2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
                             self.current_state[self.rep.channel2index[type(channel)],q, position]=a
@@ -188,9 +195,9 @@ class QuantumCircuit(gym.Env):
         elif self.step_r_metric=='mse' or 'MSE':
             self.actual_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
         if self.actual_mse>self.previous_mse:
-            reward=NEG_REWARD
+            reward=self.neg_reward
         else:
-            reward=POS_REWARD
+            reward=self.pos_reward
         return reward
     def render(self):
         print(self.get_qibo_circuit().draw(), end='\r')
@@ -226,7 +233,6 @@ class QuantumCircuit(gym.Env):
         
 def mse(x,y):
     return np.sqrt(np.abs(((x-y)**2)).mean())
-#Riscrivere rappresentazione in modo che solo 2 colonne rappresentano i channel: se diverse da zero indicano direttamente il valore del parametro del canale (time o lambda)
-#eliminare colonna della posizione
+
 
 

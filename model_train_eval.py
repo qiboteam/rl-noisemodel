@@ -8,18 +8,18 @@ from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO,DQN,DDPG #not bad
 from stable_baselines3 import DQN,A2C,TD3
-from rlnoise.utils import model_evaluation
 from rlnoise.CustomNoise import CustomNoiseModel
-from rlnoise.MlpPolicy import MlPFeaturesExtractor
+
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=7
+nqubits=3
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
 
-f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q_1000.npz"%(circuits_depth),"rb")
+f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_%dQ_1000.npz"%(circuits_depth,nqubits),"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=copy.deepcopy(tmp['train_set'])
 train_label=copy.deepcopy(tmp['train_label'])
@@ -28,11 +28,9 @@ val_label=copy.deepcopy(tmp['val_label'])
 
 
 #Setting up training env and policy model
-nqubits=3
-noise_model = CustomNoiseModel()
 
+noise_model = CustomNoiseModel()
 reward = DensityMatrixReward()
-kernel_size=3
 
 rep = CircuitRepresentation(
     primitive_gates = noise_model.primitive_gates,
@@ -45,8 +43,6 @@ circuit_env_training = QuantumCircuit(
     representation = rep,
     labels = train_label,
     reward = reward,
-    kernel_size=kernel_size,
-    step_reward=False
 )
 policy = "MlpPolicy"
 policy_kwargs = dict(
@@ -63,7 +59,7 @@ Rew_Mae_TraceD_trained=[]
 
                                                 #SINGLE TRAIN AND VALID
 
-callback=CustomCallback(check_freq=5000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth,save_best=True)                                          
+callback=CustomCallback(check_freq=5000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
 model = PPO(
 policy,
 circuit_env_training,
@@ -72,15 +68,8 @@ verbose=0,
 )
 
 
-#val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
-model.learn(500000,progress_bar=True,callback=callback)
-#val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
-#print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
-#print('avg MAE from untrained model: %f\n'%(mae_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
-#print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
-#if trace_dist_train ==0:
-#    model.save(model_path+"D5_K3_1Q_Dep_Therm_30k")
-#model.save(model_path+"D7_K3_3Q_Dep0.005_Therm0.07_80k")
+model.learn(1000000,progress_bar=True,callback=callback)
+
 f.close()
                                         #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
 '''
