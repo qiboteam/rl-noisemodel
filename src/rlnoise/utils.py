@@ -110,13 +110,12 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         average reward (total reward/n_circuits), avg Hilbert-Schmidt distance, avg Trace Distance
     '''
     circuits=copy.deepcopy(evaluation_circ)
-    debug=False
+    debug=True
     environment = QuantumCircuit(
     circuits = circuits,
     representation = train_environment.rep,
     labels = evaluation_labels,
-    reward = train_environment.reward,
-    kernel_size=train_environment.kernel_size   
+    reward = train_environment.reward, 
     )
     avg_rew=0.
     mae=0.
@@ -144,13 +143,13 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
             test_rep=evaluation_circ[0]
             test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
            
-            print('true circ rep: ',test_rep)
+            #print('true circ rep: ',test_rep)
             print('\nTrue noisy circuit')
             print(test_circ.draw())
             print('\nPredicted noisy circ: ')
             print(predicted_circ.draw())
             print("Predicted representation: \n", predicted_rep)
-            print('\n DM MSE: ',10*(np.sqrt(np.abs((test_circ().state()-dm_untrained)**2))).mean())
+            #print('\n DM MSE: ',10*(np.sqrt(np.abs((test_circ().state()-dm_untrained)**2))).mean())
 
     
     return avg_rew/n_circ,hilbert_schmidt_dist/n_circ,avg_trace_distance/n_circ

@@ -1,19 +1,28 @@
+import json
 import numpy as np
+from configparser import ConfigParser
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
 from qibo import gates
 from qibo.gates import ThermalRelaxationChannel,DepolarizingChannel
 from rlnoise.datasetv2 import CircuitRepresentation
 from qibo.models import Circuit
+
+params=ConfigParser()
+params.read("src/rlnoise/config.ini") 
+
 class CustomNoiseModel(object):
 
-    def __init__(self,time=0.07,lam=0.05, coherent_err=False,std_noise=True):
-        self.primitive_gates= ['RZ', 'RX','CZ']#,'RY']
-        self.channels=['DepolarizingChannel','ThermalRelaxationChannel']
-        self.time=time
-        self.t1=1
-        self.t2=1
-        self.lam=lam
-        self.std_noise=std_noise
+    def __init__(self):
+        self.primitive_gates= json.loads(params.get('noise','primitive_gates'))
+        self.channels=json.loads(params.get('noise','channels'))
+        self.time=params.getfloat('noise','thermal_time')
+        self.t1=params.getfloat('noise','t1')
+        self.t2=params.getfloat('noise','t2')
+        self.lam=params.getfloat('noise','dep_lambda')
+        self.coherent_err=params.getboolean('noise','coherent_noise')
+        self.std_noise=params.getboolean('noise','std_noise')
+        self.epsilonZ=params.getfloat('noise','epsilon_z')
+        self.epsilonX=params.getfloat('noise','epsilon_x')     
         self.qibo_noise_model=NoiseModel()
 
         if self.std_noise is True: 
@@ -25,11 +34,10 @@ class CustomNoiseModel(object):
             self.Therm_on_gate=None
             self.Depol_on_gate=None
 
-        self.coherent_err=coherent_err
+        
         self.rep=CircuitRepresentation(primitive_gates=self.primitive_gates,noise_channels=self.channels,shape='3d')
 
-        self.epsilonZ=0.15
-        self.epsilonX=0.3
+
         
     def apply(self,circuit):
         no_noise_circ_rep=self.rep.circuit_to_array(circuit)#SHAPE: (n_moments,n_qubits,encoding_dim=8)
