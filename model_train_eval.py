@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import copy
-from rlnoise.datasetv2 import Dataset, CircuitRepresentation
+from rlnoise.dataset import Dataset, CircuitRepresentation
 from qibo import gates
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback

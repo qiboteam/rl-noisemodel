@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from rlnoise.datasetv2 import Dataset, CircuitRepresentation
+from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.CustomNoise import CustomNoiseModel
 
 noise_model = CustomNoiseModel()

@@ -1,6 +1,6 @@
 
 import time
-from rlnoise.datasetv2 import Dataset, CircuitRepresentation
+from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
 from rlnoise.CustomNoise import CustomNoiseModel
 

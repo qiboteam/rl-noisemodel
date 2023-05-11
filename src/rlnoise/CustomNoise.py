@@ -1,10 +1,10 @@
 import json
 import numpy as np
 from configparser import ConfigParser
-from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError
+from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,ResetError
 from qibo import gates
-from qibo.gates import ThermalRelaxationChannel,DepolarizingChannel
-from rlnoise.datasetv2 import CircuitRepresentation
+from qibo.gates import ThermalRelaxationChannel,DepolarizingChannel,ResetChannel
+from rlnoise.dataset import CircuitRepresentation
 from qibo.models import Circuit
 
 params=ConfigParser()
@@ -19,6 +19,7 @@ class CustomNoiseModel(object):
         self.t1=params.getfloat('noise','t1')
         self.t2=params.getfloat('noise','t2')
         self.lam=params.getfloat('noise','dep_lambda')
+        self.p0=params.getfloat('noise','p0')
         self.coherent_err=params.getboolean('noise','coherent_noise')
         self.std_noise=params.getboolean('noise','std_noise')
         self.epsilonZ=params.getfloat('noise','epsilon_z')
@@ -27,18 +28,21 @@ class CustomNoiseModel(object):
 
         if self.std_noise is True: 
             self.Therm_on_gate=gates.RZ
+            self.Damping_on_gate=gates.RZ
             self.Depol_on_gate=gates.RX
-            self.qibo_noise_model.add(ThermalRelaxationError(t1=self.t1,t2=self.t2,time=self.time), self.Therm_on_gate)
+            self.qibo_noise_model.add(ResetError(p0=self.p0, p1=0), self.Damping_on_gate)
             self.qibo_noise_model.add(DepolarizingError(self.lam),self.Depol_on_gate )
         else:
             self.Therm_on_gate=None
-            self.Depol_on_gate=None
-
-        
+            self.Depol_on_gate=None        
         self.rep=CircuitRepresentation(primitive_gates=self.primitive_gates,noise_channels=self.channels,shape='3d')
-
-
         
+
+    '''
+    therm_on_gate=[gate1, gate2]
+    if self.rep.index2gate[int(gate_idx)] in therm_on_gate:
+        applica thermal
+    '''
     def apply(self,circuit):
         no_noise_circ_rep=self.rep.circuit_to_array(circuit)#SHAPE: (n_moments,n_qubits,encoding_dim=8)
 

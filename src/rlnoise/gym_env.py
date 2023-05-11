@@ -31,7 +31,6 @@ class QuantumCircuit(gym.Env):
         self.std_noise=params.getboolean('noise','std_noise')
         self.coherent_noise=params.getboolean('noise','coherent_noise')
         self.action_space_type=params.get('gym_env','action_space')
-        print(self.action_space_type)
         self.kernel_size = params.getint('gym_env','kernel_size')
         self.step_reward=params.getboolean('gym_env','step_reward')  
         self.position=None
@@ -69,7 +68,6 @@ class QuantumCircuit(gym.Env):
             low = 0,
             high = 1,
             shape = tuple(self.shape),
-            #shape =(4,1,3),
             dtype = np.float32
         )
         if self.action_space_type=="Box":
@@ -156,13 +154,12 @@ class QuantumCircuit(gym.Env):
                     if self.std_noise is True:
                         reward-=self.action_penality
                         if idx == 1:#to be generalized with channel2index
-                            channel = self.noise_channels[idx](q,t_1=1,t_2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
-                            self.current_state[self.rep.channel2index[type(channel)],q, position]=a
+                            #channel = self.noise_channels[idx](q,t_1=1,t_2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
+                            channel = self.noise_channels[idx]
+                            self.current_state[self.rep.channel2index[channel],q, position]=a
                         if idx == 0:
-                            channel = self.noise_channels[idx](q,lam=0.05)
-
-                        #self.current_state[:,q, position] += self.rep.gate_to_array(channel)
-                            self.current_state[self.rep.channel2index[type(channel)],q, position]=a
+                            channel = self.noise_channels[idx]
+                            self.current_state[self.rep.channel2index[channel],q, position]=a
                     if self.coherent_noise is True and self.std_noise is False:
                         if idx == 1:#to be generalized with channel2index
                             #gate = gates.RX(q,theta=a) # -1 cause there is no identity channel in self.noise_channels
