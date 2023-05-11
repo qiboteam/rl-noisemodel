@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 import numpy as np
 from qibo import gates
 from qibo.quantum_info import trace_distance
+from configparser import ConfigParser
 
+params=ConfigParser()
+params.read("src/rlnoise/config.ini")
 class Reward(ABC):
 
     def __init__(self, metric=lambda x,y: np.sqrt(np.abs(((x-y)**2)).mean())):
@@ -43,6 +46,7 @@ class FrequencyReward(Reward):
     
 class DensityMatrixReward(Reward):
     def __call__(self, circuit, target, final=False,alpha=10.):
+        reward_type=params.get('reward','reward_type')
         if final:
             circuit_dm=np.array(circuit().state())
             dm_mse=alpha*self.metric(circuit_dm, target)
@@ -59,7 +63,13 @@ class DensityMatrixReward(Reward):
             else:
                 reward=0.
             '''
-            reward=1-dm_mse
+            if reward_type=="log" or reward_type=="Log":
+                if -np.log(dm_mse) < 1000:
+                    reward=-np.log(dm_mse) #mae or exp
+                else:
+                    reward=1000.
+            elif reward_type=="mse":
+                reward=1-dm_mse
             #reward=1-trace_distance(circuit_dm, target)
             #print('reward: ',reward)
             #print('\n dm MSE: ',dm_mse )

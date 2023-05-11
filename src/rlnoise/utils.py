@@ -115,8 +115,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     circuits = circuits,
     representation = train_environment.rep,
     labels = evaluation_labels,
-    reward = train_environment.reward,
-    kernel_size=train_environment.kernel_size   
+    reward = train_environment.reward, 
     )
     avg_rew=0.
     mae=0.

@@ -31,6 +31,7 @@ class QuantumCircuit(gym.Env):
         self.std_noise=params.getboolean('noise','std_noise')
         self.coherent_noise=params.getboolean('noise','coherent_noise')
         self.action_space_type=params.get('gym_env','action_space')
+        print(self.action_space_type)
         self.kernel_size = params.getint('gym_env','kernel_size')
         self.step_reward=params.getboolean('gym_env','step_reward')  
         self.position=None
