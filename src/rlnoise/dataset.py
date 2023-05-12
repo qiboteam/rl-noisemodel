@@ -4,7 +4,9 @@ from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
-
+from configparser import ConfigParser
+params=ConfigParser()
+params.read("src/rlnoise/config.ini")
 
 class Dataset(object):
 
@@ -191,18 +193,32 @@ class CircuitRepresentation(object):
     def __init__(self, primitive_gates, noise_channels, shape='3d',coherent_noise=False):
         super(CircuitRepresentation, self).__init__()
         self.coherent_noise=coherent_noise
+        self.coherent_channels=json.loads(params.get('noise','coherent_channels'))
         self.gate2index = { getattr(gates, g): i for i,g in enumerate(primitive_gates) }
         self.index2gate = { v: k for k,v in self.gate2index.items() }
+        
         self.channel2index = {
             getattr(gates, c): i + len(self.gate2index) + 1
             for i,c in enumerate(noise_channels)
         }
+       
+        
+        self.epsilon2index={c: i + len(self.gate2index) + 1+len(self.channel2index)
+            for i,c in enumerate(self.coherent_channels)}
+        
+        self.gate2epsilonidx={gates.RZ: self.epsilon2index["epsilon_z"],
+                              gates.RX: self.epsilon2index["epsilon_x"]}
+        
         self.index2channel = { v: k for k,v in self.channel2index.items() }
         self.encoding_dim = len(primitive_gates) + 1 + len(noise_channels) 
         if self.coherent_noise is True:
             self.encoding_dim+=2#(epsilon_Z,epsilon_X)
         self.shape = shape
-
+        epsilon_idx=self.gate2epsilonidx[gates.RX]
+        epsilon_value=[i for i in self.epsilon2index if self.epsilon2index[i]==epsilon_idx]
+                           
+        
+        print('test',str(epsilon_value[0]))
     def gate_to_array(self, gate):
         """Provide the one-hot encoding of a gate."""
         one_hot = np.zeros(self.encoding_dim)
@@ -258,6 +274,7 @@ class CircuitRepresentation(object):
         return list(zip(*new_moments))      
 
     def circuit_to_array(self, circuit):
+        #DOESN'T WORK with noisy circuit only clean one
         """Maps qibo circuits to numpy array representation.
         """
         nqubits = circuit.nqubits
@@ -280,12 +297,11 @@ class CircuitRepresentation(object):
         """Build pair of qibo (gate,channel) starting from the encoding."""
         # separate gate part and channel part
         gate_arr = array[:len(self.gate2index) + 1]
-        coherent_err_Z=None
-        coherent_err_X=None
+        
         if self.coherent_noise is True:
-            channel_arr = array[len(self.gate2index) + 1:-2]
-            epsilonZ=array[-2]#to be generalized
-            epsilonX=array[-1]
+            channel_arr = array[len(self.gate2index) + 1:-len(self.epsilon2index)]
+            epsilonZ=array[self.epsilon2index["epsilon_z"]]
+            epsilonX=array[self.epsilon2index["epsilon_x"]]
         else:
             channel_arr = array[len(self.gate2index) + 1:]
             epsilonZ=None
@@ -368,12 +384,12 @@ class CircuitRepresentation(object):
                             if i is not None and idx>0: #the first element is CZ gate and it will be added later, now is excluded
                                 pending_gates.append(i)
                         count=qubit
-                        if self.coherent_noise is False:
-                            lam1=row[-2]
-                            p0=row[-1]#to be generalized without adding the index manually
-                        else:
-                            lam1=row[-4]
-                            p0=row[-3]#to be generalized without adding the index manually
+                       
+                        lam1=row[self.channel2index[gates.DepolarizingChannel]]
+                        print('-----lam1----',lam1)
+                        p0=row[self.channel2index[gates.ResetChannel]]#to be generalized without adding the index manually
+                        print('-----p0----',p0)
+                       
                         pass
                     elif count!=-1:
                         gate, channels=self.array_to_gate(row,qubit,count) 

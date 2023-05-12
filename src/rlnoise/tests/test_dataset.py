@@ -3,23 +3,21 @@ from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
+from rlnoise.CustomNoisev2 import CustomNoiseModel
 
-nqubits = 1
+nqubits = 2
 depth = 5
 ncirc = 2
 val_split = 0.2
 
-noise_model = NoiseModel()
-lam = 0.2
-noise_model.add(DepolarizingError(lam), gates.RZ)
-noise_channel = gates.DepolarizingChannel((0,), lam=lam)
-primitive_gates = ['RZ', 'RX']
-channels = ['DepolarizingChannel']
+noise_model = CustomNoiseModel()
+
 
 rep = CircuitRepresentation(
-    primitive_gates = primitive_gates,
-    noise_channels = channels,
-    shape = '2d'
+    primitive_gates = noise_model.primitive_gates,
+    noise_channels = noise_model.channels,
+    shape = '3d',
+    coherent_noise=True
 )
 
 # create dataset
@@ -48,11 +46,11 @@ def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())
     array = rep.circuit_to_array(circuit)
     print(' --> Representation:\n', array)
-    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
+    print(' --> Circuit Rebuilt:\n', rep.rep_to_circuit(array).draw())
     print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     print('> Noisy Circuit:\n', noisy_circuit.draw())
-    array = rep.circuit_to_array(noisy_circuit)
-    print(array)
-    print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
+    #array = rep.circuit_to_array(noisy_circuit)
+    #print(array)
+    #print(' --> Circuit Rebuilt:\n', rep.rep_to_circuit(array).draw())
 
 test_representation()
