@@ -3,7 +3,7 @@ from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
-from rlnoise.CustomNoisev2 import CustomNoiseModel
+from rlnoise.CustomNoise import CustomNoiseModel
 
 nqubits = 2
 depth = 5

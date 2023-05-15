@@ -5,19 +5,19 @@ from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
 from configparser import ConfigParser
+
 params=ConfigParser()
 params.read("src/rlnoise/config.ini")
 
 class Dataset(object):
-
     def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, noise_model=None, mode='rep'):
         '''Generate dataset for the training of RL-algorithm
         Args:
             n_circuits (int): number of random circuits generated
-            n_gates (int): number of gates in each circuit (depth)
+            n_gates (int): number of gates to add on each qubit
             n_qubits (int): number of qubits in each circuit
+            representation: object of class CircuitRepresentation()
         '''
-
         super(Dataset, self).__init__()
 
         self.n_gates = n_gates
@@ -51,7 +51,6 @@ class Dataset(object):
         '''
         self.train_circuits, self.val_circuits ,self.train_noisy_label, self.val_noisy_label= self.train_val_split()
         
-
     def get_dm_labels(self, num_snapshots=10000):
         if self.shadows:
             states = []
@@ -106,6 +105,8 @@ class Dataset(object):
         Split dataset into train ad validation sets and it return the array representation of the circuits without noise
         and the label of the correspondent noisy circuit.
 
+        Args:
+            split: percentage of the total circuits that goes in validation set
         Return: 
             train_circuits: array representation of training circuit dataset
             val_circuits: same as before but for validation dataset
@@ -189,8 +190,14 @@ class Dataset(object):
 
 
 class CircuitRepresentation(object):
-    """Object for mapping qibo circuits to numpy array representation and vice versa."""
-    def __init__(self, primitive_gates, noise_channels, shape='3d',coherent_noise=False):
+    """Object for mapping qibo circuits to numpy array representation and vice versa.
+    
+    Args: 
+        primitive_gates: list of string (in qibo notation) of the gates to consider
+        noise_channels: list of string (qibo notation) of the channel to consider
+    
+    """  
+    def __init__(self, primitive_gates, noise_channels, shape='3d',coherent_noise=True):
         super(CircuitRepresentation, self).__init__()
         self.coherent_noise=coherent_noise
         self.coherent_channels=json.loads(params.get('noise','coherent_channels'))
@@ -202,7 +209,6 @@ class CircuitRepresentation(object):
             for i,c in enumerate(noise_channels)
         }
        
-        
         self.epsilon2index={c: i + len(self.gate2index) + 1+len(self.channel2index)
             for i,c in enumerate(self.coherent_channels)}
         
@@ -212,13 +218,9 @@ class CircuitRepresentation(object):
         self.index2channel = { v: k for k,v in self.channel2index.items() }
         self.encoding_dim = len(primitive_gates) + 1 + len(noise_channels) 
         if self.coherent_noise is True:
-            self.encoding_dim+=2#(epsilon_Z,epsilon_X)
+            self.encoding_dim+=2   #(epsilon_Z,epsilon_X)
         self.shape = shape
-        epsilon_idx=self.gate2epsilonidx[gates.RX]
-        epsilon_value=[i for i in self.epsilon2index if self.epsilon2index[i]==epsilon_idx]
-                           
         
-        print('test',str(epsilon_value[0]))
     def gate_to_array(self, gate):
         """Provide the one-hot encoding of a gate."""
         one_hot = np.zeros(self.encoding_dim)
@@ -227,7 +229,7 @@ class CircuitRepresentation(object):
             if type(gate) is gates.channels.DepolarizingChannel:               
                 param_val = gate.init_kwargs['lam']
             if type(gate) is gates.channels.ThermalRelaxationChannel:
-                param_val = gate.init_args[-1]#the last element is the time parameter
+                param_val = gate.init_args[-1] #the last element is the time parameter
             if type(gate) is gates.channels.ResetChannel:               
                 param_val = gate.init_kwargs['p0'] 
         elif type(gate) in self.gate2index.keys():
@@ -274,7 +276,7 @@ class CircuitRepresentation(object):
         return list(zip(*new_moments))      
 
     def circuit_to_array(self, circuit):
-        #DOESN'T WORK with noisy circuit only clean one
+        #DOESN'T WORK with noisy circuit, only clean one
         """Maps qibo circuits to numpy array representation.
         """
         nqubits = circuit.nqubits
@@ -294,7 +296,19 @@ class CircuitRepresentation(object):
         return clean_rep #rep shape: n_moments,n_qubits,encoding_dim
 
     def array_to_gate(self, array, qubit,qubit2=None):
-        """Build pair of qibo (gate,channel) starting from the encoding."""
+        """Build pair of qibo (gate,channel) starting from the encoding.
+
+        Args: 
+            array: 1-D array that is the representation of a specific moment of the circuit
+            qubit: the qubit that corresponds to that moment
+
+        Returns: 
+            gates_array: array (shape=[3]) of qibo gates relative to the input representation. The first element will be the
+            principal gate encoded by the input array and the second and third will be the perturbative gates (RZ,RX) due to the epsilon parameter.
+            If epsilon is 0 or coherent noise is turned off, those final elements will be None.
+        
+            channels: list of channels encoded by the array in input
+        """
         # separate gate part and channel part
         gate_arr = array[:len(self.gate2index) + 1]
         
@@ -307,7 +321,7 @@ class CircuitRepresentation(object):
             epsilonZ=None
             epsilonX=None
         # extract parameters and objects
-        theta = gate_arr[-1]
+        theta = gate_arr[-1]* 2*np.pi
         
         gate_idx=gate_arr[:-1].nonzero()[0]
 
@@ -316,15 +330,11 @@ class CircuitRepresentation(object):
             gate = gate(qubit,qubit2)
         elif gate_arr[self.gate2index.get(gates.RZ)]==1: 
             gate = self.index2gate[ int(gate_idx) ]
-            gate = gate(qubit, theta=theta * 2*np.pi)    
-           # if self.coherent_noise is True:
-           #     gate_coher_err= gates.RZ(qubit, theta=array[-2] * 2*np.pi) 
+            gate = gate(qubit, theta=theta )    
            
         elif  gate_arr[self.gate2index.get(gates.RX)]==1:
             gate = self.index2gate[ int(gate_idx) ]
-            gate = gate(qubit, theta=theta * 2*np.pi)
-            #if self.coherent_noise is True:
-            #    gate_coher_err= gates.RX(qubit, theta=array[-1] * 2*np.pi) 
+            gate = gate(qubit, theta=theta )
          
         else:
             gate=None
@@ -332,8 +342,7 @@ class CircuitRepresentation(object):
         if len(channel_arr.nonzero()[0]) > 0:           
             channel_list=[]
             channel_idx=channel_arr.nonzero()[0]
-            for idx in channel_idx:        
-            #channel_idx=int(channel_idx)          
+            for idx in channel_idx:              
                 channel = self.index2channel[
                     idx + len(self.gate2index) + 1
                 ]          
@@ -350,11 +359,11 @@ class CircuitRepresentation(object):
         else:
             channel_list = None
         if epsilonZ is not None and epsilonZ!=0 :
-            coherent_err_Z=gates.RZ(q=qubit,theta=epsilonZ)
+            coherent_err_Z=gates.RZ(q=qubit,theta=theta*epsilonZ)
         else: 
             coherent_err_Z=None
         if epsilonX is not None and epsilonX!=0 :
-            coherent_err_X=gates.RX(q=qubit,theta=epsilonX)
+            coherent_err_X=gates.RX(q=qubit,theta=theta*epsilonX)
         else:
             coherent_err_X=None
         gates_arr=[gate,coherent_err_Z,coherent_err_X]
@@ -371,31 +380,26 @@ class CircuitRepresentation(object):
         ''' 
         nqubits = rep_array.shape[1]      
         c = Circuit(nqubits, density_matrix=True)
-        #print('rep array shape: ',rep_array.shape)
         for moment in range(len(rep_array)):
             count=-1
-            pending_gates=[] #possible problem if using more than 3 qubits 
+            pending_gates=[] 
             for qubit, row in enumerate(rep_array[moment]):
-
                 if self.gate2index.get(gates.CZ) is not None and row[int(self.gate2index.get(gates.CZ))]==1: 
                     if count == -1:
                         gate, channels=self.array_to_gate(row,qubit) 
                         for idx,i in enumerate(gate):
                             if i is not None and idx>0: #the first element is CZ gate and it will be added later, now is excluded
                                 pending_gates.append(i)
-                        count=qubit
-                       
+                        count=qubit        
                         lam1=row[self.channel2index[gates.DepolarizingChannel]]
-                        print('-----lam1----',lam1)
-                        p0=row[self.channel2index[gates.ResetChannel]]#to be generalized without adding the index manually
-                        print('-----p0----',p0)
-                       
+                        p0=row[self.channel2index[gates.ResetChannel]]                      
                         pass
+
                     elif count!=-1:
                         gate, channels=self.array_to_gate(row,qubit,count) 
                         for i in range(len(gate)):
                             if gate[i] is not None:
-                                c.add(gate[i]) #now gate is an array of form (TrueGate,coherent_err_Z,coherent_err_X)
+                                c.add(gate[i]) # gate is an array of form (TrueGate,coherent_err_Z,coherent_err_X)
                             if i<len(pending_gates) and pending_gates[i] is not None:
                                 c.add(pending_gates[i])
                         if p0 !=0:
@@ -404,7 +408,7 @@ class CircuitRepresentation(object):
                         if channels is not None:
                             for channel in channels:
                                 if channel.__class__ is gates.channels.DepolarizingChannel:
-                                    c.add(channel.__class__((qubit,count),lam=(lam1+channel.init_kwargs['lam'])/2))#+channel.init_kwargs['lam'])/2)
+                                    c.add(channel.__class__((qubit,count),lam=(lam1+channel.init_kwargs['lam'])/2)) #Average value of the 2 lambda
                                 elif channel.__class__ is gates.channels.ThermalRelaxationChannel:
                                     c.add(channel.__class__(q=qubit,t_1=1,t_2=1,time=channel.init_args[-1]))
                                 elif channel.__class__ is gates.channels.ResetChannel:

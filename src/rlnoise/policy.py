@@ -65,7 +65,8 @@ class CustomCallback(BaseCallback):
     """
     A custom callback that derives from ``BaseCallback``.
 
-    :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
+    Args:
+        check_freq: number of steps after wich will be performed the callback 
     """
     def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=1,test_on_data_size=None):
         super(CustomCallback, self).__init__(verbose)
@@ -184,7 +185,7 @@ class CustomCallback(BaseCallback):
 
         if self.test_on_data_size is None:
             fig=plt.figure(figsize=(15,5))
-            fig.suptitle('3Q w CZ D7 K3 Penalization-on(0.001) dataset len=1000 Dep and Therm', fontsize=15)
+            fig.suptitle('3Q D7 K3 SR-off,Penal-off,SR-off, datasize=100, Coherent (e_x & e_z)', fontsize=15)
             ax=fig.add_subplot(131)
             ax1=fig.add_subplot(132)
             ax2=fig.add_subplot(133)

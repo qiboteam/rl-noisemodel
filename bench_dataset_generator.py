@@ -3,29 +3,27 @@ import numpy as np
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.CustomNoise import CustomNoiseModel
 
-noise_model = CustomNoiseModel()
 
-benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
-model_path=os.getcwd()+'/src/rlnoise/saved_models'
+benchmark_circ_path='src/rlnoise/bench_dataset'
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
-if not os.path.exists(model_path):
-    os.makedirs(model_path)
+
+noise_model = CustomNoiseModel()
 
 rep = CircuitRepresentation(
     primitive_gates = noise_model.primitive_gates,
     noise_channels = noise_model.channels,
     shape = '3d',
-    coherent_noise=False
+    coherent_noise=True
 )
 
 depths=[7]
 
 for i in depths:
-    f = open(benchmark_circ_path+"/depth_"+str(i)+"Dep-Term_CZ_3Q_1000.npz","wb")
+    f = open(benchmark_circ_path+"/depth_"+str(i)+"_3Q_CoherentOnly_100.npz","wb")
     nqubits = 3
     depth = i
-    ncirc = 1000
+    ncirc = 100
     dataset = Dataset(
         n_circuits = ncirc,
         n_gates = depth,

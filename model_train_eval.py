@@ -19,7 +19,7 @@ benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
 
-f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_%dQ_1000.npz"%(circuits_depth,nqubits),"rb")
+f = open(benchmark_circ_path+"/depth_%d_%dQ_CoherentOnly_100.npz"%(circuits_depth,nqubits),"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=copy.deepcopy(tmp['train_set'])
 train_label=copy.deepcopy(tmp['train_label'])
@@ -36,13 +36,13 @@ rep = CircuitRepresentation(
     primitive_gates = noise_model.primitive_gates,
     noise_channels = noise_model.channels,
     shape = '3d',
-    coherent_noise=False
+    coherent_noise=True
 )
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
     representation = rep,
     labels = train_label,
-    reward = reward,
+    reward = reward
 )
 policy = "MlpPolicy"
 policy_kwargs = dict(
@@ -65,10 +65,12 @@ policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
+n_steps=512,
+n_epochs=4
 )
 
 
-model.learn(1000000,progress_bar=True,callback=callback)
+model.learn(500000,progress_bar=True,callback=callback)
 
 f.close()
                                         #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS

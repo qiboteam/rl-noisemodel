@@ -155,7 +155,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     return avg_rew/n_circ,hilbert_schmidt_dist/n_circ,avg_trace_distance/n_circ
 
 
-    
+
 '''
 def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())
