@@ -66,7 +66,11 @@ class CustomCallback(BaseCallback):
     A custom callback that derives from ``BaseCallback``.
 
     Args:
-        check_freq: number of steps after wich will be performed the callback 
+        check_freq: number of steps after wich will be performed the callback
+        evaluation_set: np array loaded with np.load('bench_dataset') 
+        train_environment: object of class QuantumCircuit()
+        trainset_depth: number of gates per qubit used in the bench dataset
+
     """
     def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=1,test_on_data_size=None):
         super(CustomCallback, self).__init__(verbose)
@@ -147,7 +151,7 @@ class CustomCallback(BaseCallback):
 
             if avg_rew_eval > self.best_mean_reward:
                 self.best_mean_reward = avg_rew_eval
-                # Example for saving best model
+                # Saving best model
                 if self.save_best is True:
                     if self.verbose >0:
                         print("Saving new best model at {} timesteps".format(self.num_timesteps))

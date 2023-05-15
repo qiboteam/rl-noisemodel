@@ -5,25 +5,14 @@ from gym import spaces
 import copy
 from qibo.quantum_info import trace_distance
 
-params=ConfigParser()
-params.read("src/rlnoise/config.ini") 
 
-neg_reward=params.getfloat('gym_env','neg_reward')
-pos_reward=params.getfloat('gym_env','pos_reward')
-step_r_metric=params.get('gym_env','step_r_metric')
-action_penality=params.getfloat('gym_env','action_penality')
-std_noise=params.getboolean('noise','std_noise')
-coherent_noise=params.getboolean('noise','coherent_noise')
-action_space_type=params.get('gym_env','action_space')
-kernel_size = params.getint('gym_env','kernel_size')
-step_reward=params.getboolean('gym_env','step_reward')
 
 class QuantumCircuit(gym.Env):
     
     def __init__(self, circuits, labels, representation, reward, noise_param_space=None,
-                 step_reward=step_reward, kernel_size=kernel_size, neg_reward=neg_reward,
-                 pos_reward=pos_reward, step_r_metric=step_r_metric, action_penality=action_penality,
-                 std_noise=std_noise, coherent_noise=coherent_noise, action_space_type=action_space_type):
+                 step_reward=None, kernel_size=None, neg_reward=None,pos_reward=None, 
+                 step_r_metric=None, action_penality=None,std_noise=None, 
+                 coherent_noise=None, action_space_type=None):
         '''
         Args: 
             circuits (list): list of circuit represented as numpy vectors
@@ -32,7 +21,7 @@ class QuantumCircuit(gym.Env):
             reward: object of the class DensityMatrixReward() or FrequencyReward()
             others: hyperparameters passed from config.ini
         '''
-        super(QuantumCircuit, self).__init__(self)
+        super(QuantumCircuit, self).__init__()
         self.neg_reward=neg_reward
         self.pos_reward=pos_reward
         self.step_r_metric=step_r_metric
@@ -51,6 +40,7 @@ class QuantumCircuit(gym.Env):
         self.n_gate_types = len(self.rep.gate2index)
         self.n_channel_types = len(self.rep.channel2index)
         self.noise_channels = list(self.rep.channel2index.keys())
+        self.n_coherent_gates= len(self.rep.epsilon2index)
 
         if noise_param_space is None:
             self.noise_par_space = { 'range': (0,0.1), 'n_steps': 100 } # convert this to a list of dict for allowing custom range and steps for the different noise channels
@@ -83,7 +73,11 @@ class QuantumCircuit(gym.Env):
             self.action_space = spaces.Box( low=0, high=0.2,shape=(self.n_qubits,2), dtype=np.float32)
 
         elif self.action_space_type=="Binary":
-            action_shape=[2,2,2,2,2,2]
+            if self.coherent_noise is True and self.std_noise is True:
+                noise_encoding_dim=self.n_channel_types+self.n_coherent_gates
+            else: 
+                noise_encoding_dim=self.n_channel_types
+            action_shape=np.ones(self.n_qubits*noise_encoding_dim,dtype=np.int8)*2 #not tested this new implementation
             self.action_space = spaces.MultiDiscrete( 
             action_shape
             )

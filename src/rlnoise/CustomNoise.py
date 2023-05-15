@@ -18,6 +18,7 @@ def string_to_gate(gate_string):
     return gate
 
 params=ConfigParser()
+
 params.read("src/rlnoise/config.ini") 
 primitive_gates= json.loads(params.get('noise','primitive_gates'))
 channels= json.loads(params.get('noise','channels'))

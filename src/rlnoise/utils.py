@@ -140,16 +140,14 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         avg_trace_distance+=trace_distance(evaluation_labels[i],dm_untrained)
         if i==0 and debug:
             noise_model=CustomNoiseModel()
-            test_rep=evaluation_circ[0]
+            test_rep=evaluation_circ[i]
             test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
            
-            #print('true circ rep: ',test_rep)
             print('\nTrue noisy circuit')
             print(test_circ.draw())
             print('\nPredicted noisy circ: ')
             print(predicted_circ.draw())
             print("Predicted representation: \n", predicted_rep)
-            #print('\n DM MSE: ',10*(np.sqrt(np.abs((test_circ().state()-dm_untrained)**2))).mean())
 
     
     return avg_rew/n_circ,hilbert_schmidt_dist/n_circ,avg_trace_distance/n_circ

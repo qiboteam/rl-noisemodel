@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from configparser import ConfigParser
 import copy
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from qibo import gates
@@ -9,17 +10,30 @@ from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO,DQN,DDPG #not bad
 from stable_baselines3 import DQN,A2C,TD3
 from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.utils import model_evaluation
+params=ConfigParser()
+params.read("src/rlnoise/config.ini") 
 
-
+neg_reward=params.getfloat('gym_env','neg_reward')
+pos_reward=params.getfloat('gym_env','pos_reward')
+step_r_metric=params.get('gym_env','step_r_metric')
+action_penality=params.getfloat('gym_env','action_penality')
+std_noise=params.getboolean('noise','std_noise')
+coherent_noise=params.getboolean('noise','coherent_noise')
+action_space_type=params.get('gym_env','action_space')
+kernel_size = params.getint('gym_env','kernel_size')
+step_reward=params.getboolean('gym_env','step_reward')
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=7
 nqubits=3
+n_circuit_in_dataset=100
+dataset_name="Test"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
 
-benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
+benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
 
-f = open(benchmark_circ_path+"/depth_%d_%dQ_CoherentOnly_100.npz"%(circuits_depth,nqubits),"rb")
+f = open(benchmark_circ_path+dataset_name,"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=copy.deepcopy(tmp['train_set'])
 train_label=copy.deepcopy(tmp['train_label'])
@@ -42,7 +56,16 @@ circuit_env_training = QuantumCircuit(
     circuits = train_set,
     representation = rep,
     labels = train_label,
-    reward = reward
+    reward = reward,
+    neg_reward=neg_reward,
+    pos_reward=pos_reward,
+    step_r_metric=step_r_metric,
+    action_penality=action_penality,
+    std_noise=std_noise,
+    coherent_noise=coherent_noise,
+    action_space_type=action_space_type,
+    kernel_size = kernel_size,
+    step_reward=step_reward
 )
 policy = "MlpPolicy"
 policy_kwargs = dict(
@@ -69,48 +92,13 @@ n_steps=512,
 n_epochs=4
 )
 
-
 model.learn(500000,progress_bar=True,callback=callback)
 
 f.close()
-                                        #TRAIN & TEST ON SAME DEPTH BUT DIFFERENT TIMESTEPS
 '''
-total_timesteps=[2000,4000,6000,8000,10000,15000,20000,30000,50000,80000,130000,200000]
-
-model = PPO(
-policy,
-circuit_env_training,
-policy_kwargs=policy_kwargs, 
-verbose=0,
-)
-
-for time in total_timesteps:
-    model = PPO(
-    policy,
-    circuit_env_training,
-    policy_kwargs=policy_kwargs, 
-    verbose=0,
-    )
-    val_avg_rew_untrained,mae_untrained,trace_dist_untr=(model_evaluation(val_set,val_label,circuit_env_training,model))
-    Rew_Mae_TraceD_untrained.append([val_avg_rew_untrained,mae_untrained,trace_dist_untr])
-
-    model.learn(time, progress_bar=True) 
-
-    val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
-    if trace_dist_train <0.0001:
-        model.save(model_path+'/Dep-Term_CZ_3Q_BestMod'+str(time))
-    Rew_Mae_TraceD_trained.append([val_avg_rew_trained,mae_trained,trace_dist_train])
-    del model
-Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
-Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
-
-f = open(bench_results_path+"/Dep-Term_CZ_3Q"+str(total_timesteps),"wb")
-np.savez(f,untrained=Rew_Mae_TraceD_untrained,trained=Rew_Mae_TraceD_trained)
-f.close()
-'''
-                                            #TRAIN AND TEST ON DIFFERENT DEPTHS
+                                            #TEST A SAVED MODEL ON DIFFERENT DEPTHS
    
-'''
+
 model1= PPO(
 policy,
 circuit_env_training,
@@ -118,9 +106,14 @@ policy_kwargs=policy_kwargs,
 verbose=0,
 )
 model=PPO.load(model_path+"/best_model_Q3_D7154000")
+
+nqubits=3
+n_circuit_in_dataset=100
 depth_list=[7,10,15,20,25,30,35,40]
+result_filename='Dep-Term_CZ_3Q_154k_1'
 for d in depth_list:
-    f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q.npz"%(d),"rb")
+    dataset_name='3Q_CoherentOnly'+'_D%d_%dQ_len%d.npz'%(d,nqubits,n_circuit_in_dataset)
+    f = open(benchmark_circ_path+dataset_name,"rb")
     tmp=np.load(f,allow_pickle=True)
     val_set=tmp['val_set']
     val_label=tmp['val_label']
@@ -132,7 +125,7 @@ for d in depth_list:
 
 Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
 Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
-f = open(bench_results_path+"/Dep-Term_CZ_3Q_154k_1"+str(depth_list),"wb")
+f = open(bench_results_path+result_filename+str(depth_list),"wb")
 np.savez(f,trained=Rew_Mae_TraceD_trained,untrained=Rew_Mae_TraceD_untrained)
 f.close()
 '''
@@ -168,8 +161,3 @@ for data_size in n_circ:
 f.close()
 '''
 #f.close()
-
-
-#print('avg reward from untrained model: %f\n'%(val_avg_rew_untrained),'avg reward from trained model: %f \n'%(val_avg_rew_trained))
-#print('avg MAE from untrained model: %f\n'%(mea_untrained*10),'avg MAE from trained model: %f \n'%(mae_trained*10))
-#print('avg Trace Distance from untrained model: %f\n'%(trace_dist_untr),'avg Trace Distance from trained model: %f \n'%(trace_dist_train))
