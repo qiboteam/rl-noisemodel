@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from configparser import ConfigParser
 from rlnoise.gym_env import QuantumCircuit
 import copy
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.custom_noise import CustomNoiseModel
 from qibo.quantum_info import trace_distance, hilbert_schmidt_distance #those are the equivalent of fidellity for density matrices (see also Bures distance)
 np.set_printoptions(precision=3, suppress=True)
 def models_folder():
@@ -109,6 +110,15 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     Return: 
         average reward (total reward/n_circuits), avg Hilbert-Schmidt distance, avg Trace Distance
     '''
+    params=ConfigParser()
+    params.read("src/rlnoise/config.ini") 
+    neg_reward=params.getfloat('gym_env','neg_reward')
+    pos_reward=params.getfloat('gym_env','pos_reward')
+    step_r_metric=params.get('gym_env','step_r_metric')
+    action_penality=params.getfloat('gym_env','action_penality')
+    action_space_type=params.get('gym_env','action_space')
+    kernel_size = params.getint('gym_env','kernel_size')
+    step_reward=params.getboolean('gym_env','step_reward')
     circuits=copy.deepcopy(evaluation_circ)
     debug=True
     environment = QuantumCircuit(
@@ -116,6 +126,13 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     representation = train_environment.rep,
     labels = evaluation_labels,
     reward = train_environment.reward, 
+    neg_reward=neg_reward,
+    pos_reward=pos_reward,
+    step_r_metric=step_r_metric,
+    action_penality=action_penality,
+    action_space_type=action_space_type,
+    kernel_size = kernel_size,
+    step_reward=step_reward
     )
     avg_rew=0.
     mae=0.

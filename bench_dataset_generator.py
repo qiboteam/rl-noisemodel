@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from rlnoise.dataset import Dataset, CircuitRepresentation
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.custom_noise import CustomNoiseModel
 
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
@@ -9,12 +9,7 @@ if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
 
 noise_model = CustomNoiseModel()
-rep = CircuitRepresentation(
-    primitive_gates = noise_model.primitive_gates,
-    noise_channels = noise_model.channels,
-    shape = '3d',
-    coherent_noise=True
-)
+rep = CircuitRepresentation()
 
 number_of_gates_per_qubit=[7]
 qubits=3

@@ -20,10 +20,7 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
     ):
         super().__init__(observation_space, features_dim)
         indim = observation_space.shape[0]
-        print('observation spac shape: ',observation_space.shape)
         sample = torch.as_tensor(observation_space.sample()[None]).float()
-        #print('indim: ',indim)
-        #print('filter shape: ',filter_shape)
         filter_shape=(1,2)
         conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=64, kernel_size=filter_shape) #adding pooling layer?
         
@@ -32,7 +29,6 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
             #shape = torch.nn.functional.avg_pool2d(conv1(sample),kernel_size=filter_shape).shape
             shape = conv1(sample).shape
             
-        #conv2 = torch.nn.Conv2d(n_filters, n_filters, (max(int(shape[2]/2), 1), shape[3]))  #aggiungi linear layer prima di conv1
         conv2 = torch.nn.Conv2d(64, 32, (max(int(shape[2]/2), 1), shape[3]))
 
         self.cnn = torch.nn.Sequential(
@@ -54,10 +50,7 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         self.linear = torch.nn.Sequential(torch.nn.Linear(hdim, features_dim), torch.nn.ELU())
 
     def forward(self, x):
-        #test=np.array(torch.Tensor.cpu(x[0]))
-        #print('input of feature extractor: \n',test.transpose(2,1,0))
-        x = self.cnn(x)
-        
+        x = self.cnn(x)  
         return self.linear(x)
     
 
@@ -189,7 +182,7 @@ class CustomCallback(BaseCallback):
 
         if self.test_on_data_size is None:
             fig=plt.figure(figsize=(15,5))
-            fig.suptitle('3Q D7 K3 SR-off,Penal-off,SR-off, datasize=100, Coherent (e_x & e_z)', fontsize=15)
+            fig.suptitle('3Q D7 K3 SR-off,Penal=0.001, datasize=100, Coherent(all),Std_noise=None', fontsize=15)
             ax=fig.add_subplot(131)
             ax1=fig.add_subplot(132)
             ax2=fig.add_subplot(133)

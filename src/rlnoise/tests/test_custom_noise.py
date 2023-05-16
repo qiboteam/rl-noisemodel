@@ -1,4 +1,4 @@
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.custom_noise import CustomNoiseModel
 from qibo import gates
 from qibo.models import Circuit
 

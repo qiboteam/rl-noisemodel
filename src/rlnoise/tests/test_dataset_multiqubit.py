@@ -2,7 +2,7 @@
 import time
 from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.custom_noise import CustomNoiseModel
 
 nqubits = 2
 depth = 5

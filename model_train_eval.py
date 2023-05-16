@@ -9,8 +9,9 @@ from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO,DQN,DDPG #not bad
 from stable_baselines3 import DQN,A2C,TD3
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation
+
 params=ConfigParser()
 params.read("src/rlnoise/config.ini") 
 
@@ -18,8 +19,6 @@ neg_reward=params.getfloat('gym_env','neg_reward')
 pos_reward=params.getfloat('gym_env','pos_reward')
 step_r_metric=params.get('gym_env','step_r_metric')
 action_penality=params.getfloat('gym_env','action_penality')
-std_noise=params.getboolean('noise','std_noise')
-coherent_noise=params.getboolean('noise','coherent_noise')
 action_space_type=params.get('gym_env','action_space')
 kernel_size = params.getint('gym_env','kernel_size')
 step_reward=params.getboolean('gym_env','step_reward')
@@ -46,12 +45,7 @@ val_label=copy.deepcopy(tmp['val_label'])
 noise_model = CustomNoiseModel()
 reward = DensityMatrixReward()
 
-rep = CircuitRepresentation(
-    primitive_gates = noise_model.primitive_gates,
-    noise_channels = noise_model.channels,
-    shape = '3d',
-    coherent_noise=True
-)
+rep = CircuitRepresentation()
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
     representation = rep,
@@ -61,8 +55,6 @@ circuit_env_training = QuantumCircuit(
     pos_reward=pos_reward,
     step_r_metric=step_r_metric,
     action_penality=action_penality,
-    std_noise=std_noise,
-    coherent_noise=coherent_noise,
     action_space_type=action_space_type,
     kernel_size = kernel_size,
     step_reward=step_reward
@@ -92,7 +84,7 @@ n_steps=512,
 n_epochs=4
 )
 
-model.learn(500000,progress_bar=True,callback=callback)
+model.learn(1000000,progress_bar=True,callback=callback)
 
 f.close()
 '''
