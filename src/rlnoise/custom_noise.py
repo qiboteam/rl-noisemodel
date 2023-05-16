@@ -23,7 +23,6 @@ params=ConfigParser()
 
 params.read("src/rlnoise/config.ini") 
 primitive_gates= json.loads(params.get('noise','primitive_gates'))
-channels= json.loads(params.get('noise','channels'))
 lam=params.getfloat('noise','dep_lambda')
 p0=params.getfloat('noise','p0')   
 epsilon_x=params.getfloat('noise','epsilon_x')
@@ -34,12 +33,10 @@ x_coherent_on_gate=json.loads(params.get('noise','x_coherent_on_gate'))
 z_coherent_on_gate=json.loads(params.get('noise','z_coherent_on_gate'))
 class CustomNoiseModel(object):
 
-    def __init__(self,primitive_gates=primitive_gates,channels=channels,
-                lam=lam,p0=p0,
+    def __init__(self,primitive_gates=primitive_gates,lam=lam,p0=p0,
                 x_coherent_on_gate=x_coherent_on_gate,z_coherent_on_gate=z_coherent_on_gate,
                 epsilon_x=epsilon_x,epsilon_z=epsilon_z,damping_on_gate=damping_on_gate,depol_on_gate=depol_on_gate):
         self.primitive_gates= primitive_gates
-        self.channels= channels
         self.x_coherent_on_gate=x_coherent_on_gate   
         self.z_coherent_on_gate=z_coherent_on_gate
         self.damping_on_gate=damping_on_gate

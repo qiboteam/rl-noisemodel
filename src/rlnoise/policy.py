@@ -129,7 +129,7 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        if self.n_calls % self.check_freq == 0:
+        if self.n_calls==1 or self.n_calls % self.check_freq == 0:
 
           # Retrieve training reward
             avg_rew_train,avg_hilbert_schmidt_dist_train,avg_trace_dist_train=model_evaluation(self.train_circ,self.train_label,self.environment,self.model)
@@ -182,7 +182,7 @@ class CustomCallback(BaseCallback):
 
         if self.test_on_data_size is None:
             fig=plt.figure(figsize=(15,5))
-            fig.suptitle('3Q D7 K3 SR-off,Penal=0.001, datasize=100, Coherent(all),Std_noise=None', fontsize=15)
+            fig.suptitle('3Q D7 K3 SR-off,Penal=0.001, datasize=100, Coherent(e_z=0.1,e_x=0.2),Std_noise=None', fontsize=15)
             ax=fig.add_subplot(131)
             ax1=fig.add_subplot(132)
             ax2=fig.add_subplot(133)
@@ -198,7 +198,6 @@ class CustomCallback(BaseCallback):
             ax1.plot(time_steps,train_results[:,1],color='orange',label='train_set',marker='x')
             ax2.plot(time_steps,train_results[:,2],color='orange',label='train_set',marker='x')
             ax.legend()
-            
             fig.savefig(self.plot_dir+self.plot_name+'_Q%d_D%d_steps%d.png'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]))
             plt.show()
         else:

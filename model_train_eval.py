@@ -84,7 +84,7 @@ n_steps=512,
 n_epochs=4
 )
 
-model.learn(1000000,progress_bar=True,callback=callback)
+model.learn(5000000,progress_bar=True,callback=callback)
 
 f.close()
 '''
