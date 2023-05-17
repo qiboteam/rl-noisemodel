@@ -232,7 +232,6 @@ class CircuitRepresentation(object):
         return one_hot
 
     #WORK WITH CX AND CZ
-
     def reorder_moments(self,moments):
         new_moments = []  
         count=0
@@ -260,7 +259,8 @@ class CircuitRepresentation(object):
                     new_row.append(None)
                 i+=1
             new_moments.append(new_row)
-        return list(zip(*new_moments))      
+        return list(zip(*new_moments))
+    
     #   DOESN'T WORK WITH MORE THAN ONE CHANNEL ON A GATE
     def circuit_to_array(self, circuit):
         """Maps qibo circuits to numpy array representation.
@@ -371,6 +371,21 @@ class CircuitRepresentation(object):
                     
         return c
 
+    # works only if the representation for each channel consists of one bit
+    # 1/0 for placing the channel and one bit for the parameter of the channel
+    def make_action(self, action, circuit, position):
+        if isinstance(circuit, qibo.models.circuit.Circuit):
+            assert False, "Circuit to array is not currently working."
+            circuit = self.circuit_to_array(circuit)
+        nqubits = circuit.shape[1]
+        action = action.reshape(nqubits,-1,2)
+        action[action[:,0] == 0] = 0
+        action = action.reshape(nqubits,-1)
+        circuit[position, :, -action.shape[-1]:] = action
+        return circuit
+
+                
+                       
 '''
     def array_to_circuit(self, array):
         """Maps numpy array to qibo circuit."""

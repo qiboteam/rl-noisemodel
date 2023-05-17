@@ -24,7 +24,6 @@ train_label=tmp['train_label']
 val_set=tmp['val_set']
 val_label=tmp['val_label']
 
-
 #Setting up training env and policy model
 nqubits=3
 noise_model = CustomNoiseModel()

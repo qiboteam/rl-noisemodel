@@ -210,7 +210,26 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
     return depths, survival_probs, optimal_params, model
 
 
+class RL_NoiseModel(object):
 
+    def __init__(self, agent, circuit_representation):
+        super(self, ).__init__()
+        self.agent = agent
+        self.rep = circuit_representation
+
+    def apply(self, circuit):
+        if isinstance(circuit, qibo.models.circuit.Circuit):
+            observation = self.circuit_to_array(circuit)
+        elif isinstance(circuit, np.ndarray):
+            observation = circuit
+        else:
+            assert False, "Invalid circuit type"
+        for i in range(circuit.shape[0]):
+            action = self.agent.predict(observation, deterministic=True)
+            observation = self.rep.make_action(action=action, circuit=observation, position=i)
+        return self.rep.rep_to_circuit(observation)
+            
+            
 if __name__ == "__main__":
 
     from dataset import Dataset, CircuitRepresentation
@@ -233,6 +252,7 @@ if __name__ == "__main__":
 
     depths, survival_probs, optimal_params, model = randomized_benchmarking(circs, noise_model=noise_model)
     print(f"> Decay: {optimal_params[1]}")
+    print(optimal_params)
     plt.scatter(depths, survival_probs)
     plt.plot(depths, model(depths))
     plt.show()
