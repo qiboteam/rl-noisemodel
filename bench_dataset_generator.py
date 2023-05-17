@@ -1,31 +1,26 @@
 import os
 import numpy as np
-from rlnoise.datasetv2 import Dataset, CircuitRepresentation
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.dataset import Dataset, CircuitRepresentation
+from rlnoise.custom_noise import CustomNoiseModel
 
-noise_model = CustomNoiseModel()
 
-benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset'
-model_path=os.getcwd()+'/src/rlnoise/saved_models'
+benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
-if not os.path.exists(model_path):
-    os.makedirs(model_path)
 
-rep = CircuitRepresentation(
-    primitive_gates = noise_model.primitive_gates,
-    noise_channels = noise_model.channels,
-    shape = '3d',
-    coherent_noise=False
-)
+noise_model = CustomNoiseModel()
+rep = CircuitRepresentation()
 
-depths=[7,10,20,30]
+number_of_gates_per_qubit=[7]
+qubits=3
+number_of_circuits=100
+dataset_name='Test'
 
-for i in depths:
-    f = open(benchmark_circ_path+"/depth_"+str(i)+"Dep-Term_CZ_3Q.npz","wb")
-    nqubits = 3
+for i in number_of_gates_per_qubit:
+    f = open(benchmark_circ_path+dataset_name+"_D%d_%dQ_len%d.npz"%(i,qubits,number_of_circuits),"wb")
+    nqubits = qubits
     depth = i
-    ncirc = 100
+    ncirc = number_of_circuits
     dataset = Dataset(
         n_circuits = ncirc,
         n_gates = depth,
@@ -40,7 +35,7 @@ for i in depths:
     train_label=np.asarray(dataset.train_noisy_label)
     val_set=np.asarray(dataset.val_circuits)
     val_label=np.asarray(dataset.val_noisy_label)
-    np.savez(f,train_set=train_set, train_label=train_label, val_set=val_set,val_label=val_label)
+    np.savez(f,train_set=train_set, train_label=train_label, val_set=val_set,val_label=val_label,allow_pickle=True)
 
 f.close()
 

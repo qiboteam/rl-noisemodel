@@ -1,192 +1,174 @@
+from configparser import ConfigParser
 import numpy as np
 import gym, random
 from gym import spaces
 import copy
+from qibo import gates
+from qibo.quantum_info import trace_distance
+from rlnoise.dataset import gate_to_idx
 
-# currently working just for single qubit circuits
-# TO DO:
-# - Adapt to multi-qubits circuits
-# - Implement batches
-# - Write a reward that makes sense
-# - Adapt it for working with the 3d representation
+def gate_action_index(gate):
+    if gate == 'epsilon_x':
+        return 0
+    if gate == 'epsilon_z':
+        return 1
+    if gate == gates.ResetChannel:
+        return 2
+    if gate == gates.DepolarizingChannel:
+        return 3
 
-NEG_REWARD=-0.1
-POS_REWARD=0.05
 class QuantumCircuit(gym.Env):
     
-    def __init__(self, circuits, representation, labels, reward, noise_param_space=None, kernel_size=None,step_reward=False):
+    def __init__(self, circuits, labels, representation, reward, noise_param_space=None,
+                 step_reward=None, kernel_size=None, neg_reward=None,pos_reward=None, 
+                 step_r_metric=None, action_penality=None,
+                 action_space_type=None):
         '''
         Args: 
             circuits (list): list of circuit represented as numpy vectors
-        
+            labels (list): list relative to the circuits
+            representation: object of the class CircuitRepresentation()
+            reward: object of the class DensityMatrixReward() or FrequencyReward()
+            others: hyperparameters passed from config.ini
         '''
         super(QuantumCircuit, self).__init__()
-
-        self.std_noise=True
-        self.coherent_noise=False
-
+        self.neg_reward=neg_reward
+        self.pos_reward=pos_reward
+        self.step_r_metric=step_r_metric
+        self.action_penality=action_penality
+        self.action_space_type=action_space_type
+        self.kernel_size = kernel_size
+        assert self.kernel_size % 2 == 1, "Kernel_size must be odd"
+        self.step_reward=step_reward 
         self.position=None
         self.circuits = circuits
         self.n_circ = len(self.circuits)
         self.n_qubits = circuits[0].shape[1]
         self.circuit_lenght = None
         self.rep = representation
-        self.n_gate_types = len(self.rep.gate2index)
-        self.n_channel_types = len(self.rep.channel2index)
-        self.noise_channels = list(self.rep.channel2index.keys())
-        self.kernel_size = kernel_size
-        self.step_reward=step_reward
-        if noise_param_space is None:
-            self.noise_par_space = { 'range': (0,0.1), 'n_steps': 100 } # convert this to a list of dict for allowing custom range and steps for the different noise channels
-        else:
-            self.noise_par_space = noise_param_space
-        self.noise_incr = np.diff(self.noise_par_space['range']) / self.noise_par_space['n_steps']
-
-        assert self.noise_incr > 0
-        self.labels = labels
-        self.reward = reward
-        self.current_state, self.current_target = self.init_state()
-        #self.n_qubits = int(self.shape[-1] / self.rep.encoding_dim)
         self.actual_mse=None
         self.previous_mse=None
-        if kernel_size is not None:
-            assert kernel_size % 2 == 1, "Kernel_size must be odd"
-            self.shape[2] = kernel_size
-            self.kernel_size = kernel_size
-        else:
-            self.kernel_size = None
-            self.shape[0] += 1
-        #print('self.shape2: ',self.shape)
+        self.labels = labels
+        self.reward = reward
+        self.encoding_dim = 8
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
-            shape = tuple(self.shape),
-            #shape =(4,1,3),
+            shape = (self.encoding_dim,self.n_qubits,self.kernel_size),
             dtype = np.float32
         )
-        #action_shape=([ self.n_channel_types + 1 for i in range(self.n_qubits) ] +  [ self.noise_par_space['n_steps'] for i in range(self.n_qubits) ])
-        action_shape=[2,2,2,2,2,2]
-        #print('action shape: ',action_shape.shape)
-        self.action_space = spaces.MultiDiscrete(
-            #action_shape     # +1 for the no ch.annel option 
-            action_shape
-        )
+        if self.action_space_type=="Continuous":
+            self.action_space = spaces.Box( low=0, high=0.2,shape=(self.n_qubits,4), dtype=np.float32)
 
-        #self.action_space = spaces.Box( low=0, high=100,shape=(self.n_qubits,2), dtype=np.float32)
-        
-        #self.action_space = spaces.Box( low=0., high=0.2,shape=(self.n_qubits,2), dtype=np.float32)
-        # doesn't work with stable baselines
-        #self.action_space = spaces.Dict({
-        #    "channel": spaces.MultiDiscrete([ self.n_channel_types for i in range(self.n_qubits) ]),
-        #    "param": spaces.Box(low=0, high=1, shape=(self.n_qubits,), dtype=np.float32)
-        #})
+        elif self.action_space_type=="Discrete":
+            if noise_param_space is None:
+                self.noise_par_space = { 'range': (0,0.1), 'n_steps': 100 }
+            else:
+                self.noise_par_space = noise_param_space
+            self.noise_incr = np.diff(self.noise_par_space['range']) / self.noise_par_space['n_steps']
+            assert self.noise_incr > 0
+
+        elif self.action_space_type=="Binary":
+            action_shape=[2 for _ in range(self.n_qubits*4)]
+            self.action_space = spaces.MultiDiscrete( 
+            action_shape
+            )
         
     def init_state(self, i=None):
-        # initialize the state
         if i is None:
             i = random.randint(0, self.n_circ - 1)
+        self.circuit_number=i
         self.circuit_lenght=self.circuits[i].shape[0]
-        #print('circuit shape: ',self.circuits[i].shape)
         state=copy.deepcopy(self.circuits[i])
-        
-        state=state.transpose(2,1,0) #rearranged in shape (1, num_qubits, depth, encoding_dim+1)
-        #print('state shape: ',state.shape)
-        self.shape = np.array(state.shape)
-        #print('self.shape: ',self.shape)
-        assert (self.shape[0]) % (self.rep.encoding_dim) == 0
-
-        if self.kernel_size is not None:
-            padding = np.zeros(( self.shape[0],self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
-            self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
-            #print('padding shape: ',self.padded_circuit.shape)
-        #print('state shape: ',self.circuits[i].shape)
+        state=state.transpose(2,1,0) #check what returns from circuit_to_array and use proper shape
+        padding = np.zeros(( self.encoding_dim,self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
+        self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
         return state, self.labels[i]
     
     def _get_obs(self):
-        if self.kernel_size is not None:
-            return self.get_kernel()
-        else:
-            return self.current_state #current_state.shape= (1, depth, 6 if only 1qubit )
+        pos = int(self.get_position())
+        kernel=[]
+        r=int(self.kernel_size/2)
+        self.padded_circuit[:,:,r:-r]=self.current_state
+        kernel.append(self.padded_circuit[:,:,pos:pos+self.kernel_size])
+        return np.asarray(kernel,dtype=np.float32)
 
     def _get_info(self):
-        return { 'state': self._get_obs() } 
+        #Add last action
+        return {'State': self._get_obs(),
+                'Pos': self.position,
+                'Circ': self.circuit_number} 
 
     def reset(self, i=None):
         self.position=0
         self.current_state, self.current_target = self.init_state(i)
-        
         return self._get_obs()
 
     def step(self, action):
-        #print('action : ',action)
-        action=action.reshape((self.n_qubits,2))
+        if self.action_space_type =="Binary" or self.action_space_type =="Discrete":
+            action=action.reshape((self.n_qubits,4))
         reward=0.
         position = self.get_position()
-        #action=[action]
         #print('\n \n current state BEFORE action: \n',self.current_state.transpose(1,2,0))
-        if self.step_reward:
-            self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
-        #print('> State:\n', self._get_obs())
-        
-        for q in range(self.n_qubits):
-           
-            for idx,a in enumerate(action[q]):
-                
-
+        if self.step_reward is True:
+            if self.step_r_metric.lower() == "trace_distance":
+                self.previous_mse=trace_distance((self.current_target),(self.get_qibo_circuit()().state()))
+            elif self.step_r_metric.lower =='mse':
+                self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
+            else:
+                raise("Error")
+       
+        for q in range(self.n_qubits):          
+            for idx, a in enumerate(action[q]):
                 #print('considering qubit: ',q,'and action: ',action, 'at position: ',position)
-                if a !=0  : #add gate only if action > of something
-                    #reward-=0.01
-                    #if a< 0.05:
-                    #reward-=0.008
-                    if self.std_noise is True:
-                        if idx == 1:#to be generalized with channel2index
-                            channel = self.noise_channels[idx](q,t_1=1,t_2=1, time=a/200) # -1 cause there is no identity channel in self.noise_channels
-                            self.current_state[self.rep.channel2index[type(channel)],q, position]=0.07
-                        if idx == 0:
-                            channel = self.noise_channels[idx](q,lam=0.15)
-
-                        #self.current_state[:,q, position] += self.rep.gate_to_array(channel)
-                            self.current_state[self.rep.channel2index[type(channel)],q, position]=0.05
-                    if self.coherent_noise is True and self.std_noise is False:
-                        if idx == 1:#to be generalized with channel2index
-                            #gate = gates.RX(q,theta=a) # -1 cause there is no identity channel in self.noise_channels
-                            #self.current_state[-1,q, position]=a/7.6 #epsilonX
-                            self.current_state[-1,q, position]=0.3
-                        if idx == 0:
-                            #gate = gates.RZ(q,theta=a)    
-                            #self.current_state[-2,q, position]=a/7.6 #epsilonZ  
-                            self.current_state[-2,q, position]=0.15                  
-
+                if a!=0:
+                    reward -= self.action_penality
+                    if idx == gate_action_index("epsilon_x"):
+                        self.current_state[gate_to_idx("epsilon_x"), q, position]=a
+                    if idx == gate_action_index("epsilon_z"):
+                        self.current_state[gate_to_idx("epsilon_z"),q, position]=a
+                    if idx == gate_action_index(gates.ResetChannel):
+                        self.current_state[gate_to_idx(gates.ResetChannel),q, position]=a
+                    if idx == gate_action_index(gates.DepolarizingChannel):
+                        self.current_state[gate_to_idx(gates.DepolarizingChannel),q, position]=a                
                     if self.step_reward:
-                        reward+=self.step_reward_fun()
-
-                #self.current_state[0, position, idx:idx+self.rep.encoding_dim] += self.rep.gate_to_array(channel)
-        #print(f'> New State: \n{self._get_obs()}')
+                        reward+=self.step_reward_fun(a)
         if position == self.circuit_lenght - 1:
-            # compute final reward
             terminated = True
         else:
-            # update position
             self.position+=1
             terminated = False
         reward+=self.reward(self.get_qibo_circuit(), self.current_target, terminated)
         #print('current state AFTER action: \n',self.current_state.transpose(1,2,0))
-        #print('current state shape: ',self.current_state.transpose(1,2,0).shape)
         return self._get_obs(), reward, terminated, self._get_info()
     
-    def step_reward_fun(self):
-        
-        self.actual_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
+    def step_reward_fun(self, action):
+        '''
+        Compute reward at each Agent step. 
+        It will be positive if the action made has decreased the 
+        distance, between predicted and real state, respect the distance at previous step, negative otherwise.
+
+        Args:
+            action: action performed by the agent, NOT USED YET
+
+        Returns:
+            step_reward
+        '''
+        #add penalization only if action !=0 (?)
+        if self.step_r_metric=="Trace_distance" or "trace_distance" or "td":
+            self.actual_mse=trace_distance((self.current_target),(self.get_qibo_circuit()().state()))
+        elif self.step_r_metric=='mse' or 'MSE':
+            self.actual_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
         if self.actual_mse>self.previous_mse:
-            reward=NEG_REWARD
+            reward=self.neg_reward
         else:
-            reward=POS_REWARD
+            reward=self.pos_reward
         return reward
+    
     def render(self):
         print(self.get_qibo_circuit().draw(), end='\r')
             
     def get_position(self):
-        #return (self.current_state[:,0,-1] == 1).nonzero()[-1]
         return self.position
 
     def get_qibo_circuit(self):
@@ -195,28 +177,5 @@ class QuantumCircuit(gym.Env):
     def get_circuit_rep(self):
         return self.current_state.transpose(1,2,0)
 
-    def get_kernel(self):
-        pos = int(self.get_position())
-        kernel=[]
-        r=int(self.kernel_size/2)
-        self.padded_circuit[:,:,r:-r]=self.current_state
-        #print(self.padded_circuit)
-         
-        '''
-        if self.coherent_noise is True and self.std_noise is False: #sbagliato
-           [ kernel.append(self.padded_circuit[i,:,pos:pos+self.kernel_size]) for i in range(self.padded_circuit.shape[0]) if i<4  ]
-            
-        else:
-            kernel.append(self.padded_circuit[:,:,pos:pos+self.kernel_size])
-        '''
-        kernel.append(self.padded_circuit[:,:,pos:pos+self.kernel_size])
-        
-        #print('kernel shape:\n ',kernel[0].shape)
-        return np.asarray(kernel,dtype=np.float32)
-        
 def mse(x,y):
     return np.sqrt(np.abs(((x-y)**2)).mean())
-#Riscrivere rappresentazione in modo che solo 2 colonne rappresentano i channel: se diverse da zero indicano direttamente il valore del parametro del canale (time o lambda)
-#eliminare colonna della posizione
-
-
