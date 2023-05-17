@@ -74,7 +74,7 @@ Rew_Mae_TraceD_trained=[]
 
                                                 #SINGLE TRAIN AND VALID
 
-callback=CustomCallback(check_freq=5000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
+callback=CustomCallback(check_freq=1000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
 model = PPO(
 policy,
 circuit_env_training,
@@ -84,7 +84,7 @@ n_steps=512,
 n_epochs=4
 )
 
-model.learn(5000000,progress_bar=True,callback=callback)
+model.learn(20000,progress_bar=True,callback=callback)
 
 f.close()
 '''

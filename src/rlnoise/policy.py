@@ -129,27 +129,34 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
+        debug=False
+
         if self.n_calls==1 or self.n_calls % self.check_freq == 0:
 
           # Retrieve training reward
-            avg_rew_train,avg_hilbert_schmidt_dist_train,avg_trace_dist_train=model_evaluation(self.train_circ,self.train_label,self.environment,self.model)
-            avg_rew_eval,avg_hilbert_schmidt_dist_eval,avg_trace_dist_eval=model_evaluation(self.val_circ,self.val_label,self.environment,self.model)
-            self.eval_results.append([avg_rew_eval,avg_hilbert_schmidt_dist_eval,avg_trace_dist_eval])
-            self.train_results.append([avg_rew_train,avg_hilbert_schmidt_dist_train,avg_trace_dist_train])
+            rew_train,rew_train_std,fidel_train,fidel_train_std,TD_train,TD_train_std=model_evaluation(self.train_circ,self.train_label,self.environment,self.model)
+            rew_eval,rew_eval_std,fidel_eval,fidel_eval_std,TD_eval,TD_eval_std=model_evaluation(self.val_circ,self.val_label,self.environment,self.model)
+            print('variance: ',rew_train_std,fidel_train_std,TD_train_std)
+            self.eval_results.append([rew_train,rew_train_std,fidel_train,fidel_train_std,TD_train,TD_train_std])
+            self.train_results.append([rew_eval,rew_eval_std,fidel_eval,fidel_eval_std,TD_eval,TD_eval_std])
             self.timestep_list.append(self.num_timesteps)
            
             if self.verbose > 0:
                 print("Num timesteps: {}".format(self.num_timesteps))
-                print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, avg_rew_eval))
+                print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, rew_eval))
 
-            if avg_rew_eval > self.best_mean_reward:
-                self.best_mean_reward = avg_rew_eval
+            if rew_eval > self.best_mean_reward:
+                self.best_mean_reward = rew_eval
                 # Saving best model
                 if self.save_best is True:
                     if self.verbose >0:
                         print("Saving new best model at {} timesteps".format(self.num_timesteps))
                         print("Saving new best model to {}.zip".format(self.save_path))
                     self.model.save(self.save_path+str(self.num_timesteps))
+            if debug is True:
+                print('State BEFORE action: \n',self.environment._get_info()['State_before'])
+                print('Considering action: \n',self.environment._get_info()['Action'],' at position: ',self.environment._get_info()['Pos'])
+                print('State AFTER action: \n',self.environment._get_info()['State_after'])
         return True
 
     def _on_rollout_end(self) -> None:
@@ -187,16 +194,16 @@ class CustomCallback(BaseCallback):
             ax1=fig.add_subplot(132)
             ax2=fig.add_subplot(133)
             plt.subplots_adjust(left=0.065, bottom=None, right=0.971, top=None, wspace=0.27, hspace=None)
-            ax.plot(time_steps,eval_results[:,0],label='evaluation_set',marker='x')
+            ax.errorbar(time_steps,eval_results[:,0],yerr=eval_results[:,1],label='evaluation_set',errorevery=5,capsize=4)
             ax.set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
-            ax1.plot(time_steps,eval_results[:,1],marker='x')
-            ax1.set(xlabel='timesteps/1000', ylabel='H-S distance',title='Hilbert-Schmidt distance between DM')
-            ax2.plot(time_steps,eval_results[:,2],marker='x')
+            ax1.errorbar(time_steps,eval_results[:,2],yerr=eval_results[:,3],errorevery=5,capsize=4)
+            ax1.set(xlabel='timesteps/1000', ylabel='Fidelity',title='Fidelity between DM')
+            ax2.errorbar(time_steps,eval_results[:,4],yerr=eval_results[:,5],errorevery=5,capsize=4)
             ax2.set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance between DM')
 
-            ax.plot(time_steps,train_results[:,0],color='orange',label='train_set',marker='x')
-            ax1.plot(time_steps,train_results[:,1],color='orange',label='train_set',marker='x')
-            ax2.plot(time_steps,train_results[:,2],color='orange',label='train_set',marker='x')
+            ax.errorbar(time_steps,train_results[:,0],yerr=train_results[:,1],color='orange',label='train_set',errorevery=5,capsize=4)
+            ax1.errorbar(time_steps,train_results[:,2],yerr=train_results[:,3],color='orange',label='train_set',errorevery=5,capsize=4)
+            ax2.errorbar(time_steps,train_results[:,4],yerr=train_results[:,5],color='orange',label='train_set',errorevery=5,capsize=4)
             ax.legend()
             fig.savefig(self.plot_dir+self.plot_name+'_Q%d_D%d_steps%d.png'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]))
             plt.show()
@@ -210,7 +217,7 @@ class CustomCallback(BaseCallback):
             ax.legend()
             fig.savefig(self.plot_dir+'test_size%d_D_%d_Dep-Term_CZ_%dQ'%(self.dataset_size,self.trainset_depth,self.n_qubits))
             #plt.show()
-
+        
 
     def generalization_test():
         #here will be tested the simple generalization (1 depth for train and different for test)

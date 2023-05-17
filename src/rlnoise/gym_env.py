@@ -51,6 +51,9 @@ class QuantumCircuit(gym.Env):
         self.labels = labels
         self.reward = reward
         self.encoding_dim = 8
+        self.action=None
+        self.state_before_act=None
+        self.state_after_act=None
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
@@ -97,19 +100,23 @@ class QuantumCircuit(gym.Env):
         #Add last action
         return {'State': self._get_obs(),
                 'Pos': self.position,
-                'Circ': self.circuit_number} 
-
+                'Circ': self.circuit_number,
+                'State_before': self.state_before_act,
+                'State_after': self.state_after_act,
+                'Action': self.action} 
+        #IMPLEMENT GET INFO (EX CALL IT WITH VERBOSE)
     def reset(self, i=None):
         self.position=0
         self.current_state, self.current_target = self.init_state(i)
         return self._get_obs()
 
     def step(self, action):
+        self.state_before_act=self.get_circuit_rep()
+        self.action=action
         if self.action_space_type =="Binary" or self.action_space_type =="Discrete":
             action=action.reshape((self.n_qubits,4))
         reward=0.
         position = self.get_position()
-        #print('\n \n current state BEFORE action: \n',self.current_state.transpose(1,2,0))
         if self.step_reward is True:
             if self.step_r_metric.lower() == "trace_distance":
                 self.previous_mse=trace_distance((self.current_target),(self.get_qibo_circuit()().state()))
@@ -132,17 +139,18 @@ class QuantumCircuit(gym.Env):
                     if idx == gate_action_index(gates.DepolarizingChannel):
                         self.current_state[gate_to_idx(gates.DepolarizingChannel),q, position]=a                
                     if self.step_reward:
-                        reward+=self.step_reward_fun(a)
+                        reward+=self.step_reward_fun()
         if position == self.circuit_lenght - 1:
             terminated = True
         else:
             self.position+=1
             terminated = False
         reward+=self.reward(self.get_qibo_circuit(), self.current_target, terminated)
-        #print('current state AFTER action: \n',self.current_state.transpose(1,2,0))
+        self.state_after_act=self.get_circuit_rep()
+
         return self._get_obs(), reward, terminated, self._get_info()
     
-    def step_reward_fun(self, action):
+    def step_reward_fun(self):
         '''
         Compute reward at each Agent step. 
         It will be positive if the action made has decreased the 
