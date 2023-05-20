@@ -7,6 +7,9 @@ import copy
 from rlnoise.custom_noise import CustomNoiseModel
 from qibo.quantum_info import trace_distance, fidelity #those are the equivalent of fidellity for density matrices (see also Bures distance)
 np.set_printoptions(precision=3, suppress=True)
+
+DEBUG=False
+
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
     return folder
@@ -115,23 +118,47 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     avg_trace_distance=[]
     avg_fidelity=[]
     n_circ=len(evaluation_circ)
-    debug=False
+    
+    params=ConfigParser()
+    params.read("src/rlnoise/config.ini") 
+    neg_reward=params.getfloat('gym_env','neg_reward')
+    pos_reward=params.getfloat('gym_env','pos_reward')
+    step_r_metric=params.get('gym_env','step_r_metric')
+    action_penality=params.getfloat('gym_env','action_penality')
+    action_space_type=params.get('gym_env','action_space')
+    kernel_size = params.getint('gym_env','kernel_size')
+    step_reward=params.getboolean('gym_env','step_reward')
+    circuits=copy.deepcopy(evaluation_circ)
+    
+    environment = QuantumCircuit(
+    circuits = circuits,
+    representation = train_environment.rep,
+    labels = evaluation_labels,
+    reward = train_environment.reward, 
+    neg_reward=neg_reward,
+    pos_reward=pos_reward,
+    step_r_metric=step_r_metric,
+    action_penality=action_penality,
+    action_space_type=action_space_type,
+    kernel_size = kernel_size,
+    step_reward=step_reward
+    )
 
     for i in range(n_circ):
         
-        obs = train_environment.reset(i=i)
+        obs = environment.reset(i=i)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
             action=action[0]          
-            obs, rewards, done, info = train_environment.step(action)
-        predicted_circ = train_environment.get_qibo_circuit()
-        predicted_rep=train_environment.get_circuit_rep()
+            obs, rewards, done, info = environment.step(action)
+        predicted_circ = environment.get_qibo_circuit()
+        predicted_rep=environment.get_circuit_rep()
         dm_untrained=np.array(predicted_circ().state())
         avg_rew.append(rewards)
         avg_fidelity.append(fidelity(evaluation_labels[i],dm_untrained))
         avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
-        if i==0 and debug:
+        if i==0 and DEBUG:
             noise_model=CustomNoiseModel() #NB must be initialized with args from config
             test_rep=evaluation_circ[i]
             test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))

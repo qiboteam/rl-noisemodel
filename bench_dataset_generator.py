@@ -11,10 +11,10 @@ if not os.path.exists(benchmark_circ_path):
 noise_model = CustomNoiseModel()
 rep = CircuitRepresentation()
 
-number_of_gates_per_qubit=[7]
-qubits=3
-number_of_circuits=100
-dataset_name='Test'
+number_of_gates_per_qubit=[5]
+qubits=1
+number_of_circuits=1000
+dataset_name='Coherent-on_Std-on'
 
 for i in number_of_gates_per_qubit:
     f = open(benchmark_circ_path+dataset_name+"_D%d_%dQ_len%d.npz"%(i,qubits,number_of_circuits),"wb")

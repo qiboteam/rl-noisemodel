@@ -78,6 +78,8 @@ class CustomCallback(BaseCallback):
         self.test_on_data_size=test_on_data_size
         self.environment=train_environment
         self.best_mean_reward = -np.inf
+        self.best_mean_fidelity=-np.inf
+        self.best_mean_trace_dist=np.inf
         if self.test_on_data_size is not None:
             self.train_circ=evaluation_set['train_set'][:self.test_on_data_size]
             self.train_label=evaluation_set['train_label'][:self.test_on_data_size]
@@ -94,6 +96,7 @@ class CustomCallback(BaseCallback):
         self.train_results=[]
         self.timestep_list=[]
         self.save_path = os.path.join(self.log_dir, self.best_model_name)
+        self.plot_1_title='%dQ D%d K3 SR-off,Penal=0.0, Trainset_size=%d Valset_size=%d, Coherent(e_z=0.1,e_x=0.2),Std_noise(lam=0.05,p0=0.1)'%(self.n_qubits,self.trainset_depth,self.dataset_size,len(self.val_circ))
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -132,30 +135,23 @@ class CustomCallback(BaseCallback):
         debug=False
 
         if self.n_calls==1 or self.n_calls % self.check_freq == 0:
-
           # Retrieve training reward
             rew_train,rew_train_std,fidel_train,fidel_train_std,TD_train,TD_train_std=model_evaluation(self.train_circ,self.train_label,self.environment,self.model)
             rew_eval,rew_eval_std,fidel_eval,fidel_eval_std,TD_eval,TD_eval_std=model_evaluation(self.val_circ,self.val_label,self.environment,self.model)
-            print('variance: ',rew_train_std,fidel_train_std,TD_train_std)
-            self.eval_results.append([rew_train,rew_train_std,fidel_train,fidel_train_std,TD_train,TD_train_std])
-            self.train_results.append([rew_eval,rew_eval_std,fidel_eval,fidel_eval_std,TD_eval,TD_eval_std])
+            self.train_results.append([rew_train,rew_train_std,fidel_train,fidel_train_std,TD_train,TD_train_std])
+            self.eval_results.append([rew_eval,rew_eval_std,fidel_eval,fidel_eval_std,TD_eval,TD_eval_std])
             self.timestep_list.append(self.num_timesteps)
            
             if self.verbose > 0:
                 print("Num timesteps: {}".format(self.num_timesteps))
                 print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, rew_eval))
+                print('Standard deviations: Reward_std=%f, Fidelity_std=%f, Trace distance_std=%f'%(rew_train_std,fidel_train_std,TD_train_std))
 
-            if rew_eval > self.best_mean_reward:
-                self.best_mean_reward = rew_eval
-                # Saving best model
-                if self.save_best is True:
-                    if self.verbose >0:
-                        print("Saving new best model at {} timesteps".format(self.num_timesteps))
-                        print("Saving new best model to {}.zip".format(self.save_path))
-                    self.model.save(self.save_path+str(self.num_timesteps))
+            if self.save_best is True:
+                self.save_best_model(rew_eval)
+            self.save_best_results(rew_eval,fidel_eval,TD_eval)
             if debug is True:
-                print('State BEFORE action: \n',self.environment._get_info()['State_before'])
-                print('Considering action: \n',self.environment._get_info()['Action'],' at position: ',self.environment._get_info()['Pos'])
+                print('Considering action: \n',self.environment._get_info()['Action'],' at last position: ',self.environment._get_info()['Pos'])
                 print('State AFTER action: \n',self.environment._get_info()['State_after'])
         return True
 
@@ -172,6 +168,7 @@ class CustomCallback(BaseCallback):
         self.train_results=np.array(self.train_results)
         self.eval_results=np.array(self.eval_results)
         self.timestep_list=np.array(self.timestep_list)
+        print('Best average results obtained on the evaluation set are:\n Reward=%f, Fidelity=%f, Trace distance=%f'%(self.best_mean_reward,self.best_mean_fidelity,self.best_mean_trace_dist))
         if self.plot is True:
             self.plot_results()
         '''
@@ -180,6 +177,7 @@ class CustomCallback(BaseCallback):
             np.savez(f,train_results=self.train_results, val_results=self.eval_results, timesteps=self.timestep_list)
             f.close()
         '''
+
         pass 
 
     def plot_results(self):
@@ -189,7 +187,7 @@ class CustomCallback(BaseCallback):
 
         if self.test_on_data_size is None:
             fig=plt.figure(figsize=(15,5))
-            fig.suptitle('3Q D7 K3 SR-off,Penal=0.001, datasize=100, Coherent(e_z=0.1,e_x=0.2),Std_noise=None', fontsize=15)
+            fig.suptitle(self.plot_1_title, fontsize=15)
             ax=fig.add_subplot(131)
             ax1=fig.add_subplot(132)
             ax2=fig.add_subplot(133)
@@ -222,4 +220,20 @@ class CustomCallback(BaseCallback):
     def generalization_test():
         #here will be tested the simple generalization (1 depth for train and different for test)
         # and a more complex one (same depth but test circuit sligthly different noise parameter)
-        return 0
+        pass
+
+    def save_best_results(self,reward,fidelity,trace_dist):
+        if reward>self.best_mean_reward:
+            self.best_mean_reward=reward
+        if fidelity > self.best_mean_fidelity:
+            self.best_mean_fidelity=fidelity
+        if trace_dist < self.best_mean_trace_dist:
+            self.best_mean_trace_dist=trace_dist
+
+    def save_best_model(self,reward):
+        if reward > self.best_mean_reward:
+            if self.verbose >0:
+                print("Saving new best model at {} timesteps".format(self.num_timesteps))
+                print("Saving new best model to {}.zip".format(self.save_path))
+            self.model.save(self.save_path+str(self.num_timesteps))
+        

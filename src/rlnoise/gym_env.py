@@ -52,7 +52,6 @@ class QuantumCircuit(gym.Env):
         self.reward = reward
         self.encoding_dim = 8
         self.action=None
-        self.state_before_act=None
         self.state_after_act=None
         self.observation_space = spaces.Box(
             low = 0,
@@ -61,7 +60,7 @@ class QuantumCircuit(gym.Env):
             dtype = np.float32
         )
         if self.action_space_type=="Continuous":
-            self.action_space = spaces.Box( low=0, high=0.2,shape=(self.n_qubits,4), dtype=np.float32)
+            self.action_space = spaces.Box( low=0, high=1,shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
 
         elif self.action_space_type=="Discrete":
             if noise_param_space is None:
@@ -83,7 +82,7 @@ class QuantumCircuit(gym.Env):
         self.circuit_number=i
         self.circuit_lenght=self.circuits[i].shape[0]
         state=copy.deepcopy(self.circuits[i])
-        state=state.transpose(2,1,0) #check what returns from circuit_to_array and use proper shape
+        state=state.transpose(2,1,0) 
         padding = np.zeros(( self.encoding_dim,self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
         self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
         return state, self.labels[i]
@@ -97,21 +96,20 @@ class QuantumCircuit(gym.Env):
         return np.asarray(kernel,dtype=np.float32)
 
     def _get_info(self):
-        #Add last action
+       
         return {'State': self._get_obs(),
                 'Pos': self.position,
-                'Circ': self.circuit_number,
-                'State_before': self.state_before_act,
+                'Circ': self.circuit_number,  
                 'State_after': self.state_after_act,
                 'Action': self.action} 
-        #IMPLEMENT GET INFO (EX CALL IT WITH VERBOSE)
+        
     def reset(self, i=None):
         self.position=0
         self.current_state, self.current_target = self.init_state(i)
         return self._get_obs()
 
     def step(self, action):
-        self.state_before_act=self.get_circuit_rep()
+        
         self.action=action
         if self.action_space_type =="Binary" or self.action_space_type =="Discrete":
             action=action.reshape((self.n_qubits,4))
@@ -120,10 +118,10 @@ class QuantumCircuit(gym.Env):
         if self.step_reward is True:
             if self.step_r_metric.lower() == "trace_distance":
                 self.previous_mse=trace_distance((self.current_target),(self.get_qibo_circuit()().state()))
-            elif self.step_r_metric.lower =='mse':
+            elif self.step_r_metric.lower() =='mse':
                 self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
             else:
-                raise("Error")
+                raise("Error: problem with the specified Step_Reward_Metric")
        
         for q in range(self.n_qubits):          
             for idx, a in enumerate(action[q]):

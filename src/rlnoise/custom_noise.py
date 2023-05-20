@@ -70,12 +70,14 @@ class CustomNoiseModel(object):
                     if type(gate) == string_to_gate(x_coherent_on_gate):   
                         qubit=gate.qubits[0]                    
                         theta=self.noise_params["x"]*gate.init_kwargs['theta'] 
+                        #print('Real theta %f, epsilon_x %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.noise_params["x"],theta))
                         noisy_circuit.add(gates.RX(q=qubit, theta=theta))
             if self.z_coherent_on_gate is not None:
                 for z_coherent_on_gate in self.z_coherent_on_gate:
                     if type(gate) == string_to_gate(z_coherent_on_gate):
                         qubit=gate.qubits[0]
                         theta=self.noise_params["z"]*gate.init_kwargs['theta'] 
+                        #print('Real theta %f, epsilon_z %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.noise_params["z"],theta))
                         noisy_circuit.add(gates.RZ(q=qubit, theta=theta))
         return noisy_circuit
 

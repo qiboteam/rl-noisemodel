@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from qibo import gates
-from qibo.quantum_info import trace_distance
+from qibo.quantum_info import trace_distance,fidelity
 from configparser import ConfigParser
 
 params=ConfigParser()
@@ -45,22 +45,24 @@ class FrequencyReward(Reward):
         return reward
     
 class DensityMatrixReward(Reward):
-    def __call__(self, circuit, target, final=False,alpha=10.):
+    def __call__(self, circuit, target, final=False,alpha=1.):
         reward_type=params.get('reward','reward_type')
         if final:
             circuit_dm=np.array(circuit().state())
-            dm_mse=alpha*self.metric(circuit_dm, target)
-            dm_trace_dist=trace_distance(circuit_dm,target)
-
             if reward_type=="log" or reward_type=="Log":
+                dm_mse=alpha*self.metric(circuit_dm, target)
                 if -np.log(dm_mse) < 1000:
                     reward=-np.log(dm_mse) #mae or exp
                 else:
                     reward=1000.
             elif reward_type=="mse":
-                reward=1-dm_mse
+                reward=1-alpha*self.metric(circuit_dm, target)
+
             elif reward_type=="trace_distance" or reward_type=="trace distance":
-                reward=(1-dm_mse)*(-np.log(dm_trace_dist))
+                reward=1-trace_distance(circuit_dm,target)
+                
+            elif reward_type.lower()=="fidelity":
+                reward=fidelity(circuit_dm, target)
         else:
             reward = 0.
         return reward  #other possible metric to evaluate distance between DMs is Bures distance. See https://arxiv.org/pdf/2105.02743.pdf

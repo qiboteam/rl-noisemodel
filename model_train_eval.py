@@ -23,10 +23,10 @@ action_space_type=params.get('gym_env','action_space')
 kernel_size = params.getint('gym_env','kernel_size')
 step_reward=params.getboolean('gym_env','step_reward')
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=7
-nqubits=3
-n_circuit_in_dataset=100
-dataset_name="Test"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
+circuits_depth=5
+nqubits=1
+n_circuit_in_dataset=1000
+dataset_name="Coherent-on_Std-on"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
@@ -63,7 +63,7 @@ policy = "MlpPolicy"
 policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
     features_extractor_kwargs = dict(
-        features_dim = 64,
+        features_dim = 32,
         filter_shape = (nqubits,1)
     )
 )
@@ -74,17 +74,16 @@ Rew_Mae_TraceD_trained=[]
 
                                                 #SINGLE TRAIN AND VALID
 
-callback=CustomCallback(check_freq=1000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
+callback=CustomCallback(check_freq=5000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth,verbose=1)                                          
 model = PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
-n_steps=512,
-n_epochs=4
+n_epochs=20
 )
 
-model.learn(20000,progress_bar=True,callback=callback)
+model.learn(500000,progress_bar=True,callback=callback)
 
 f.close()
 '''
