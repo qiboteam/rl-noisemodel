@@ -109,7 +109,7 @@ def compute_fidelity(density_matrix0, density_matrix1):
     .. math::
             F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
     """
-    
+
     sqrt_mat = sqrtm(density_matrix0).astype(dtype=np.complex64)
     sqrt_mat_sqrt = np.array(copy.deepcopy(sqrt_mat @ density_matrix1 @ sqrt_mat),dtype=np.complex64)
 
@@ -147,7 +147,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     n_circ=len(evaluation_circ)
     
     params=ConfigParser()
-    params.read("src/rlnoise/config.ini") 
+    params.read(os.getcwd()+"src/rlnoise/config.ini") 
     neg_reward=params.getfloat('gym_env','neg_reward')
     pos_reward=params.getfloat('gym_env','pos_reward')
     step_r_metric=params.get('gym_env','step_r_metric')

@@ -8,7 +8,7 @@ from rlnoise.utils import model_evaluation
 import matplotlib.pyplot as plt
 
 params=ConfigParser()
-params.read("src/rlnoise/config.ini")
+params.read(os.getcwd()+"src/rlnoise/config.ini")
 class CNNFeaturesExtractor(BaseFeaturesExtractor):
 
     def __init__(

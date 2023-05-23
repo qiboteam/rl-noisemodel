@@ -1,13 +1,10 @@
-import itertools, json, random
+import random
 import numpy as np
 from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
-from configparser import ConfigParser
 
-params=ConfigParser()
-params.read("src/rlnoise/config.ini")
 
 class Dataset(object):
     def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, noise_model=None, mode='rep'):

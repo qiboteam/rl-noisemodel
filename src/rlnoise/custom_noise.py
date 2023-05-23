@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import os
 from configparser import ConfigParser
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,ResetError
 from qibo import gates
@@ -21,7 +22,7 @@ def string_to_gate(gate_string):
 
 params=ConfigParser()
 
-params.read("src/rlnoise/config.ini") 
+params.read(os.getcwd()+"src/rlnoise/config.ini") 
 primitive_gates= json.loads(params.get('noise','primitive_gates'))
 lam=params.getfloat('noise','dep_lambda')
 p0=params.getfloat('noise','p0')   
