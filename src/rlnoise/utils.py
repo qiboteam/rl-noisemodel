@@ -109,10 +109,10 @@ def compute_fidelity(density_matrix0, density_matrix1):
     .. math::
             F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
     """
-    sqrt_mat = sqrtm(density_matrix0)
-    sqrt_mat_sqrt = sqrt_mat @ density_matrix1 @ sqrt_mat
+    sqrt_mat = sqrtm(density_matrix0).astype(dtype=np.complex64)
+    sqrt_mat_sqrt = (sqrt_mat @ density_matrix1 @ sqrt_mat).astype(dtype=np.complex64)
 
-    evs = np.linalg.eigvalsh(sqrt_mat_sqrt.astype(dtype=np.complex128))
+    evs = np.linalg.eigvalsh(sqrt_mat_sqrt.astype(dtype=np.complex64))
     evs = np.real(evs)
     evs = np.where(evs > 0.0, evs, 0.0)
     trace = (np.sum(np.sqrt(evs))) ** 2
