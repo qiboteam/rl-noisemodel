@@ -11,7 +11,7 @@ from stable_baselines3 import PPO,DQN,DDPG #not bad
 from stable_baselines3 import DQN,A2C,TD3
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation
-
+import json
 params=ConfigParser()
 params.read("src/rlnoise/config.ini") 
 
@@ -42,7 +42,7 @@ val_label=copy.deepcopy(tmp['val_label'])
 
 #Setting up training env and policy model
 
-noise_model = CustomNoiseModel()
+noise_model = CustomNoiseModel(primitive_gates=json.loads(params.get('noise','primitive_gates')),lam=params.get('noise','dep_lambda'),p0=params.get('noise','p0'),x_coherent_on_gate=["rx"],z_coherent_on_gate=["rz"],epsilon_x=params.get('noise','epsilon_x'),epsilon_z=params.get('noise','epsilon_z'),damping_on_gate=json.loads(params.get('noise','damping_on_gate')),depol_on_gate=json.loads(params.get('noise','depol_on_gate')))
 reward = DensityMatrixReward()
 
 rep = CircuitRepresentation()
@@ -74,16 +74,15 @@ Rew_Mae_TraceD_trained=[]
 
                                                 #SINGLE TRAIN AND VALID
 
-callback=CustomCallback(check_freq=5000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth,verbose=1)                                          
+callback=CustomCallback(check_freq=5000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth,verbose=True)                                          
 model = PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
-n_epochs=20
 )
 
-model.learn(500000,progress_bar=True,callback=callback)
+model.learn(1000000,progress_bar=True,callback=callback)
 
 f.close()
 '''
@@ -152,3 +151,6 @@ for data_size in n_circ:
 f.close()
 '''
 #f.close()
+
+
+#Can be useful for finetuning to add a list of possible hyerparameters (e.g. n_epochs,n_steps, learning_rate, ecc) and then cycle on all of them to find the best configuration. Watch out the parameters extracted now at the end of training (policy.py) are the best one but not correspond all to the same timestep

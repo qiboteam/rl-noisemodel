@@ -7,6 +7,8 @@ from qibo import gates
 from qibo.quantum_info import trace_distance
 from rlnoise.dataset import gate_to_idx
 
+
+
 def gate_action_index(gate):
     if gate == 'epsilon_x':
         return 0
@@ -64,17 +66,13 @@ class QuantumCircuit(gym.Env):
 
         elif self.action_space_type=="Discrete":
             if noise_param_space is None:
-                self.noise_par_space = { 'range': (0,0.1), 'n_steps': 100 }
+                self.noise_par_space = { 'max': 1., 'n_steps': 20}
             else:
                 self.noise_par_space = noise_param_space
-            self.noise_incr = np.diff(self.noise_par_space['range']) / self.noise_par_space['n_steps']
-            assert self.noise_incr > 0
-
-        elif self.action_space_type=="Binary":
-            action_shape=[2 for _ in range(self.n_qubits*4)]
-            self.action_space = spaces.MultiDiscrete( 
-            action_shape
-            )
+            self.discrete_step = self.noise_par_space['max'] / self.noise_par_space['n_steps']
+            assert self.discrete_step > 0
+            action_shape=[self.noise_par_space['n_steps'] for _ in range(self.n_qubits*4)]
+            self.action_space=spaces.MultiDiscrete(action_shape)
         
     def init_state(self, i=None):
         if i is None:
@@ -107,12 +105,18 @@ class QuantumCircuit(gym.Env):
         self.position=0
         self.current_state, self.current_target = self.init_state(i)
         return self._get_obs()
-
-    def step(self, action):
+    
+    def transform_action(self, action):
+        """
+        Trasform discrete action in the form of a continuos action with"""
         
+        action2=action.reshape((self.n_qubits,4))*self.discrete_step
+        
+        return action2
+    def step(self, action):
+        if self.action_space_type=="Discrete":
+            action=self.transform_action(action)
         self.action=action
-        if self.action_space_type =="Binary" or self.action_space_type =="Discrete":
-            action=action.reshape((self.n_qubits,4))
         reward=0.
         position = self.get_position()
         if self.step_reward is True:
@@ -124,7 +128,7 @@ class QuantumCircuit(gym.Env):
                 raise("Error: problem with the specified Step_Reward_Metric")
        
         for q in range(self.n_qubits):          
-            for idx, a in enumerate(action[q]):
+            for idx, a in enumerate(self.action[q]):
                 #print('considering qubit: ',q,'and action: ',action, 'at position: ',position)
                 if a!=0:
                     reward -= self.action_penality

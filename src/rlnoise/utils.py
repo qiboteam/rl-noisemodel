@@ -5,7 +5,8 @@ from configparser import ConfigParser
 from rlnoise.gym_env import QuantumCircuit
 import copy
 from rlnoise.custom_noise import CustomNoiseModel
-from qibo.quantum_info import trace_distance, fidelity #those are the equivalent of fidellity for density matrices (see also Bures distance)
+from qibo.quantum_info import trace_distance #(see also Bures distance)
+from scipy.linalg import sqrtm
 np.set_printoptions(precision=3, suppress=True)
 
 DEBUG=False
@@ -102,6 +103,31 @@ def plot_results(train_history, val_history, n_steps=20, filename="train_info.pn
     plt.show()
     plt.savefig(figures_folder()+ '/' +filename)
 
+def compute_fidelity(density_matrix0, density_matrix1):
+    """Compute the fidelity for two density matrices (pure or mixed states).
+
+    .. math::
+            F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
+    """
+    sqrt_mat = sqrtm(density_matrix0)
+    sqrt_mat_sqrt = sqrt_mat @ density_matrix1 @ sqrt_mat
+
+    evs = np.linalg.eigvalsh(sqrt_mat_sqrt)
+    evs = np.real(evs)
+    evs = np.where(evs > 0.0, evs, 0.0)
+    trace = (np.sum(np.sqrt(evs))) ** 2
+
+    return trace
+
+def bures_distance(density_matrix0, density_matrix1):
+    """ Compute the Bures distance between density matrices
+    .. math::
+        B( \rho , \sigma ) = -\sqrt{2*(1-sqrt(F(\sigma,\rho)))} where F is the fidelity
+    """
+    return np.sqrt(2*(1-np.sqrt(compute_fidelity(density_matrix0, density_matrix1))))
+
+
+
 def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     '''
     Function for evaluating the model
@@ -156,10 +182,10 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         predicted_rep=environment.get_circuit_rep()
         dm_untrained=np.array(predicted_circ().state())
         avg_rew.append(rewards)
-        avg_fidelity.append(fidelity(evaluation_labels[i],dm_untrained))
+        avg_fidelity.append(bures_distance(evaluation_labels[i],dm_untrained))
         avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
         if i==0 and DEBUG:
-            noise_model=CustomNoiseModel() #NB must be initialized with args from config
+            noise_model=CustomNoiseModel(primitive_gates=params.get('noise','primitive_gates'),lam=params.get('noise','dep_lambda'),p0=params.get('noise','p0'),x_coherent_on_gate=['rx'],z_coherent_on_gate=['rz'],epsilon_x=params.get('noise','epsilon_x'),epsilon_z=params.get('noise','epsilon_z'),damping_on_gate=params.get('noise','damping_on_gate'),depol_on_gate=params.get('noise','depol_on_gate')) 
             test_rep=evaluation_circ[i]
             test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
             print('\nTrue noisy circuit')
@@ -186,3 +212,5 @@ def test_representation():
     print(array)
     print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
 '''
+
+

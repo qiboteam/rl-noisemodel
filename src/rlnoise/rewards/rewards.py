@@ -79,3 +79,5 @@ if __name__ == '__main__':
     target = {'0': 0, '1': 100}
     r = FrequencyReward()
     print(r(c,target))
+
+#Add Bures distance as metric to evaluate the performance

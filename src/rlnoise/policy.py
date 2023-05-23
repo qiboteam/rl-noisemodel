@@ -65,7 +65,7 @@ class CustomCallback(BaseCallback):
         trainset_depth: number of gates per qubit used in the bench dataset
 
     """
-    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=1,test_on_data_size=None):
+    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=False ,test_on_data_size=None):
         super(CustomCallback, self).__init__(verbose)
         self.save_best=params.getboolean('policy','save_best_model')
         self.plot=params.getboolean('policy','plot_results')
@@ -132,7 +132,7 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        debug=False
+        debug=True
 
         if self.n_calls==1 or self.n_calls % self.check_freq == 0:
           # Retrieve training reward
@@ -142,7 +142,7 @@ class CustomCallback(BaseCallback):
             self.eval_results.append([rew_eval,rew_eval_std,fidel_eval,fidel_eval_std,TD_eval,TD_eval_std])
             self.timestep_list.append(self.num_timesteps)
            
-            if self.verbose > 0:
+            if self.verbose:
                 print("Num timesteps: {}".format(self.num_timesteps))
                 print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, rew_eval))
                 print('Standard deviations: Reward_std=%f, Fidelity_std=%f, Trace distance_std=%f'%(rew_train_std,fidel_train_std,TD_train_std))
@@ -232,7 +232,7 @@ class CustomCallback(BaseCallback):
 
     def save_best_model(self,reward):
         if reward > self.best_mean_reward:
-            if self.verbose >0:
+            if self.verbose:
                 print("Saving new best model at {} timesteps".format(self.num_timesteps))
                 print("Saving new best model to {}.zip".format(self.save_path))
             self.model.save(self.save_path+str(self.num_timesteps))
