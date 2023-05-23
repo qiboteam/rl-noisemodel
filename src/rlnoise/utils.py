@@ -112,7 +112,7 @@ def compute_fidelity(density_matrix0, density_matrix1):
     sqrt_mat = sqrtm(density_matrix0)
     sqrt_mat_sqrt = sqrt_mat @ density_matrix1 @ sqrt_mat
 
-    evs = np.linalg.eigvalsh(sqrt_mat_sqrt)
+    evs = np.linalg.eigvalsh(sqrt_mat_sqrt.astype(dtype=np.complex128))
     evs = np.real(evs)
     evs = np.where(evs > 0.0, evs, 0.0)
     trace = (np.sum(np.sqrt(evs))) ** 2
