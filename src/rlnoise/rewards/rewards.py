@@ -6,7 +6,7 @@ from qibo.quantum_info import trace_distance,fidelity
 from configparser import ConfigParser
 
 params=ConfigParser()
-params.read(os.getcwd()+"src/rlnoise/config.ini")
+params.read(os.getcwd()+"/src/rlnoise/config.ini")
 class Reward(ABC):
 
     def __init__(self, metric=lambda x,y: np.sqrt(np.abs(((x-y)**2)).mean())):

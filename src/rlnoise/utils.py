@@ -147,7 +147,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     n_circ=len(evaluation_circ)
     
     params=ConfigParser()
-    params.read(os.getcwd()+"src/rlnoise/config.ini") 
+    params.read(os.getcwd()+"/src/rlnoise/config.ini") 
     neg_reward=params.getfloat('gym_env','neg_reward')
     pos_reward=params.getfloat('gym_env','pos_reward')
     step_r_metric=params.get('gym_env','step_r_metric')

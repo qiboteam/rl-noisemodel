@@ -13,7 +13,7 @@ from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation
 import json
 params=ConfigParser()
-params.read(os.getcwd()+"src/rlnoise/config.ini") 
+params.read(os.getcwd()+"/src/rlnoise/config.ini") 
 
 neg_reward=params.getfloat('gym_env','neg_reward')
 pos_reward=params.getfloat('gym_env','pos_reward')
