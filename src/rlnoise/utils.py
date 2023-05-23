@@ -110,7 +110,7 @@ def compute_fidelity(density_matrix0, density_matrix1):
             F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
     """
     sqrt_mat = sqrtm(density_matrix0).astype(dtype=np.complex64)
-    sqrt_mat_sqrt = np.array(sqrt_mat @ density_matrix1 @ sqrt_mat,dtype=np.complex64)
+    sqrt_mat_sqrt = np.array(copy.deepcopy(sqrt_mat @ density_matrix1 @ sqrt_mat),dtype=np.complex64)
 
     evs = np.linalg.eigvalsh(sqrt_mat_sqrt)
     evs = np.real(evs)
