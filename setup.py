@@ -38,5 +38,5 @@ setup(
         "stable_baselines3"
         
     ],
-    #python_requires="==3.10.9",
+    python_requires="==3.10.9",
 )
