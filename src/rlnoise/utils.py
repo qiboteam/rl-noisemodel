@@ -143,6 +143,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
 
     avg_rew=[]
     avg_trace_distance=[]
+    avg_bures_distance=[]
     avg_fidelity=[]
     n_circ=len(evaluation_circ)
     
@@ -183,8 +184,9 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         predicted_rep=environment.get_circuit_rep()
         dm_untrained=np.array(predicted_circ().state())
         avg_rew.append(rewards)
-        avg_fidelity.append(bures_distance(evaluation_labels[i],dm_untrained))
+        avg_fidelity.append(compute_fidelity(evaluation_labels[i],dm_untrained))
         avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
+        avg_bures_distance.append(bures_distance(evaluation_labels[i],dm_untrained))
         if i==0 and DEBUG:
             noise_model=CustomNoiseModel(primitive_gates=params.get('noise','primitive_gates'),lam=params.get('noise','dep_lambda'),p0=params.get('noise','p0'),x_coherent_on_gate=['rx'],z_coherent_on_gate=['rz'],epsilon_x=params.get('noise','epsilon_x'),epsilon_z=params.get('noise','epsilon_z'),damping_on_gate=params.get('noise','damping_on_gate'),depol_on_gate=params.get('noise','depol_on_gate')) 
             test_rep=evaluation_circ[i]
@@ -197,7 +199,17 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     rew=np.array(avg_rew)
     fid=np.array(avg_fidelity)
     trace_d=np.array(avg_trace_distance)
-    return rew.mean(),rew.std(),fid.mean(),fid.std(),trace_d.mean(),trace_d.std()
+    bures_d=np.array(avg_bures_distance)
+    results=np.array([(rew.mean(),rew.std(),
+                       fid.mean(),fid.std(),
+                       trace_d.mean(),trace_d.std(),
+                       bures_d.mean(),bures_d.std())],
+                       dtype=[('reward','<f4'),('reward_std','<f4'),
+                              ('fidelity','<f4'),('fidelity_std','<f4'),
+                              ('trace_distance','<f4'),('trace_distance_std','<f4'),
+                              ('bures_distance','<f4'),('bures_distance_std','<f4')                         
+                            ])
+    return results
 
 
 
