@@ -1,27 +1,29 @@
-import numpy as np
 import os
-from configparser import ConfigParser
+import json
 import copy
-from rlnoise.dataset import Dataset, CircuitRepresentation
-from qibo import gates
+import numpy as np
+from pathlib import Path
+from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
-from stable_baselines3 import PPO,DQN,DDPG #not bad
-from stable_baselines3 import DQN,A2C,TD3
+from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation
-import json
-params=ConfigParser()
-params.read(os.getcwd()+"/src/rlnoise/config.ini") 
 
-neg_reward=params.getfloat('gym_env','neg_reward')
-pos_reward=params.getfloat('gym_env','pos_reward')
-step_r_metric=params.get('gym_env','step_r_metric')
-action_penality=params.getfloat('gym_env','action_penality')
-action_space_type=params.get('gym_env','action_space')
-kernel_size = params.getint('gym_env','kernel_size')
-step_reward=params.getboolean('gym_env','step_reward')
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
+
+gym_env_params = config['gym_env']
+kernel_size = gym_env_params['kernel_size']
+step_reward = gym_env_params['step_reward']
+step_r_metric = gym_env_params['step_r_metric']
+neg_reward = gym_env_params['neg_reward']
+pos_reward = gym_env_params['pos_reward']
+action_penalty = gym_env_params['action_penalty']
+action_space = gym_env_params['action_space']
+
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=5
 nqubits=1
@@ -42,7 +44,7 @@ val_label=copy.deepcopy(tmp['val_label'])
 
 #Setting up training env and policy model
 
-noise_model = CustomNoiseModel(primitive_gates=json.loads(params.get('noise','primitive_gates')),lam=params.get('noise','dep_lambda'),p0=params.get('noise','p0'),x_coherent_on_gate=["rx"],z_coherent_on_gate=["rz"],epsilon_x=params.get('noise','epsilon_x'),epsilon_z=params.get('noise','epsilon_z'),damping_on_gate=json.loads(params.get('noise','damping_on_gate')),depol_on_gate=json.loads(params.get('noise','depol_on_gate')))
+noise_model = CustomNoiseModel()
 reward = DensityMatrixReward()
 
 rep = CircuitRepresentation()
@@ -54,8 +56,8 @@ circuit_env_training = QuantumCircuit(
     neg_reward=neg_reward,
     pos_reward=pos_reward,
     step_r_metric=step_r_metric,
-    action_penality=action_penality,
-    action_space_type=action_space_type,
+    action_penality=action_penalty,
+    action_space_type=action_space,
     kernel_size = kernel_size,
     step_reward=step_reward
 )
@@ -82,7 +84,7 @@ policy_kwargs=policy_kwargs,
 verbose=0,
 )
 
-model.learn(500000,progress_bar=True,callback=callback)
+model.learn(5000,progress_bar=True,callback=callback)
 
 f.close()
 '''

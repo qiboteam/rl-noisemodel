@@ -1,13 +1,17 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-from configparser import ConfigParser
-from rlnoise.gym_env import QuantumCircuit
+import json
 import copy
+import numpy as np
+from pathlib import Path
+import matplotlib.pyplot as plt
+from rlnoise.gym_env import QuantumCircuit
 from rlnoise.custom_noise import CustomNoiseModel
-from qibo.quantum_info import trace_distance #(see also Bures distance)
+from qibo.quantum_info import trace_distance
 from scipy.linalg import sqrtm
-np.set_printoptions(precision=3, suppress=True)
+
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
 
 DEBUG=False
 
@@ -147,15 +151,15 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     avg_fidelity=[]
     n_circ=len(evaluation_circ)
     
-    params=ConfigParser()
-    params.read(os.getcwd()+"/src/rlnoise/config.ini") 
-    neg_reward=params.getfloat('gym_env','neg_reward')
-    pos_reward=params.getfloat('gym_env','pos_reward')
-    step_r_metric=params.get('gym_env','step_r_metric')
-    action_penality=params.getfloat('gym_env','action_penality')
-    action_space_type=params.get('gym_env','action_space')
-    kernel_size = params.getint('gym_env','kernel_size')
-    step_reward=params.getboolean('gym_env','step_reward')
+    gym_env_params = config['gym_env']
+    kernel_size = gym_env_params['kernel_size']
+    step_reward = gym_env_params['step_reward']
+    step_r_metric = gym_env_params['step_r_metric']
+    neg_reward = gym_env_params['neg_reward']
+    pos_reward = gym_env_params['pos_reward']
+    action_penalty = gym_env_params['action_penalty']
+    action_space = gym_env_params['action_space']
+
     circuits=copy.deepcopy(evaluation_circ)
     
     environment = QuantumCircuit(
@@ -166,8 +170,8 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     neg_reward=neg_reward,
     pos_reward=pos_reward,
     step_r_metric=step_r_metric,
-    action_penality=action_penality,
-    action_space_type=action_space_type,
+    action_penality=action_penalty,
+    action_space_type=action_space,
     kernel_size = kernel_size,
     step_reward=step_reward
     )
@@ -188,7 +192,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
         avg_bures_distance.append(bures_distance(evaluation_labels[i],dm_untrained))
         if i==0 and DEBUG:
-            noise_model=CustomNoiseModel(primitive_gates=params.get('noise','primitive_gates'),lam=params.get('noise','dep_lambda'),p0=params.get('noise','p0'),x_coherent_on_gate=['rx'],z_coherent_on_gate=['rz'],epsilon_x=params.get('noise','epsilon_x'),epsilon_z=params.get('noise','epsilon_z'),damping_on_gate=params.get('noise','damping_on_gate'),depol_on_gate=params.get('noise','depol_on_gate')) 
+            noise_model=CustomNoiseModel() 
             test_rep=evaluation_circ[i]
             test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
             print('\nTrue noisy circuit')

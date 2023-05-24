@@ -1,4 +1,3 @@
-from configparser import ConfigParser
 import numpy as np
 import gym, random
 from gym import spaces

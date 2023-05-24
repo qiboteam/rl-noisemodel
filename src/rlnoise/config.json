@@ -1,0 +1,39 @@
+{
+  "general": {
+    "dataset_length": 1000,
+    "dataset_depth": 7
+  },
+  "gym_env": {
+    "kernel_size": 3,
+    "step_reward": false,
+    "step_r_metric": "mse",
+    "neg_reward": -0.1,
+    "pos_reward": 0.2,
+    "action_penalty": 0.0,
+    "action_space": "Continuous"
+  },
+  "noise": {
+    "primitive_gates": ["RZ", "RX"],
+    "channels": ["DepolarizingChannel", "ResetChannel"],
+    "dep_lambda": 0.05,
+    "p0": 0.1,
+    "epsilon_x": 0.2,
+    "epsilon_z": 0.1,
+    "x_coherent_on_gate": ["rx"],
+    "z_coherent_on_gate": ["rz"],
+    "damping_on_gate": ["rx"],
+    "depol_on_gate": ["rz"]
+  },
+  "policy": {
+    "save_best_model": false,
+    "plot_results": true,
+    "model_name": "3Q_coherent_mseReward_Penal1_corrected",
+    "plot_name": "All_noise_log-rews_len1000"
+  },
+  "reward": {
+    "reward_type": "log"
+  }
+}
+
+
+

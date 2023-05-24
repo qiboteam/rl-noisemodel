@@ -1,12 +1,14 @@
-from abc import ABC, abstractmethod
-import os
+import json
+from pathlib import Path
 import numpy as np
+from abc import ABC, abstractmethod
 from qibo import gates
 from qibo.quantum_info import trace_distance,fidelity
-from configparser import ConfigParser
 
-params=ConfigParser()
-params.read(os.getcwd()+"/src/rlnoise/config.ini")
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
+
 class Reward(ABC):
 
     def __init__(self, metric=lambda x,y: np.sqrt(np.abs(((x-y)**2)).mean())):
@@ -47,7 +49,7 @@ class FrequencyReward(Reward):
     
 class DensityMatrixReward(Reward):
     def __call__(self, circuit, target, final=False,alpha=1.):
-        reward_type=params.get('reward','reward_type')
+        reward_type=config['reward']['reward_type']
         if final:
             circuit_dm=np.array(circuit().state())
             if reward_type=="log" or reward_type=="Log":

@@ -1,14 +1,18 @@
-from configparser import ConfigParser
 import os
+import json
 import torch
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 import numpy as np
+from pathlib import Path
+import matplotlib.pyplot as plt
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.callbacks import BaseCallback
 from rlnoise.utils import model_evaluation
-import matplotlib.pyplot as plt
 
-params=ConfigParser()
-params.read(os.getcwd()+"/src/rlnoise/config.ini")
+
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
+
 class CNNFeaturesExtractor(BaseFeaturesExtractor):
 
     def __init__(
@@ -67,13 +71,15 @@ class CustomCallback(BaseCallback):
     """
     def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=False ,test_on_data_size=None):
         super(CustomCallback, self).__init__(verbose)
-        self.save_best=params.getboolean('policy','save_best_model')
-        self.plot=params.getboolean('policy','plot_results')
-        self.best_model_name=params.get('policy','model_name')
-        self.plot_name=params.get('policy','plot_name')
-        self.log_dir = os.getcwd()+'/src/rlnoise/saved_models/'
-        self.plot_dir=os.getcwd()+'/src/rlnoise/data_analysis/plots/'
-        self.results_path=os.getcwd()+'/src/rlnoise/bench_results/'
+
+        policy_params = config['policy']
+        self.save_best=policy_params['save_best_model']
+        self.plot=policy_params['plot_results']
+        self.best_model_name=policy_params['model_name']
+        self.plot_name=policy_params['plot_name']
+        self.log_dir = str(Path().parent.absolute())+'/src/rlnoise/saved_models/'
+        self.plot_dir=str(Path().parent.absolute())+'/src/rlnoise/data_analysis/plots/'
+        self.results_path=str(Path().parent.absolute())+'/src/rlnoise/bench_results/'
         self.check_freq = check_freq
         self.test_on_data_size=test_on_data_size
         self.environment=train_environment

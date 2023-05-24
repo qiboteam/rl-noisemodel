@@ -1,7 +1,5 @@
 import json
-import numpy as np
-import os
-from configparser import ConfigParser
+from pathlib import Path
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,ResetError
 from qibo import gates
 from qibo.models import Circuit
@@ -20,19 +18,21 @@ def string_to_gate(gate_string):
         raise('Error: unrecognised gate in string_to_gate()')
     return gate
 
-params=ConfigParser()
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
 
-params.read(os.getcwd()+"/src/rlnoise/config.ini") 
-print(os.getcwd()+"/src/rlnoise/config.ini")
-primitive_gates= json.loads(params.get('noise','primitive_gates'))
-lam=params.getfloat('noise','dep_lambda')
-p0=params.getfloat('noise','p0')   
-epsilon_x=params.getfloat('noise','epsilon_x')
-epsilon_z=params.getfloat('noise','epsilon_z')
-damping_on_gate=json.loads(params.get('noise','damping_on_gate'))
-depol_on_gate=json.loads(params.get('noise','depol_on_gate'))
-x_coherent_on_gate=json.loads(params.get('noise','x_coherent_on_gate'))   
-z_coherent_on_gate=json.loads(params.get('noise','z_coherent_on_gate'))
+noise_params = config['noise']
+primitive_gates = noise_params['primitive_gates']
+lam = noise_params['dep_lambda']
+p0 = noise_params['p0']
+epsilon_x = noise_params['epsilon_x']
+epsilon_z = noise_params['epsilon_z']
+x_coherent_on_gate = noise_params['x_coherent_on_gate']
+z_coherent_on_gate = noise_params['z_coherent_on_gate']
+damping_on_gate = noise_params['damping_on_gate']
+depol_on_gate = noise_params['depol_on_gate']
+
 class CustomNoiseModel(object):
 
     def __init__(self,primitive_gates=primitive_gates,lam=lam,p0=p0,
