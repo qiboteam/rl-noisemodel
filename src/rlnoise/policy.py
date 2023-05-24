@@ -80,6 +80,7 @@ class CustomCallback(BaseCallback):
         self.best_mean_reward = -np.inf
         self.best_mean_fidelity=-np.inf
         self.best_mean_trace_dist=np.inf
+        self.best_mean_bures_dist=np.inf
         if self.test_on_data_size is not None:
             self.train_circ=evaluation_set['train_set'][:self.test_on_data_size]
             self.train_label=evaluation_set['train_label'][:self.test_on_data_size]
@@ -150,7 +151,7 @@ class CustomCallback(BaseCallback):
 
             if self.save_best is True:
                 self.save_best_model(evaluation_results["reward"])
-            self.save_best_results(evaluation_results["reward"],evaluation_results["fidelity"],evaluation_results["trace_distance"])
+            self.save_best_results(evaluation_results["reward"],evaluation_results["fidelity"],evaluation_results["trace_distance"],evaluation_results["bures_distance"])
             if debug is True:
                 print('Considering action: \n',self.environment._get_info()['Action'],' at last position: ',self.environment._get_info()['Pos'])
                 print('State AFTER action: \n',self.environment._get_info()['State_after'])
@@ -169,7 +170,7 @@ class CustomCallback(BaseCallback):
         self.train_results=np.asarray(self.train_results)
         self.eval_results=np.asarray(self.eval_results)
         self.timestep_list=np.asarray(self.timestep_list)/1000
-        print('Best average results obtained on the evaluation set are:\n Reward=%f, Fidelity=%f, Trace distance=%f'%(self.best_mean_reward,self.best_mean_fidelity,self.best_mean_trace_dist))
+        print('Best average results obtained on the evaluation set are:\n Reward=%f, Fidelity=%f, Trace distance=%f, Bures=%f'%(self.best_mean_reward,self.best_mean_fidelity,self.best_mean_trace_dist,self.best_mean_bures_dist))
         if self.plot is True:
             self.plot_results()
         '''
@@ -190,13 +191,13 @@ class CustomCallback(BaseCallback):
             fig.suptitle(self.plot_1_title, fontsize=15)
   
             plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
-            ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=eval_results["reward_std"],label='evaluation_set',errorevery=5,capsize=4) #use list comprehension
+            ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=eval_results["reward_std"],label='evaluation_set',errorevery=10,capsize=4) #use list comprehension
             ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
-            ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=5,capsize=4)
+            ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=10,capsize=4)
             ax[0,1].set(xlabel='timesteps/1000', ylabel='Fidelity',title='Bures Distance between DM')
-            ax[1,0].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=5,capsize=4)
+            ax[1,0].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=10,capsize=4)
             ax[1,0].set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance between DM')
-            ax[1,1].errorbar(time_steps,eval_results["bures_distance"],yerr=eval_results["bures_distance_std"],errorevery=5,capsize=4)
+            ax[1,1].errorbar(time_steps,eval_results["bures_distance"],yerr=eval_results["bures_distance_std"],errorevery=10,capsize=4)
             ax[1,1].set(xlabel='timesteps/1000', ylabel='Bures Distance',title='Bures distance between DM')
    
             ax[0,0].errorbar(time_steps,train_results["reward"],yerr=train_results["reward_std"],color='orange',label='train_set',errorevery=5,capsize=4)
@@ -223,7 +224,7 @@ class CustomCallback(BaseCallback):
         # and a more complex one (same depth but test circuit sligthly different noise parameter)
         pass
 
-    def save_best_results(self,reward,fidelity,trace_dist): 
+    def save_best_results(self,reward,fidelity,trace_dist,bures_dist): 
         reward=reward.item() 
         fidelity=fidelity.item()
         trace_dist=trace_dist.item()
@@ -231,7 +232,7 @@ class CustomCallback(BaseCallback):
             self.best_mean_reward=reward
             self.best_mean_fidelity=fidelity
             self.best_mean_trace_dist=trace_dist           
-
+            self.best_mean_bures_dist=bures_dist
     def save_best_model(self,reward):
         if reward.item() > self.best_mean_reward:
             if self.verbose:

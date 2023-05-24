@@ -62,8 +62,8 @@ class DensityMatrixReward(Reward):
             elif reward_type=="trace_distance" or reward_type=="trace distance":
                 reward=1-trace_distance(circuit_dm,target)
                 
-            elif reward_type.lower()=="fidelity":
-                reward=fidelity(circuit_dm, target)
+            elif reward_type.lower()=="mixed":
+                reward=fidelity(circuit_dm, target)*(1-5*self.metric(circuit_dm, target))*(1-trace_distance(circuit_dm, target))
         else:
             reward = 0.
         return reward  #other possible metric to evaluate distance between DMs is Bures distance. See https://arxiv.org/pdf/2105.02743.pdf

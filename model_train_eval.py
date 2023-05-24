@@ -82,7 +82,7 @@ policy_kwargs=policy_kwargs,
 verbose=0,
 )
 
-model.learn(1000000,progress_bar=True,callback=callback)
+model.learn(500000,progress_bar=True,callback=callback)
 
 f.close()
 '''
