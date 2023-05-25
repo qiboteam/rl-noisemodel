@@ -25,8 +25,10 @@ dataset = Dataset(
     representation = rep,
     clifford = True,
     shadows = False,
+    readout_mit = False,
     noise_model = noise_model,
-    mode = 'rep'
+    mode = 'rep',
+    bakend = None,
 )
 end_time = time.time()
                            #testing rep_to_circuit,set_mode and getitem() of dataset
