@@ -4,6 +4,7 @@ from qibo.hamiltonians import SymbolicHamiltonian
 from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
 
 from itertools import product
+import numpy as np
 
 
 class StateTomography:
@@ -28,9 +29,9 @@ class StateTomography:
             circuit = self.circuit.copy(deep=True)
             for q in range(self.nqubits):
                 if obs[q] == 'X':
-                    circuit.add(gates.H(q))
+                    circuit.add([gates.RZ(q,np.pi/2),gates.RX(q,np.pi/2),gates.RZ(q,np.pi/2)]) #H
                 elif obs[q] == 'Y':
-                    circuit.add([gates.S(q).dagger(),gates.H(q)])
+                    circuit.add([gates.RX(q,np.pi/2),gates.RZ(q,np.pi/2)]) #S^tH
             circuit.add(gates.M(*range(self.nqubits)))
             circuits.append(circuit)
         self.tomo_circuits = circuits
