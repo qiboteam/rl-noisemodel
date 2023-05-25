@@ -4,13 +4,14 @@ from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
+from rlnoise.rewards.state_tomography import StateTomography
 from configparser import ConfigParser
 
 params=ConfigParser()
 params.read("src/rlnoise/config.ini")
 
 class Dataset(object):
-    def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, noise_model=None, mode='rep'):
+    def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, readout_mit=False, noise_model=None, mode='rep', backend=None):
         '''Generate dataset for the training of RL-algorithm
         Args:
             n_circuits (int): number of random circuits generated
@@ -28,6 +29,8 @@ class Dataset(object):
         self.mode = mode
         self.n_circuits=n_circuits
         self.shadows = shadows
+        self.readout_mit = readout_mit
+        self.backend = backend
         
         self.circuits = [
             self.generate_random_circuit()
@@ -50,8 +53,15 @@ class Dataset(object):
             states = []
             for i in range(self.n_circuits):
                 model = ClassicalShadows(self.noisy_circuits[i], num_snapshots)
-                model.get_classical_shadow()
+                model.get_classical_shadow(backend=self.backend)
                 states.append(model.shadow_state_reconstruction())
+        elif self.tomography:
+            states = []
+            for i in range(self.n_circuits):
+                model = StateTomography(nshots=num_snapshots, backend=self.backend)
+                model.get_circuits(self.noisy_circuits[i])
+                model.meas_obs(readout_mit=self.readout_mit)
+                states.append(model.get_rho())
         else:
             states = [self.noisy_circuits[i]().state() for i in range(self.n_circuits)]
         return np.asarray(states)
