@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 import numpy as np
 from qibo import gates
 from qibo.quantum_info import trace_distance
+from configparser import ConfigParser
 
+params=ConfigParser()
+params.read("src/rlnoise/config.ini")
 class Reward(ABC):
 
     def __init__(self, metric=lambda x,y: np.sqrt(np.abs(((x-y)**2)).mean())):
@@ -43,36 +46,25 @@ class FrequencyReward(Reward):
     
 class DensityMatrixReward(Reward):
     def __call__(self, circuit, target, final=False,alpha=10.):
+        reward_type=params.get('reward','reward_type')
         if final:
             circuit_dm=np.array(circuit().state())
             dm_mse=alpha*self.metric(circuit_dm, target)
-            #dm_mae=(np.abs(circuit_dm-target)).mean()
-            #if dm_mse<0.2:
-            #    reward = (1 - dm_mse)*10
-            #else:
-            #    reward = (1 - dm_mse)
-            
-            #print('log(mse): ',np.log(dm_mse))
-            '''
-            if dm_mse < 0.2:
-                reward=-np.log(dm_mse)
-            else:
-                reward=0.
-            '''
-            reward=1-dm_mse
-            #reward=1-trace_distance(circuit_dm, target)
-            #print('reward: ',reward)
-            #print('\n dm MSE: ',dm_mse )
-            #print('Trace distance: ',self.trace_distance(circuit_dm, target))
-           # print('dm MAE',dm_mae)
+            dm_trace_dist=trace_distance(circuit_dm,target)
+
+            if reward_type=="log" or reward_type=="Log":
+                if -np.log(dm_mse) < 1000:
+                    reward=-np.log(dm_mse) #mae or exp
+                else:
+                    reward=1000.
+            elif reward_type=="mse":
+                reward=1-dm_mse
+            elif reward_type=="trace_distance" or reward_type=="trace distance":
+                reward=(1-dm_mse)*(-np.log(dm_trace_dist))
         else:
             reward = 0.
         return reward  #other possible metric to evaluate distance between DMs is Bures distance. See https://arxiv.org/pdf/2105.02743.pdf
     
-
-
-    
-
 
 if __name__ == '__main__':
 

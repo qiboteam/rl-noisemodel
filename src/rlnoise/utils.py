@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from configparser import ConfigParser
 from rlnoise.gym_env import QuantumCircuit
 import copy
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.custom_noise import CustomNoiseModel
 from qibo.quantum_info import trace_distance, hilbert_schmidt_distance #those are the equivalent of fidellity for density matrices (see also Bures distance)
 np.set_printoptions(precision=3, suppress=True)
 def models_folder():
@@ -109,14 +110,29 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     Return: 
         average reward (total reward/n_circuits), avg Hilbert-Schmidt distance, avg Trace Distance
     '''
+    params=ConfigParser()
+    params.read("src/rlnoise/config.ini") 
+    neg_reward=params.getfloat('gym_env','neg_reward')
+    pos_reward=params.getfloat('gym_env','pos_reward')
+    step_r_metric=params.get('gym_env','step_r_metric')
+    action_penality=params.getfloat('gym_env','action_penality')
+    action_space_type=params.get('gym_env','action_space')
+    kernel_size = params.getint('gym_env','kernel_size')
+    step_reward=params.getboolean('gym_env','step_reward')
     circuits=copy.deepcopy(evaluation_circ)
-    debug=False
+    debug=True
     environment = QuantumCircuit(
     circuits = circuits,
     representation = train_environment.rep,
     labels = evaluation_labels,
-    reward = train_environment.reward,
-    kernel_size=train_environment.kernel_size   
+    reward = train_environment.reward, 
+    neg_reward=neg_reward,
+    pos_reward=pos_reward,
+    step_r_metric=step_r_metric,
+    action_penality=action_penality,
+    action_space_type=action_space_type,
+    kernel_size = kernel_size,
+    step_reward=step_reward
     )
     avg_rew=0.
     mae=0.
@@ -141,22 +157,20 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         avg_trace_distance+=trace_distance(evaluation_labels[i],dm_untrained)
         if i==0 and debug:
             noise_model=CustomNoiseModel()
-            test_rep=evaluation_circ[0]
+            test_rep=evaluation_circ[i]
             test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
            
-            print('true circ rep: ',test_rep)
             print('\nTrue noisy circuit')
             print(test_circ.draw())
             print('\nPredicted noisy circ: ')
             print(predicted_circ.draw())
             print("Predicted representation: \n", predicted_rep)
-            print('\n DM MSE: ',10*(np.sqrt(np.abs((test_circ().state()-dm_untrained)**2))).mean())
 
     
     return avg_rew/n_circ,hilbert_schmidt_dist/n_circ,avg_trace_distance/n_circ
 
 
-    
+
 '''
 def test_representation():
     print('> Noiseless Circuit:\n', circuit.draw())

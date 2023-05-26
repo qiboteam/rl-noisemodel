@@ -1,8 +1,8 @@
 
 import time
-from rlnoise.datasetv2 import Dataset, CircuitRepresentation
+from rlnoise.dataset import Dataset, CircuitRepresentation
 import numpy as np
-from rlnoise.CustomNoise import CustomNoiseModel
+from rlnoise.custom_noise import CustomNoiseModel
 
 nqubits = 2
 depth = 5
@@ -25,8 +25,10 @@ dataset = Dataset(
     representation = rep,
     clifford = True,
     shadows = False,
+    readout_mit = False,
     noise_model = noise_model,
-    mode = 'rep'
+    mode = 'rep',
+    bakend = None,
 )
 end_time = time.time()
                            #testing rep_to_circuit,set_mode and getitem() of dataset

@@ -1,5 +1,6 @@
 import numpy as np
 from qibo import gates, symbols
+from qibo.backends import GlobalBackend
 
 
 class ClassicalShadows:
@@ -7,7 +8,11 @@ class ClassicalShadows:
         self.circuit = circuit
         self.shadow_size = shadow_size
         self.shadows = None
-    def get_classical_shadow(self):
+    def get_classical_shadow(self, backend=None):
+
+        if backend == None:
+            self.backend = GlobalBackend()
+
         num_qubits = self.circuit.nqubits
         unitary_ensemble = [symbols.X, symbols.Y, symbols.Z]
         unitary_ids = np.random.randint(0, 3, size=(self.shadow_size, num_qubits))
@@ -21,7 +26,7 @@ class ClassicalShadows:
                 elif mat.name[0] == 'Y':
                     circuit.add([gates.S(i).dagger(),gates.H(i)])
                 circuit.add(gates.M(i))
-            sample = circuit(nshots=1).samples()[0]
+            sample = backend.execute_circuit(circuit,nshots=1).samples()[0]
             for i in range(len(sample)):
                 if sample[i] == 0:
                     sample[i] = 1
