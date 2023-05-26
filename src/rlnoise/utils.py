@@ -6,7 +6,10 @@ from rlnoise.gym_env import QuantumCircuit
 import copy
 from rlnoise.custom_noise import CustomNoiseModel
 from qibo.quantum_info import trace_distance, hilbert_schmidt_distance #those are the equivalent of fidellity for density matrices (see also Bures distance)
+
 np.set_printoptions(precision=3, suppress=True)
+
+
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
     return folder
@@ -233,7 +236,7 @@ class RL_NoiseModel(object):
 
     def apply(self, circuit):
         if isinstance(circuit, qibo.models.circuit.Circuit):
-            observation = self.circuit_to_array(circuit)
+            observation = self.rep.circuit_to_array(circuit)
         elif isinstance(circuit, np.ndarray):
             observation = circuit
         else:

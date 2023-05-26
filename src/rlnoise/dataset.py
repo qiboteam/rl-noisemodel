@@ -265,17 +265,22 @@ class CircuitRepresentation(object):
                         c.add(channel)
         return c
 
-    # works only if the representation for each channel consists of one bit
-    # 1/0 for placing the channel and one bit for the parameter of the channel
+
     def make_action(self, action, circuit, position):
         if isinstance(circuit, qibo.models.circuit.Circuit):
-            assert False, "Circuit to array is not currently working."
-            circuit = self.circuit_to_array(circuit)
+            assert False, "Works only with circuits as numpy arrays at the moment."
+            #circuit = self.circuit_to_array(circuit)
         nqubits = circuit.shape[1]
-        action = action.reshape(nqubits,-1,2)
-        action[action[:,0] == 0] = 0
-        action = action.reshape(nqubits,-1)
-        circuit[position, :, -action.shape[-1]:] = action
+        for q in range(nqubits):          
+            for idx, a in enumerate(action[q]):
+                if idx == gate_action_index("epsilon_x"):
+                    circuit[gate_to_idx("epsilon_x"), q, position] = a
+                if idx == gate_action_index("epsilon_z"):
+                    circuit[gate_to_idx("epsilon_z"), q, position] = a
+                if idx == gate_action_index(gates.ResetChannel):
+                    circuit[gate_to_idx(gates.ResetChannel), q, position] = a
+                if idx == gate_action_index(gates.DepolarizingChannel):
+                    circuit[gate_to_idx(gates.DepolarizingChannel), q, position] = a                
         return circuit
 
 
