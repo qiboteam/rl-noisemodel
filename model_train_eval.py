@@ -10,8 +10,11 @@ from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation
-
+benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
+model_path=os.getcwd()+'/src/rlnoise/saved_models/'
+bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+
 with open(config_path) as f:
     config = json.load(f)
 
@@ -30,17 +33,12 @@ nqubits=1
 n_circuit_in_dataset=1000
 dataset_name="Coherent-on_Std-on"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
 
-benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
-model_path=os.getcwd()+'/src/rlnoise/saved_models/'
-bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
-
 f = open(benchmark_circ_path+dataset_name,"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=copy.deepcopy(tmp['train_set'])
 train_label=copy.deepcopy(tmp['train_label'])
 val_set=copy.deepcopy(tmp['val_set'])
 val_label=copy.deepcopy(tmp['val_label'])
-
 
 #Setting up training env and policy model
 
@@ -69,13 +67,10 @@ policy_kwargs = dict(
         filter_shape = (nqubits,1)
     )
 )
-Rew_Mae_TraceD_untrained=[]
-Rew_Mae_TraceD_trained=[]
-
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
                                                 #SINGLE TRAIN AND VALID
-
+'''
 callback=CustomCallback(check_freq=5000,verbose=True,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
 model = PPO(
 policy,
@@ -84,43 +79,44 @@ policy_kwargs=policy_kwargs,
 verbose=0,
 )
 
-model.learn(5000,progress_bar=True,callback=callback)
+model.learn(1000000,progress_bar=True,callback=callback)
 
 f.close()
 '''
                                             #TEST A SAVED MODEL ON DIFFERENT DEPTHS
    
-
+results_list_untrained=[]
+results_list_trained=[]
 model1= PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 )
-model=PPO.load(model_path+"/best_model_Q3_D7154000")
+model=PPO.load(model_path+"/1Q_AllNoises_mseReward735000")
 
-nqubits=3
-n_circuit_in_dataset=100
-depth_list=[7,10,15,20,25,30,35,40]
-result_filename='Dep-Term_CZ_3Q_154k_1'
+nqubits=1
+n_circuit_in_dataset=1000
+depth_list=[5,7,10,15,30]
+result_filename='AllNoise_len1000_1Msteps'
 for d in depth_list:
-    dataset_name='3Q_CoherentOnly'+'_D%d_%dQ_len%d.npz'%(d,nqubits,n_circuit_in_dataset)
+    dataset_name='Coherent-on_Std-on'+'_D%d_%dQ_len%d.npz'%(d,nqubits,n_circuit_in_dataset)
     f = open(benchmark_circ_path+dataset_name,"rb")
     tmp=np.load(f,allow_pickle=True)
     val_set=tmp['val_set']
     val_label=tmp['val_label']
     f.close()
-    val_avg_rew_untrained,mae_untrained,trace_dist_untrain=(model_evaluation(val_set,val_label,circuit_env_training,model1))
-    val_avg_rew_trained,mae_trained,trace_dist_train=(model_evaluation(val_set,val_label,circuit_env_training,model))
-    Rew_Mae_TraceD_trained.append([val_avg_rew_trained,mae_trained,trace_dist_train])
-    Rew_Mae_TraceD_untrained.append( [val_avg_rew_untrained,mae_untrained,trace_dist_untrain])
+    results_untrained_model = (model_evaluation(val_set,val_label,circuit_env_training,model1))
+    results_trained_model = (model_evaluation(val_set,val_label,circuit_env_training,model))
+    results_list_trained.append(results_trained_model)
+    results_list_untrained.append(results_untrained_model)
 
-Rew_Mae_TraceD_trained=np.array(Rew_Mae_TraceD_trained)
-Rew_Mae_TraceD_untrained=np.array(Rew_Mae_TraceD_untrained)
+results_list_trained=np.array(results_list_trained)
+results_list_untrained=np.array(results_list_untrained)
 f = open(bench_results_path+result_filename+str(depth_list),"wb")
-np.savez(f,trained=Rew_Mae_TraceD_trained,untrained=Rew_Mae_TraceD_untrained)
+np.savez(f,trained=results_list_trained,untrained=results_list_untrained)
 f.close()
-'''
+
 
 
                         #TRAIN & TEST ON DATASET W SAME PARAMS BUT DIFFERENT SIZE(n_circ)

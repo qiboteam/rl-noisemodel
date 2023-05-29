@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from rlnoise.gym_env import QuantumCircuit
-from rlnoise.custom_noise import CustomNoiseModel
+from qibo import gates
 from qibo.quantum_info import trace_distance
 from scipy.linalg import sqrtm
 
@@ -131,7 +131,19 @@ def bures_distance(density_matrix0, density_matrix1):
     """
     return np.sqrt(2*(1-np.sqrt(compute_fidelity(density_matrix0, density_matrix1))))
 
-
+def string_to_gate(gate_string):   
+    gate_str_low=gate_string.lower()
+    if gate_str_low == 'none':
+        return None
+    if gate_str_low == 'rx':
+        gate=gates.RX
+    elif gate_str_low == 'rz':
+        gate=gates.RZ
+    elif gate_str_low == 'cz':
+        gate=gates.CZ
+    else:
+        raise('Error: unrecognised gate in string_to_gate()')
+    return gate
 
 def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     '''
@@ -167,13 +179,13 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     representation = train_environment.rep,
     labels = evaluation_labels,
     reward = train_environment.reward, 
-    neg_reward=neg_reward,
-    pos_reward=pos_reward,
-    step_r_metric=step_r_metric,
-    action_penality=action_penalty,
-    action_space_type=action_space,
+    neg_reward = neg_reward,
+    pos_reward = pos_reward,
+    step_r_metric = step_r_metric,
+    action_penality = action_penalty,
+    action_space_type = action_space,
     kernel_size = kernel_size,
-    step_reward=step_reward
+    step_reward = step_reward
     )
 
     for i in range(n_circ):
@@ -182,29 +194,20 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            action=action[0]          
+            action = action[0]          
             obs, rewards, done, info = environment.step(action)
         predicted_circ = environment.get_qibo_circuit()
-        predicted_rep=environment.get_circuit_rep()
-        dm_untrained=np.array(predicted_circ().state())
+        dm_untrained = np.array(predicted_circ().state())
         avg_rew.append(rewards)
         avg_fidelity.append(compute_fidelity(evaluation_labels[i],dm_untrained))
         avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
         avg_bures_distance.append(bures_distance(evaluation_labels[i],dm_untrained))
-        if i==0 and DEBUG:
-            noise_model=CustomNoiseModel() 
-            test_rep=evaluation_circ[i]
-            test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
-            print('\nTrue noisy circuit')
-            print(test_circ.draw())
-            print('\nPredicted noisy circ: ')
-            print(predicted_circ.draw())
-            print("Predicted representation: \n", predicted_rep)
-    rew=np.array(avg_rew)
-    fid=np.array(avg_fidelity)
-    trace_d=np.array(avg_trace_distance)
-    bures_d=np.array(avg_bures_distance)
-    results=np.array([(rew.mean(),rew.std(),
+
+    rew = np.array(avg_rew)
+    fid = np.array(avg_fidelity)
+    trace_d = np.array(avg_trace_distance)
+    bures_d = np.array(avg_bures_distance)
+    results = np.array([(rew.mean(),rew.std(),
                        fid.mean(),fid.std(),
                        trace_d.mean(),trace_d.std(),
                        bures_d.mean(),bures_d.std())],

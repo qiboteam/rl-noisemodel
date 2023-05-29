@@ -11,7 +11,7 @@ if not os.path.exists(benchmark_circ_path):
 noise_model = CustomNoiseModel()
 rep = CircuitRepresentation()
 
-number_of_gates_per_qubit=[5]
+number_of_gates_per_qubit=[7,10,15,30]
 qubits=1
 number_of_circuits=1000
 dataset_name='Coherent-on_Std-on'

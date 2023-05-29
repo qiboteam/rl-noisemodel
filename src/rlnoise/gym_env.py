@@ -33,45 +33,45 @@ class QuantumCircuit(gym.Env):
             others: hyperparameters passed from config.ini
         '''
         super(QuantumCircuit, self).__init__()
-        self.neg_reward=neg_reward
-        self.pos_reward=pos_reward
-        self.step_r_metric=step_r_metric
-        self.action_penality=action_penality
-        self.action_space_type=action_space_type
+        self.neg_reward = neg_reward
+        self.pos_reward = pos_reward
+        self.step_r_metric = step_r_metric
+        self.action_penality = action_penality
+        self.action_space_type = action_space_type
         self.kernel_size = kernel_size
         assert self.kernel_size % 2 == 1, "Kernel_size must be odd"
-        self.step_reward=step_reward 
-        self.position=None
+        self.step_reward = step_reward 
+        self.position = None
         self.circuits = circuits
         self.n_circ = len(self.circuits)
         self.n_qubits = circuits[0].shape[1]
         self.circuit_lenght = None
         self.rep = representation
-        self.actual_mse=None
-        self.previous_mse=None
+        self.actual_mse = None
+        self.previous_mse = None
         self.labels = labels
         self.reward = reward
         self.encoding_dim = 8
-        self.action=None
-        self.state_after_act=None
+        self.action = None
+        self.state_after_act = None
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
             shape = (self.encoding_dim,self.n_qubits,self.kernel_size),
             dtype = np.float32
         )
-        if self.action_space_type=="Continuous":
-            self.action_space = spaces.Box( low=0, high=1,shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
+        if self.action_space_type == "Continuous":
+            self.action_space = spaces.Box( low=0, high=1, shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
 
-        elif self.action_space_type=="Discrete":
+        elif self.action_space_type == "Discrete":
             if noise_param_space is None:
                 self.noise_par_space = { 'max': 1., 'n_steps': 20}
             else:
                 self.noise_par_space = noise_param_space
             self.discrete_step = self.noise_par_space['max'] / self.noise_par_space['n_steps']
             assert self.discrete_step > 0
-            action_shape=[self.noise_par_space['n_steps'] for _ in range(self.n_qubits*4)]
-            self.action_space=spaces.MultiDiscrete(action_shape)
+            action_shape = [self.noise_par_space['n_steps'] for _ in range(self.n_qubits*4)]
+            self.action_space = spaces.MultiDiscrete(action_shape)
         
     def init_state(self, i=None):
         if i is None:

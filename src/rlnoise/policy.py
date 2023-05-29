@@ -9,7 +9,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from rlnoise.utils import model_evaluation
 
 
-config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+config_path = str(Path().parent.absolute())+'/src/rlnoise/config.json'
 with open(config_path) as f:
     config = json.load(f)
 
@@ -25,7 +25,7 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         super().__init__(observation_space, features_dim)
         indim = observation_space.shape[0]
         sample = torch.as_tensor(observation_space.sample()[None]).float()
-        filter_shape=(1,2)
+        filter_shape = (1,2)
         conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=64, kernel_size=filter_shape) #adding pooling layer?
         
         # Compute shape by doing one forward pass
@@ -69,41 +69,41 @@ class CustomCallback(BaseCallback):
         trainset_depth: number of gates per qubit used in the bench dataset
 
     """
-    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=False ,test_on_data_size=None):
+    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=False ,test_on_data_size = None):
         super(CustomCallback, self).__init__(verbose)
 
-        policy_params = config['policy']
-        self.save_best=policy_params['save_best_model']
-        self.plot=policy_params['plot_results']
-        self.best_model_name=policy_params['model_name']
-        self.plot_name=policy_params['plot_name']
+        policy_params  =  config['policy']
+        self.save_best = policy_params['save_best_model']
+        self.plot = policy_params['plot_results']
+        self.best_model_name = policy_params['model_name']
+        self.plot_name = policy_params['plot_name']
         self.log_dir = str(Path().parent.absolute())+'/src/rlnoise/saved_models/'
-        self.plot_dir=str(Path().parent.absolute())+'/src/rlnoise/data_analysis/plots/'
-        self.results_path=str(Path().parent.absolute())+'/src/rlnoise/bench_results/'
+        self.plot_dir = str(Path().parent.absolute())+'/src/rlnoise/data_analysis/plots/'
+        self.results_path = str(Path().parent.absolute())+'/src/rlnoise/bench_results/'
         self.check_freq = check_freq
-        self.test_on_data_size=test_on_data_size
-        self.environment=train_environment
+        self.test_on_data_size = test_on_data_size
+        self.environment = train_environment
         self.best_mean_reward = -np.inf
-        self.best_mean_fidelity=-np.inf
-        self.best_mean_trace_dist=np.inf
-        self.best_mean_bures_dist=np.inf
+        self.best_mean_fidelity = -np.inf
+        self.best_mean_trace_dist = np.inf
+        self.best_mean_bures_dist = np.inf
         if self.test_on_data_size is not None:
-            self.train_circ=evaluation_set['train_set'][:self.test_on_data_size]
-            self.train_label=evaluation_set['train_label'][:self.test_on_data_size]
+            self.train_circ = evaluation_set['train_set'][:self.test_on_data_size]
+            self.train_label = evaluation_set['train_label'][:self.test_on_data_size]
         else:
-            self.train_circ=evaluation_set['train_set']
-            self.train_label=evaluation_set['train_label']
+            self.train_circ = evaluation_set['train_set']
+            self.train_label = evaluation_set['train_label']
 
-        self.val_circ=evaluation_set['val_set']
-        self.val_label=evaluation_set['val_label']
-        self.dataset_size=len(self.train_circ)
-        self.trainset_depth=trainset_depth
-        self.n_qubits=self.train_circ[0].shape[1]
-        self.eval_results=[]
-        self.train_results=[]
-        self.timestep_list=[]
+        self.val_circ = evaluation_set['val_set']
+        self.val_label = evaluation_set['val_label']
+        self.dataset_size = len(self.train_circ)
+        self.trainset_depth = trainset_depth
+        self.n_qubits = self.train_circ[0].shape[1]
+        self.eval_results = []
+        self.train_results = []
+        self.timestep_list = []
         self.save_path = os.path.join(self.log_dir, self.best_model_name)
-        self.plot_1_title='%dQ D%d K3 SR-off,Penal=0.0, Trainset_size=%d Valset_size=%d, Coherent(e_z=0.1,e_x=0.2),Std_noise(lam=0.05,p0=0.1)'%(self.n_qubits,self.trainset_depth,self.dataset_size,len(self.val_circ))
+        self.plot_1_title = '%dQ D%d K3 SR-off,Penal=0.0, Trainset_size=%d Valset_size=%d, Coherent(e_z=0.1,e_x=0.2),Std_noise(lam=0.05,p0=0.1)'%(self.n_qubits,self.trainset_depth,self.dataset_size,len(self.val_circ))
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -139,12 +139,12 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        debug=True
+        debug = True
 
-        if self.n_calls==1 or self.n_calls % self.check_freq == 0:
+        if self.n_calls == 1 or self.n_calls % self.check_freq == 0:
           # Retrieve training reward
-            training_results=model_evaluation(self.train_circ,self.train_label,self.environment,self.model)
-            evaluation_results=model_evaluation(self.val_circ,self.val_label,self.environment,self.model)
+            training_results = model_evaluation(self.train_circ,self.train_label,self.environment,self.model)
+            evaluation_results = model_evaluation(self.val_circ,self.val_label,self.environment,self.model)
             self.train_results.append(training_results)
             self.eval_results.append(evaluation_results)
             self.timestep_list.append(self.num_timesteps)
@@ -173,9 +173,9 @@ class CustomCallback(BaseCallback):
         """
         This event is triggered before exiting the `learn()` method.
         """
-        self.train_results=np.asarray(self.train_results)
-        self.eval_results=np.asarray(self.eval_results)
-        self.timestep_list=np.asarray(self.timestep_list)/1000
+        self.train_results = np.asarray(self.train_results)
+        self.eval_results = np.asarray(self.eval_results)
+        self.timestep_list = np.asarray(self.timestep_list)/1000
         print('Best average results obtained on the evaluation set are:\n Reward=%f, Fidelity=%f, Trace distance=%f, Bures=%f'%(self.best_mean_reward,self.best_mean_fidelity,self.best_mean_trace_dist,self.best_mean_bures_dist))
         if self.plot is True:
             self.plot_results()
@@ -189,9 +189,9 @@ class CustomCallback(BaseCallback):
         pass 
 
     def plot_results(self):
-        train_results=self.train_results.reshape(-1)
-        eval_results=self.eval_results.reshape(-1)
-        time_steps=self.timestep_list
+        train_results = self.train_results.reshape(-1)
+        eval_results = self.eval_results.reshape(-1)
+        time_steps = self.timestep_list
         if self.test_on_data_size is None:
             fig, ax = plt.subplots(2, 2, figsize=(15, 8))
             fig.suptitle(self.plot_1_title, fontsize=15)
@@ -231,14 +231,14 @@ class CustomCallback(BaseCallback):
         pass
 
     def save_best_results(self,reward,fidelity,trace_dist,bures_dist): 
-        reward=reward.item() 
-        fidelity=fidelity.item()
-        trace_dist=trace_dist.item()
+        reward = reward.item() 
+        fidelity = fidelity.item()
+        trace_dist = trace_dist.item()
         if fidelity > self.best_mean_fidelity and trace_dist < self.best_mean_trace_dist:
-            self.best_mean_reward=reward
-            self.best_mean_fidelity=fidelity
-            self.best_mean_trace_dist=trace_dist           
-            self.best_mean_bures_dist=bures_dist
+            self.best_mean_reward = reward
+            self.best_mean_fidelity = fidelity
+            self.best_mean_trace_dist = trace_dist           
+            self.best_mean_bures_dist = bures_dist
     def save_best_model(self,reward):
         if reward.item() > self.best_mean_reward:
             if self.verbose:
