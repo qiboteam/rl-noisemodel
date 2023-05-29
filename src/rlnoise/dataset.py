@@ -31,7 +31,7 @@ class Dataset(object):
         self.shadows = shadows
         self.readout_mit = readout_mit
         self.backend = backend
-        
+        self.tomography=False
         self.circuits = [
             self.generate_random_circuit()
             for i in range(n_circuits)
@@ -80,7 +80,7 @@ class Dataset(object):
         circuit = Circuit(self.n_qubits, density_matrix=True)
         for _ in range(self.n_gates):
             for q0 in range(self.n_qubits):
-                gate = random.choice([gates.RX, gates.RZ, gates.CZ])
+                gate = random.choice([gates.RX, gates.RZ])#, gates.CZ])
                 params = signature(gate).parameters
                 # 2 qubit gate
                 if 'q0' in params and 'q1' in params:
