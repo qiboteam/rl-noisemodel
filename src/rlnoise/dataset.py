@@ -171,6 +171,16 @@ def gate_to_idx(gate):
         if gate == "epsilon_x":
             return 7
 
+def gate_action_index(gate):
+    if gate == 'epsilon_x':
+        return 0
+    if gate == 'epsilon_z':
+        return 1
+    if gate == gates.ResetChannel:
+        return 2
+    if gate == gates.DepolarizingChannel:
+        return 3
+        
 class CircuitRepresentation(object):
     """
     Object for mapping qibo circuits to numpy array representation and vice versa.
@@ -267,7 +277,7 @@ class CircuitRepresentation(object):
 
 
     def make_action(self, action, circuit, position):
-        if isinstance(circuit, qibo.models.circuit.Circuit):
+        if isinstance(circuit, Circuit):
             assert False, "Works only with circuits as numpy arrays at the moment."
             #circuit = self.circuit_to_array(circuit)
         nqubits = circuit.shape[1]

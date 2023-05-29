@@ -118,9 +118,10 @@ class QuantumCircuit(gym.Env):
             else:
                 raise("Error")
 
-        for idx, a in enumerate(action[q]):
-            if a!=0:
-                reward -= self.action_penality
+        for q in range(self.n_qubits):
+            for a in action[q]:
+                if a!=0:
+                    reward -= self.action_penality
                 
         self.current_state = self.rep.make_action(action, self.current_state, position)
 
