@@ -8,5 +8,6 @@ The data is saved in two .npy files. Each file is an array of lists. In each lis
 1000 shots for each circuit.
 
  To obtain this data, I have added custom rules to the compiler to compile the RX(n*pi/2) gates with n RX90 pulses and the X gates using two pulses.
-I am running circuits using the standard compiler where each RX and X gate is transpiled to a U3 gate, and this gate is compiled with two RX90 pulses (and virtual RZs).
+
+The data saved in the files ending in 2 has been obtained using the standard compiler where each RX and X gate is transpiled to a U3 gate, and this gate is compiled with two RX90 pulses (and virtual RZs).
 In this way, we expect the noise to be different because the number of pulses changes, and it would be good to check if our model is able to learn these differences.
