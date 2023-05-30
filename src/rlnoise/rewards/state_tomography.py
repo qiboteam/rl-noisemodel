@@ -1,8 +1,7 @@
 from qibo import gates, symbols
 from qibo.backends import GlobalBackend
 from qibo.hamiltonians import SymbolicHamiltonian
-#from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
-#TODO: there is a problem, no module called "calibration_matrix, apply_readout_mitigation" in qibo.models.error_mitigation 
+from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
 from itertools import product
 import numpy as np
 
@@ -44,7 +43,7 @@ class StateTomography:
         obs = SymbolicHamiltonian(sym)
         exps = []
         if readout_mit:
-            self.cal_mat = calibration_matrix(self.nqubits,noise)
+            self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend)
         for k, circ in enumerate(self.tomo_circuits):
             if noise is not None:
                 circ = noise.apply(circ)
