@@ -1,0 +1,12 @@
+I have calculated the density matrices using state tomography for the circuits in the training and validation set. Closes #35.
+
+I have run each set of circuits twice. The files ending in 1 contain the data obtained with the latest runcard of tti1q_b1.
+
+For the other files, I used other runcard because I thought it was the latest one (but it isn't). With these parameters, the qubit is not perfectly calibrated, but since I have the data, I thought it could be useful to see how the model performs in this case.
+
+The data is saved in two .npy files. Each file is an array of lists. In each list, there is [circuit, rho_exact, rho, rho_mit, cal_mat], where rho_exact is the density matrix calculated using exact simulation (without shot noise), rho is the density matrix obtained from the hardware, rho_mit is the matrix with readout mitigation, and cal_mat is the calibration matrix used in readout mitigation. I have used 
+1000 shots for each circuit.
+
+ To obtain this data, I have added custom rules to the compiler to compile the RX(n*pi/2) gates with n RX90 pulses and the X gates using two pulses.
+I am running circuits using the standard compiler where each RX and X gate is transpiled to a U3 gate, and this gate is compiled with two RX90 pulses (and virtual RZs).
+In this way, we expect the noise to be different because the number of pulses changes, and it would be good to check if our model is able to learn these differences.
