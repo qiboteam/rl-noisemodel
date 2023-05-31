@@ -148,7 +148,4 @@ for data_size in n_circ:
     model.learn(100000,progress_bar=True, callback=callback)
 f.close()
 '''
-#f.close()
 
-
-#Can be useful for finetuning to add a list of possible hyerparameters (e.g. n_epochs,n_steps, learning_rate, ecc) and then cycle on all of them to find the best configuration. Watch out the parameters extracted now at the end of training (policy.py) are the best one but not correspond all to the same timestep

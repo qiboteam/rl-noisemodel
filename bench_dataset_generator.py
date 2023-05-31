@@ -3,7 +3,10 @@ import numpy as np
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.custom_noise import CustomNoiseModel
 
-benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
+
+#benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
+
+benchmark_circ_path=os.getcwd()+'/src/rlnoise/dataset_hardware/'
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
@@ -11,10 +14,12 @@ if not os.path.exists(benchmark_circ_path):
 noise_model = CustomNoiseModel()
 rep = CircuitRepresentation()
 
-number_of_gates_per_qubit=[7,10,15,30]
+
+number_of_gates_per_qubit=[5]
 qubits=1
-number_of_circuits=1000
-dataset_name='Coherent-on_Std-on'
+number_of_circuits=500
+dataset_name='hardware_len500'
+
 
 for i in number_of_gates_per_qubit:
     f = open(benchmark_circ_path+dataset_name+"_D%d_%dQ_len%d.npz"%(i,qubits,number_of_circuits),"wb")

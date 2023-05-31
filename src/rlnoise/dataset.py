@@ -5,9 +5,12 @@ from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
 
+from rlnoise.rewards.state_tomography import StateTomography
+from configparser import ConfigParser
+
 
 class Dataset(object):
-    def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, noise_model=None, mode='rep'):
+    def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, readout_mit=False, noise_model=None, mode='rep', backend=None):
         '''Generate dataset for the training of RL-algorithm
         Args:
             n_circuits (int): number of random circuits generated
@@ -25,7 +28,9 @@ class Dataset(object):
         self.mode = mode
         self.n_circuits=n_circuits
         self.shadows = shadows
-        
+        self.readout_mit = readout_mit
+        self.backend = backend
+        self.tomography=False
         self.circuits = [
             self.generate_random_circuit()
             for i in range(n_circuits)
@@ -47,8 +52,15 @@ class Dataset(object):
             states = []
             for i in range(self.n_circuits):
                 model = ClassicalShadows(self.noisy_circuits[i], num_snapshots)
-                model.get_classical_shadow()
+                model.get_classical_shadow(backend=self.backend)
                 states.append(model.shadow_state_reconstruction())
+        elif self.tomography:
+            states = []
+            for i in range(self.n_circuits):
+                model = StateTomography(nshots=num_snapshots, backend=self.backend)
+                model.get_circuits(self.noisy_circuits[i])
+                model.meas_obs(readout_mit=self.readout_mit)
+                states.append(model.get_rho())
         else:
             states = [self.noisy_circuits[i]().state() for i in range(self.n_circuits)]
         return np.asarray(states)
@@ -158,6 +170,16 @@ def gate_to_idx(gate):
         if gate == "epsilon_x":
             return 7
 
+def gate_action_index(gate):
+    if gate == 'epsilon_x':
+        return 0
+    if gate == 'epsilon_z':
+        return 1
+    if gate == gates.ResetChannel:
+        return 2
+    if gate == gates.DepolarizingChannel:
+        return 3
+        
 class CircuitRepresentation(object):
     """
     Object for mapping qibo circuits to numpy array representation and vice versa.
@@ -176,6 +198,7 @@ class CircuitRepresentation(object):
         if 'theta' in gate.init_kwargs:
             one_hot[param_idx] = gate.init_kwargs['theta'] / (2 * np.pi)
         return one_hot  
+
 
     def circuit_to_array(self, circuit):
         """
@@ -210,7 +233,7 @@ class CircuitRepresentation(object):
         if array[gate_to_idx("epsilon_z")] != 0:
             channel_list.append(gates.RZ(qubit, theta=array[gate_to_idx("epsilon_z")]))
         if array[gate_to_idx(gates.ResetChannel)] != 0:
-            channel_list.append(gates.ResetChannel(q=qubit, p0=array[gate_to_idx(gates.ResetChannel)], p1=0))
+            channel_list.append(gates.ResetChannel(qubit, [array[gate_to_idx(gates.ResetChannel)], 0]))
         if array[gate_to_idx(gates.DepolarizingChannel)] != 0:
             channel_list.append(gates.DepolarizingChannel([qubit], lam=array[gate_to_idx(gates.DepolarizingChannel)]))
         return (gate, channel_list)
@@ -250,3 +273,23 @@ class CircuitRepresentation(object):
                     for channel in channels:
                         c.add(channel)
         return c
+
+
+    def make_action(self, action, circuit, position):
+        if isinstance(circuit, Circuit):
+            assert False, "Works only with circuits as numpy arrays at the moment."
+            #circuit = self.circuit_to_array(circuit)
+        nqubits = circuit.shape[1]
+        for q in range(nqubits):          
+            for idx, a in enumerate(action[q]):
+                if idx == gate_action_index("epsilon_x"):
+                    circuit[gate_to_idx("epsilon_x"), q, position] = a
+                if idx == gate_action_index("epsilon_z"):
+                    circuit[gate_to_idx("epsilon_z"), q, position] = a
+                if idx == gate_action_index(gates.ResetChannel):
+                    circuit[gate_to_idx(gates.ResetChannel), q, position] = a
+                if idx == gate_action_index(gates.DepolarizingChannel):
+                    circuit[gate_to_idx(gates.DepolarizingChannel), q, position] = a                
+        return circuit
+
+
