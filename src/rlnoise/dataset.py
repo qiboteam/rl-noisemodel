@@ -171,6 +171,16 @@ def gate_to_idx(gate):
         if gate == "epsilon_x":
             return 7
 
+def gate_action_index(gate):
+    if gate == 'epsilon_x':
+        return 0
+    if gate == 'epsilon_z':
+        return 1
+    if gate == gates.ResetChannel:
+        return 2
+    if gate == gates.DepolarizingChannel:
+        return 3
+        
 class CircuitRepresentation(object):
     """
     Object for mapping qibo circuits to numpy array representation and vice versa.
@@ -189,6 +199,7 @@ class CircuitRepresentation(object):
         if 'theta' in gate.init_kwargs:
             one_hot[param_idx] = gate.init_kwargs['theta'] / (2 * np.pi)
         return one_hot  
+
 
     def circuit_to_array(self, circuit):
         """
@@ -223,7 +234,7 @@ class CircuitRepresentation(object):
         if array[gate_to_idx("epsilon_z")] != 0:
             channel_list.append(gates.RZ(qubit, theta=array[gate_to_idx("epsilon_z")]))
         if array[gate_to_idx(gates.ResetChannel)] != 0:
-            channel_list.append(gates.ResetChannel(q=qubit, p0=array[gate_to_idx(gates.ResetChannel)], p1=0))
+            channel_list.append(gates.ResetChannel(qubit, [array[gate_to_idx(gates.ResetChannel)], 0]))
         if array[gate_to_idx(gates.DepolarizingChannel)] != 0:
             channel_list.append(gates.DepolarizingChannel([qubit], lam=array[gate_to_idx(gates.DepolarizingChannel)]))
         return (gate, channel_list)
@@ -263,3 +274,23 @@ class CircuitRepresentation(object):
                     for channel in channels:
                         c.add(channel)
         return c
+
+
+    def make_action(self, action, circuit, position):
+        if isinstance(circuit, Circuit):
+            assert False, "Works only with circuits as numpy arrays at the moment."
+            #circuit = self.circuit_to_array(circuit)
+        nqubits = circuit.shape[1]
+        for q in range(nqubits):          
+            for idx, a in enumerate(action[q]):
+                if idx == gate_action_index("epsilon_x"):
+                    circuit[gate_to_idx("epsilon_x"), q, position] = a
+                if idx == gate_action_index("epsilon_z"):
+                    circuit[gate_to_idx("epsilon_z"), q, position] = a
+                if idx == gate_action_index(gates.ResetChannel):
+                    circuit[gate_to_idx(gates.ResetChannel), q, position] = a
+                if idx == gate_action_index(gates.DepolarizingChannel):
+                    circuit[gate_to_idx(gates.DepolarizingChannel), q, position] = a                
+        return circuit
+
+

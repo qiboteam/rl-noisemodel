@@ -6,7 +6,10 @@ from rlnoise.gym_env import QuantumCircuit
 import copy
 from rlnoise.custom_noise import CustomNoiseModel
 from qibo.quantum_info import trace_distance, hilbert_schmidt_distance #those are the equivalent of fidellity for density matrices (see also Bures distance)
+
 np.set_printoptions(precision=3, suppress=True)
+
+
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
     return folder
@@ -183,3 +186,91 @@ def test_representation():
     print(array)
     print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
 '''
+
+from scipy.optimize import curve_fit
+from qibo import gates
+
+def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=None):
+    
+    if backend is None:  # pragma: no cover
+        from qibo.backends import GlobalBackend
+        
+        backend = GlobalBackend()
+        
+    nqubits = circuits[0].nqubits
+    
+    circ = { c.depth: [] for c in circuits }
+    for c in circuits:
+        depth = c.depth
+        c.add(gates.Unitary(c.invert().unitary(), *range(nqubits)))
+        if noise_model is not None:
+            circ[depth].append(noise_model.apply(c))
+        else:
+            circ[depth].append(c)
+        
+    probs = { d: [] for d in circ.keys() }
+    init_state = f"{0:0{nqubits}b}"
+    for depth, circs in circ.items():
+        for c in circs:
+            c.add(gates.M(*range(nqubits)))
+            freq = backend.execute_circuit(c, nshots=nshots).frequencies()
+            if init_state not in freq:
+                probs[depth].append(0)
+            else:
+                probs[depth].append(freq[init_state]/nshots)
+    probs = [ (d, np.mean(p)) for d,p in probs.items() ]
+    probs = sorted(probs, key=lambda x: x[0])
+    model = lambda depth,a,l,b: a * np.power(l,depth) + b
+    depths, survival_probs = zip(*probs)
+    optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
+    model = lambda depth: optimal_params[0] * np.power(optimal_params[1],depth) + optimal_params[2]
+    return depths, survival_probs, optimal_params, model
+
+
+class RL_NoiseModel(object):
+
+    def __init__(self, agent, circuit_representation):
+        super(self, ).__init__()
+        self.agent = agent
+        self.rep = circuit_representation
+
+    def apply(self, circuit):
+        if isinstance(circuit, qibo.models.circuit.Circuit):
+            observation = self.rep.circuit_to_array(circuit)
+        elif isinstance(circuit, np.ndarray):
+            observation = circuit
+        else:
+            assert False, "Invalid circuit type"
+        for i in range(circuit.shape[0]):
+            action = self.agent.predict(observation, deterministic=True)
+            observation = self.rep.make_action(action=action, circuit=observation, position=i)
+        return self.rep.rep_to_circuit(observation)
+            
+            
+if __name__ == "__main__":
+
+    from dataset import Dataset, CircuitRepresentation
+    from CustomNoise import CustomNoiseModel
+    import matplotlib.pyplot as plt
+
+    nqubits=3
+    noise_model = CustomNoiseModel()
+
+    rep = CircuitRepresentation(
+        primitive_gates = noise_model.primitive_gates,
+        noise_channels = noise_model.channels,
+        shape = '3d',
+    )
+
+    circs = []
+    for depth in (2, 5, 10, 20, 30, 50):
+        d = Dataset(20, depth, 3, rep, noise_model=noise_model)
+        circs += d.circuits
+
+    depths, survival_probs, optimal_params, model = randomized_benchmarking(circs, noise_model=noise_model)
+    print(f"> Decay: {optimal_params[1]}")
+    print(optimal_params)
+    plt.scatter(depths, survival_probs)
+    plt.plot(depths, model(depths))
+    plt.show()
+    

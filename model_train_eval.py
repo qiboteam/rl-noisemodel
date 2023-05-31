@@ -39,7 +39,6 @@ train_label=copy.deepcopy(tmp['train_label'])
 val_set=copy.deepcopy(tmp['val_set'])
 val_label=copy.deepcopy(tmp['val_label'])
 
-
 #Setting up training env and policy model
 
 noise_model = CustomNoiseModel()
@@ -152,4 +151,6 @@ for data_size in n_circ:
     model.learn(100000,progress_bar=True, callback=callback)
 f.close()
 '''
-#f.close()
+
+
+

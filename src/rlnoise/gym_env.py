@@ -117,22 +117,19 @@ class QuantumCircuit(gym.Env):
                 self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
             else:
                 raise("Error")
-       
-        for q in range(self.n_qubits):          
-            for idx, a in enumerate(action[q]):
-                #print('considering qubit: ',q,'and action: ',action, 'at position: ',position)
+
+        for q in range(self.n_qubits):
+            for a in action[q]:
                 if a!=0:
                     reward -= self.action_penality
-                    if idx == gate_action_index("epsilon_x"):
-                        self.current_state[gate_to_idx("epsilon_x"), q, position]=a
-                    if idx == gate_action_index("epsilon_z"):
-                        self.current_state[gate_to_idx("epsilon_z"),q, position]=a
-                    if idx == gate_action_index(gates.ResetChannel):
-                        self.current_state[gate_to_idx(gates.ResetChannel),q, position]=a
-                    if idx == gate_action_index(gates.DepolarizingChannel):
-                        self.current_state[gate_to_idx(gates.DepolarizingChannel),q, position]=a                
-                    if self.step_reward:
-                        reward+=self.step_reward_fun(a)
+                
+        self.current_state = self.rep.make_action(action, self.current_state, position)
+
+        if self.step_reward:
+            for q in range(self.n_qubits):          
+                for idx, a in enumerate(action[q]):
+                    reward += self.step_reward_fun(a)
+                
         if position == self.circuit_lenght - 1:
             terminated = True
         else:
