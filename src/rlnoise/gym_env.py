@@ -1,12 +1,19 @@
 import numpy as np
+import copy
+import json
+from dataclasses import dataclass
+from pathlib import Path
 import gym, random
 from gym import spaces
-import copy
 from qibo import gates
 from qibo.quantum_info import trace_distance
-from rlnoise.dataset import gate_to_idx
 
 
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
+
+gym_env_params = config['gym_env']
 
 def gate_action_index(gate):
     if gate == 'epsilon_x':
@@ -18,39 +25,42 @@ def gate_action_index(gate):
     if gate == gates.DepolarizingChannel:
         return 3
 
+@dataclass
 class QuantumCircuit(gym.Env):
-    
-    def __init__(self, circuits, labels, representation, reward, noise_param_space=None,
-                 step_reward=None, kernel_size=None, neg_reward=None,pos_reward=None, 
-                 step_r_metric=None, action_penality=None,
-                 action_space_type=None):
-        '''
+    '''
         Args: 
             circuits (list): list of circuit represented as numpy vectors
             labels (list): list relative to the circuits
             representation: object of the class CircuitRepresentation()
             reward: object of the class DensityMatrixReward() or FrequencyReward()
             others: hyperparameters passed from config.ini
-        '''
-        super(QuantumCircuit, self).__init__()
-        self.neg_reward = neg_reward
-        self.pos_reward = pos_reward
-        self.step_r_metric = step_r_metric
-        self.action_penality = action_penality
-        self.action_space_type = action_space_type
-        self.kernel_size = kernel_size
+    '''
+    noise_param_space: bool = False
+    step_reward: bool = gym_env_params['step_reward']
+    kernel_size: int = gym_env_params['kernel_size']
+    neg_reward: float = gym_env_params['neg_reward']
+    pos_reward: float = gym_env_params['pos_reward']
+    step_r_metric: str = gym_env_params['step_r_metric']
+    action_penality: float = gym_env_params['action_penalty']
+    action_space_type: str = gym_env_params['action_space']
+    circuits: object = None
+    labels: np = None
+    representation: object = None
+    reward: object = None
+
+    def __post_init__(self):
+        super().__init__()
         assert self.kernel_size % 2 == 1, "Kernel_size must be odd"
-        self.step_reward = step_reward 
         self.position = None
-        self.circuits = circuits
+        #self.circuits = circuits
         self.n_circ = len(self.circuits)
-        self.n_qubits = circuits[0].shape[1]
+        self.n_qubits = self.circuits[0].shape[1]
         self.circuit_lenght = None
-        self.rep = representation
+        self.rep = self.representation
         self.actual_mse = None
         self.previous_mse = None
-        self.labels = labels
-        self.reward = reward
+        #self.labels = self.labels
+       #self.reward = reward
         self.encoding_dim = 8
         self.action = None
         self.state_after_act = None
@@ -61,13 +71,13 @@ class QuantumCircuit(gym.Env):
             dtype = np.float32
         )
         if self.action_space_type == "Continuous":
-            self.action_space = spaces.Box( low=0, high=1, shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
+            self.action_space = spaces.Box( low=0, high=0.2, shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
 
         elif self.action_space_type == "Discrete":
-            if noise_param_space is None:
+            if self.noise_param_space is None:
                 self.noise_par_space = { 'max': 1., 'n_steps': 20}
             else:
-                self.noise_par_space = noise_param_space
+                self.noise_par_space = self.noise_param_space
             self.discrete_step = self.noise_par_space['max'] / self.noise_par_space['n_steps']
             assert self.discrete_step > 0
             action_shape = [self.noise_par_space['n_steps'] for _ in range(self.n_qubits*4)]

@@ -1,5 +1,4 @@
 import os
-import json
 import copy
 import numpy as np
 from pathlib import Path
@@ -10,22 +9,12 @@ from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation
+
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results'
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 
-with open(config_path) as f:
-    config = json.load(f)
-
-gym_env_params = config['gym_env']
-kernel_size = gym_env_params['kernel_size']
-step_reward = gym_env_params['step_reward']
-step_r_metric = gym_env_params['step_r_metric']
-neg_reward = gym_env_params['neg_reward']
-pos_reward = gym_env_params['pos_reward']
-action_penalty = gym_env_params['action_penalty']
-action_space = gym_env_params['action_space']
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=5
@@ -44,20 +33,13 @@ val_label=copy.deepcopy(tmp['val_label'])
 
 noise_model = CustomNoiseModel()
 reward = DensityMatrixReward()
-
 rep = CircuitRepresentation()
+
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
     representation = rep,
     labels = train_label,
     reward = reward,
-    neg_reward=neg_reward,
-    pos_reward=pos_reward,
-    step_r_metric=step_r_metric,
-    action_penality=action_penalty,
-    action_space_type=action_space,
-    kernel_size = kernel_size,
-    step_reward=step_reward
 )
 policy = "MlpPolicy"
 policy_kwargs = dict(

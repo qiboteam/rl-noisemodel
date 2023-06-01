@@ -5,14 +5,26 @@ from dataclasses import dataclass
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,ResetError
 from qibo import gates
 from qibo.models import Circuit
-from rlnoise.utils import string_to_gate
-
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 with open(config_path) as f:
     config = json.load(f)
 
 noise_params = config['noise']
+
+def string_to_gate(gate_string):   
+    gate_str_low=gate_string.lower()
+    if gate_str_low == 'none':
+        return None
+    if gate_str_low == 'rx':
+        gate=gates.RX
+    elif gate_str_low == 'rz':
+        gate=gates.RZ
+    elif gate_str_low == 'cz':
+        gate=gates.CZ
+    else:
+        raise('Error: unrecognised gate in string_to_gate()')
+    return gate
 
 @dataclass
 class CustomNoiseModel(object):

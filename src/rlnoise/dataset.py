@@ -233,7 +233,7 @@ class CircuitRepresentation(object):
         if array[gate_to_idx("epsilon_z")] != 0:
             channel_list.append(gates.RZ(qubit, theta=array[gate_to_idx("epsilon_z")]))
         if array[gate_to_idx(gates.ResetChannel)] != 0:
-            channel_list.append(gates.ResetChannel(qubit, [array[gate_to_idx(gates.ResetChannel)], 0]))
+            channel_list.append(gates.ResetChannel(qubit, array[gate_to_idx(gates.ResetChannel)], 0))
         if array[gate_to_idx(gates.DepolarizingChannel)] != 0:
             channel_list.append(gates.DepolarizingChannel([qubit], lam=array[gate_to_idx(gates.DepolarizingChannel)]))
         return (gate, channel_list)

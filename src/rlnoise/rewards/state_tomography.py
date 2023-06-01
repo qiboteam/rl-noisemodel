@@ -1,7 +1,7 @@
 from qibo import gates, symbols
 from qibo.backends import GlobalBackend
 from qibo.hamiltonians import SymbolicHamiltonian
-from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
+#from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
 from itertools import product
 import numpy as np
 

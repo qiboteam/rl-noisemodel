@@ -25,13 +25,13 @@
     "depol_on_gate": ["rz"]
   },
   "policy": {
-    "save_best_model": true,
+    "save_best_model": false,
     "plot_results": true,
-    "model_name": "1Q_AllNoises_mseReward",
-    "plot_name": "All_noise_log-rews_len1000"
+    "model_name": "1st_test_hardware_D5_len500_",
+    "plot_name": "file2_logRew_hardwareK5_D5_len500_"
   },
   "reward": {
-    "reward_type": "mse"
+    "reward_type": "log"
   }
 }
 

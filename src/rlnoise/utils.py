@@ -2,13 +2,14 @@ import os
 import json
 import copy
 from rlnoise.custom_noise import CustomNoiseModel
-from qibo.quantum_info import trace_distance, hilbert_schmidt_distance #those are the equivalent of fidellity for density matrices (see also Bures distance)
+from qibo.quantum_info import trace_distance
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from rlnoise.gym_env import QuantumCircuit
 from qibo import gates
 from qibo.quantum_info import trace_distance
+from qibo.models.circuit import Circuit
 from scipy.linalg import sqrtm
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
@@ -116,15 +117,10 @@ def compute_fidelity(density_matrix0, density_matrix1):
     .. math::
             F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
     """
-
-    sqrt_mat = sqrtm(density_matrix0).astype(dtype=np.complex64)
-    sqrt_mat_sqrt = np.array(copy.deepcopy(sqrt_mat @ density_matrix1 @ sqrt_mat),dtype=np.complex64)
-
-    evs = np.linalg.eigvalsh(sqrt_mat_sqrt)
-    evs = np.real(evs)
-    evs = np.where(evs > 0.0, evs, 0.0)
-    trace = (np.sum(np.sqrt(evs))) ** 2
-
+    sqrt_mat1_mat2 = sqrtm(density_matrix0 @ density_matrix1)
+    trace = np.real(np.trace(sqrt_mat1_mat2)**2)
+    if trace > 1:
+        trace=1 #TODO: problem the trace can be sligtlhy > 1! This problem appeared only on the hardware test, so probably the dm matrices are not perfect
     return trace
 
 def bures_distance(density_matrix0, density_matrix1):
@@ -133,20 +129,6 @@ def bures_distance(density_matrix0, density_matrix1):
         B( \rho , \sigma ) = -\sqrt{2*(1-sqrt(F(\sigma,\rho)))} where F is the fidelity
     """
     return np.sqrt(2*(1-np.sqrt(compute_fidelity(density_matrix0, density_matrix1))))
-
-def string_to_gate(gate_string):   
-    gate_str_low=gate_string.lower()
-    if gate_str_low == 'none':
-        return None
-    if gate_str_low == 'rx':
-        gate=gates.RX
-    elif gate_str_low == 'rz':
-        gate=gates.RZ
-    elif gate_str_low == 'cz':
-        gate=gates.CZ
-    else:
-        raise('Error: unrecognised gate in string_to_gate()')
-    return gate
 
 def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     '''
@@ -160,20 +142,12 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
         average reward (total reward/n_circuits), avg Hilbert-Schmidt distance, avg Trace Distance
     '''
 
-    avg_rew=[]
-    avg_trace_distance=[]
-    avg_bures_distance=[]
-    avg_fidelity=[]
+    avg_rew = []
+    avg_trace_distance = []
+    avg_bures_distance = []
+    avg_fidelity = []
+    correction = []
     n_circ=len(evaluation_circ)
-    
-    gym_env_params = config['gym_env']
-    kernel_size = gym_env_params['kernel_size']
-    step_reward = gym_env_params['step_reward']
-    step_r_metric = gym_env_params['step_r_metric']
-    neg_reward = gym_env_params['neg_reward']
-    pos_reward = gym_env_params['pos_reward']
-    action_penalty = gym_env_params['action_penalty']
-    action_space = gym_env_params['action_space']
 
     circuits=copy.deepcopy(evaluation_circ)
     
@@ -182,15 +156,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     representation = train_environment.rep,
     labels = evaluation_labels,
     reward = train_environment.reward, 
-    neg_reward = neg_reward,
-    pos_reward = pos_reward,
-    step_r_metric = step_r_metric,
-    action_penality = action_penalty,
-    action_space_type = action_space,
-    kernel_size = kernel_size,
-    step_reward = step_reward
     )
-
     for i in range(n_circ):
         
         obs = environment.reset(i=i)
@@ -201,6 +167,8 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
             obs, rewards, done, info = environment.step(action)
         predicted_circ = environment.get_qibo_circuit()
         dm_untrained = np.array(predicted_circ().state())
+        #print(environment.get_circuit_rep()[:,:,4:].shape)
+        correction.append(environment.get_circuit_rep()[:,:,4:])
         avg_rew.append(rewards)
         avg_fidelity.append(compute_fidelity(evaluation_labels[i],dm_untrained))
         avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
@@ -210,14 +178,17 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     fid = np.array(avg_fidelity)
     trace_d = np.array(avg_trace_distance)
     bures_d = np.array(avg_bures_distance)
+    correction = np.array(correction)
     results = np.array([(rew.mean(),rew.std(),
                        fid.mean(),fid.std(),
                        trace_d.mean(),trace_d.std(),
-                       bures_d.mean(),bures_d.std())],
+                       bures_d.mean(),bures_d.std(),
+                       correction.mean(axis=0))],
                        dtype=[('reward','<f4'),('reward_std','<f4'),
                               ('fidelity','<f4'),('fidelity_std','<f4'),
                               ('trace_distance','<f4'),('trace_distance_std','<f4'),
-                              ('bures_distance','<f4'),('bures_distance_std','<f4')                         
+                              ('bures_distance','<f4'),('bures_distance_std','<f4'),
+                              ('avg_correction', np.float64, (1,5,4))                                                  
                             ])
     return results
 
@@ -285,7 +256,7 @@ class RL_NoiseModel(object):
         self.rep = circuit_representation
 
     def apply(self, circuit):
-        if isinstance(circuit, qibo.models.circuit.Circuit):
+        if isinstance(circuit, Circuit):
             observation = self.rep.circuit_to_array(circuit)
         elif isinstance(circuit, np.ndarray):
             observation = circuit
@@ -299,8 +270,8 @@ class RL_NoiseModel(object):
             
 if __name__ == "__main__":
 
-    from dataset import Dataset, CircuitRepresentation
-    from CustomNoise import CustomNoiseModel
+    from rlnoise.dataset import Dataset, CircuitRepresentation
+    from rlnoise.custom_noise import CustomNoiseModel
     import matplotlib.pyplot as plt
 
     nqubits=3
