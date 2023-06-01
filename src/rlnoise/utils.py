@@ -1,14 +1,22 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-from configparser import ConfigParser
-from rlnoise.gym_env import QuantumCircuit
+import json
 import copy
 from rlnoise.custom_noise import CustomNoiseModel
 from qibo.quantum_info import trace_distance, hilbert_schmidt_distance #those are the equivalent of fidellity for density matrices (see also Bures distance)
+import numpy as np
+from pathlib import Path
+import matplotlib.pyplot as plt
+from rlnoise.gym_env import QuantumCircuit
+from qibo import gates
+from qibo.quantum_info import trace_distance
+from scipy.linalg import sqrtm
 
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
+
+DEBUG=False
 np.set_printoptions(precision=3, suppress=True)
-
 
 def models_folder():
     folder = os.path.join(os.getcwd(), "models")
@@ -102,6 +110,44 @@ def plot_results(train_history, val_history, n_steps=20, filename="train_info.pn
     plt.show()
     plt.savefig(figures_folder()+ '/' +filename)
 
+def compute_fidelity(density_matrix0, density_matrix1):
+    """Compute the fidelity for two density matrices (pure or mixed states).
+
+    .. math::
+            F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
+    """
+
+    sqrt_mat = sqrtm(density_matrix0).astype(dtype=np.complex64)
+    sqrt_mat_sqrt = np.array(copy.deepcopy(sqrt_mat @ density_matrix1 @ sqrt_mat),dtype=np.complex64)
+
+    evs = np.linalg.eigvalsh(sqrt_mat_sqrt)
+    evs = np.real(evs)
+    evs = np.where(evs > 0.0, evs, 0.0)
+    trace = (np.sum(np.sqrt(evs))) ** 2
+
+    return trace
+
+def bures_distance(density_matrix0, density_matrix1):
+    """ Compute the Bures distance between density matrices
+    .. math::
+        B( \rho , \sigma ) = -\sqrt{2*(1-sqrt(F(\sigma,\rho)))} where F is the fidelity
+    """
+    return np.sqrt(2*(1-np.sqrt(compute_fidelity(density_matrix0, density_matrix1))))
+
+def string_to_gate(gate_string):   
+    gate_str_low=gate_string.lower()
+    if gate_str_low == 'none':
+        return None
+    if gate_str_low == 'rx':
+        gate=gates.RX
+    elif gate_str_low == 'rz':
+        gate=gates.RZ
+    elif gate_str_low == 'cz':
+        gate=gates.CZ
+    else:
+        raise('Error: unrecognised gate in string_to_gate()')
+    return gate
+
 def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     '''
     Function for evaluating the model
@@ -113,64 +159,67 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     Return: 
         average reward (total reward/n_circuits), avg Hilbert-Schmidt distance, avg Trace Distance
     '''
-    params=ConfigParser()
-    params.read("src/rlnoise/config.ini") 
-    neg_reward=params.getfloat('gym_env','neg_reward')
-    pos_reward=params.getfloat('gym_env','pos_reward')
-    step_r_metric=params.get('gym_env','step_r_metric')
-    action_penality=params.getfloat('gym_env','action_penality')
-    action_space_type=params.get('gym_env','action_space')
-    kernel_size = params.getint('gym_env','kernel_size')
-    step_reward=params.getboolean('gym_env','step_reward')
+
+    avg_rew=[]
+    avg_trace_distance=[]
+    avg_bures_distance=[]
+    avg_fidelity=[]
+    n_circ=len(evaluation_circ)
+    
+    gym_env_params = config['gym_env']
+    kernel_size = gym_env_params['kernel_size']
+    step_reward = gym_env_params['step_reward']
+    step_r_metric = gym_env_params['step_r_metric']
+    neg_reward = gym_env_params['neg_reward']
+    pos_reward = gym_env_params['pos_reward']
+    action_penalty = gym_env_params['action_penalty']
+    action_space = gym_env_params['action_space']
+
     circuits=copy.deepcopy(evaluation_circ)
-    debug=True
+    
     environment = QuantumCircuit(
     circuits = circuits,
     representation = train_environment.rep,
     labels = evaluation_labels,
     reward = train_environment.reward, 
-    neg_reward=neg_reward,
-    pos_reward=pos_reward,
-    step_r_metric=step_r_metric,
-    action_penality=action_penality,
-    action_space_type=action_space_type,
+    neg_reward = neg_reward,
+    pos_reward = pos_reward,
+    step_r_metric = step_r_metric,
+    action_penality = action_penalty,
+    action_space_type = action_space,
     kernel_size = kernel_size,
-    step_reward=step_reward
+    step_reward = step_reward
     )
-    avg_rew=0.
-    mae=0.
-    avg_trace_distance=0.
-    hilbert_schmidt_dist=0.
-    n_circ=len(evaluation_circ)
-    
+
     for i in range(n_circ):
         
         obs = environment.reset(i=i)
         done = False
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            action=action[0]          
+            action = action[0]          
             obs, rewards, done, info = environment.step(action)
         predicted_circ = environment.get_qibo_circuit()
-        predicted_rep=environment.get_circuit_rep()
-        dm_untrained=np.array(predicted_circ().state())
-        avg_rew += rewards
-        #mae+=(np.abs(evaluation_labels[i]-dm_untrained)).mean()
-        hilbert_schmidt_dist+=hilbert_schmidt_distance(evaluation_labels[i],dm_untrained)
-        avg_trace_distance+=trace_distance(evaluation_labels[i],dm_untrained)
-        if i==0 and debug:
-            noise_model=CustomNoiseModel()
-            test_rep=evaluation_circ[i]
-            test_circ=noise_model.apply(train_environment.rep.rep_to_circuit(test_rep))
-           
-            print('\nTrue noisy circuit')
-            print(test_circ.draw())
-            print('\nPredicted noisy circ: ')
-            print(predicted_circ.draw())
-            print("Predicted representation: \n", predicted_rep)
+        dm_untrained = np.array(predicted_circ().state())
+        avg_rew.append(rewards)
+        avg_fidelity.append(compute_fidelity(evaluation_labels[i],dm_untrained))
+        avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
+        avg_bures_distance.append(bures_distance(evaluation_labels[i],dm_untrained))
 
-    
-    return avg_rew/n_circ,hilbert_schmidt_dist/n_circ,avg_trace_distance/n_circ
+    rew = np.array(avg_rew)
+    fid = np.array(avg_fidelity)
+    trace_d = np.array(avg_trace_distance)
+    bures_d = np.array(avg_bures_distance)
+    results = np.array([(rew.mean(),rew.std(),
+                       fid.mean(),fid.std(),
+                       trace_d.mean(),trace_d.std(),
+                       bures_d.mean(),bures_d.std())],
+                       dtype=[('reward','<f4'),('reward_std','<f4'),
+                              ('fidelity','<f4'),('fidelity_std','<f4'),
+                              ('trace_distance','<f4'),('trace_distance_std','<f4'),
+                              ('bures_distance','<f4'),('bures_distance_std','<f4')                         
+                            ])
+    return results
 
 
 
@@ -186,6 +235,7 @@ def test_representation():
     print(array)
     print(' --> Circuit Rebuilt:\n', rep.array_to_circuit(array).draw())
 '''
+
 
 from scipy.optimize import curve_fit
 from qibo import gates
@@ -274,3 +324,4 @@ if __name__ == "__main__":
     plt.plot(depths, model(depths))
     plt.show()
     
+

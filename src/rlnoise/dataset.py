@@ -1,14 +1,13 @@
-import itertools, json, random
+import random
 import numpy as np
 from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
+
 from rlnoise.rewards.state_tomography import StateTomography
 from configparser import ConfigParser
 
-params=ConfigParser()
-params.read("src/rlnoise/config.ini")
 
 class Dataset(object):
     def __init__(self, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, readout_mit=False, noise_model=None, mode='rep', backend=None):
@@ -154,9 +153,9 @@ class Dataset(object):
             return self.noisy_circuits[i]
 
 def gate_to_idx(gate):
-        if gate is gates.RX:
-            return 0
         if gate is gates.RZ:
+            return 0
+        if gate is gates.RX:
             return 1
         if gate is gates.CZ:
             return 2
