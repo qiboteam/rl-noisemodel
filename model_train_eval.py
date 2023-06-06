@@ -17,10 +17,10 @@ config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=5
+circuits_depth=10
 nqubits=1
-n_circuit_in_dataset=1000
-dataset_name="Coherent-on_Std-on"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
+n_circuit_in_dataset=500
+dataset_name="train_dataset"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
 
 f = open(benchmark_circ_path+dataset_name,"rb")
 tmp=np.load(f,allow_pickle=True)
@@ -52,7 +52,7 @@ policy_kwargs = dict(
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
                                                 #SINGLE TRAIN AND VALID
-'''
+
 callback=CustomCallback(check_freq=5000,verbose=True,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
 model = PPO(
 policy,
@@ -64,9 +64,9 @@ verbose=0,
 model.learn(1000000,progress_bar=True,callback=callback)
 
 f.close()
-'''
+
                                             #TEST A SAVED MODEL ON DIFFERENT DEPTHS
-   
+'''   
 results_list_untrained=[]
 results_list_trained=[]
 model1= PPO(
@@ -100,7 +100,7 @@ np.savez(f,trained=results_list_trained,untrained=results_list_untrained)
 f.close()
 
 
-
+'''
                         #TRAIN & TEST ON DATASET W SAME PARAMS BUT DIFFERENT SIZE(n_circ)
 '''
 circuits_depth=7                       

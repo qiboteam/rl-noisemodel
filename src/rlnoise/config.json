@@ -16,8 +16,8 @@
     "primitive_gates": ["RZ", "RX"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
     "dep_lambda": 0.05,
-    "p0": 0.1,
-    "epsilon_x": 0.2,
+    "p0": 0.05,
+    "epsilon_x": 0.05,
     "epsilon_z": 0.1,
     "x_coherent_on_gate": ["rx"],
     "z_coherent_on_gate": ["rz"],
@@ -25,13 +25,13 @@
     "depol_on_gate": ["rz"]
   },
   "policy": {
-    "save_best_model": false,
+    "save_best_model": true,
     "plot_results": true,
-    "model_name": "1st_test_hardware_D5_len500_",
-    "plot_name": "file2_logRew_hardwareK5_D5_len500_"
+    "model_name": "1Q_D10_AllNoises_mseReward_",
+    "plot_name": "1Q_D10_AllNoises_mseReward_"
   },
   "reward": {
-    "reward_type": "log"
+    "reward_type": "mse"
   }
 }
 

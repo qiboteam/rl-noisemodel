@@ -141,7 +141,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     Return: 
         average reward (total reward/n_circuits), avg Hilbert-Schmidt distance, avg Trace Distance
     '''
-
+    print(evaluation_circ.shape)
     avg_rew = []
     avg_trace_distance = []
     avg_bures_distance = []
@@ -188,7 +188,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
                               ('fidelity','<f4'),('fidelity_std','<f4'),
                               ('trace_distance','<f4'),('trace_distance_std','<f4'),
                               ('bures_distance','<f4'),('bures_distance_std','<f4'),
-                              ('avg_correction', np.float64, (1,5,4))                                                  
+                              ('avg_correction', np.float64, (evaluation_circ.shape[2],evaluation_circ.shape[1],4))                                                  
                             ])
     return results
 
