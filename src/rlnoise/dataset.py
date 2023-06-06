@@ -4,9 +4,16 @@ from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
-
 from rlnoise.rewards.state_tomography import StateTomography
-from configparser import ConfigParser
+
+def check_nmoments(circuit: Circuit, len):
+    new_circuit=Circuit(circuit.nqubits)
+    for i, moment in enumerate(circuit.queue.moments):
+        if i == len:
+            return new_circuit
+        for gate in moment:
+            new_circuit.add(gate)
+    return new_circuit
 
 
 class Dataset(object):
@@ -101,6 +108,7 @@ class Dataset(object):
                         circuit.add(gate(q0, theta=theta))
                     else:
                         circuit.add(gate(q0))
+        circuit = check_nmoments(circuit, self.n_gates)
         return circuit
 
     def train_val_split(self, split=0.2):
