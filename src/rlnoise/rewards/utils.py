@@ -8,7 +8,6 @@ import numpy as np
 def run_qiskit(circuits, backend, nshots=10000, layout=None):
     for k, circ in enumerate(circuits):
         circuits[k] = QuantumCircuit().from_qasm_str(circ.to_qasm())
-        
     job = execute(circuits,shots=nshots,backend=backend,initial_layout=layout,optimization_level=0)
     result = job.result()
     counts = []
@@ -23,7 +22,7 @@ def run_qiskit(circuits, backend, nshots=10000, layout=None):
     return counts
 
 
-def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None, qiskit=False, layout=None):
+def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None, backend_qiskit=None, layout=None):
     """Computes the calibration matrix for readout mitigation.
 
     Args:
@@ -38,13 +37,14 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
         numpy.ndarray : The computed (`nqubits`, `nqubits`) calibration matrix for
             readout mitigation.
     """
-    if qiskit is False and backend is None:
+    if backend is None:
         from qibo.backends import GlobalBackend
 
         backend = GlobalBackend()
 
     matrix = np.zeros((2**nqubits, 2**nqubits))
-
+    
+    cal_circs = []
     for i in range(2**nqubits):
         state = format(i, f"0{nqubits}b")
 
@@ -54,13 +54,19 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
                 circuit.add(gates.X(q))
         circuit.add(gates.M(*range(nqubits)))
 
-        if noise_model is not None and backend.name != "qibolab" and qiskit is False:
+        if noise_model is not None and backend.name != "qibolab" and backend_qiskit is None:
             circuit = noise_model.apply(circuit)
-        if qiskit:
-            freq = run_qiskit(circuit, backend, nshots=nshots, layout=layout)[0]
-        else:
-            freq = backend.execute_circuit(circuit, nshots=nshots).frequencies()
+        cal_circs.append(circuit)
 
+    if backend_qiskit is not None:
+        freqs = run_qiskit(cal_circs, backend_qiskit, nshots=nshots, layout=layout)
+    else:
+        freqs = []
+        for i in range(2**nqubits):
+            freqs.append(backend.execute_circuit(cal_circs[i], nshots=nshots).frequencies())
+
+    for i in range(2**nqubits):
+        freq = freqs[i]
         column = np.zeros(2**nqubits)
         for key in freq.keys():
             f = freq[key] / nshots
@@ -81,7 +87,7 @@ def apply_readout_mitigation(freqs, calibration_matrix):
     Returns:
         :class:`qibo.states.CircuitResult`: the input state with the updated frequencies.
     """
-    keys = freqs.keys()
+    keys = list(freqs.keys())
     nqubits = len(keys[0])
     freq = np.zeros(2**nqubits)
     for k, v in freqs.items():
@@ -90,6 +96,5 @@ def apply_readout_mitigation(freqs, calibration_matrix):
     freq = freq.reshape(-1, 1)
     freqs_mit = Counter()
     for i, val in enumerate(calibration_matrix @ freq):
-        freqs_mit["{0:b}".format(i)] = float(val)
-
+        freqs_mit[format(i, f"0{nqubits}b")] = float(val)
     return freqs_mit
