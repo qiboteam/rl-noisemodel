@@ -1,14 +1,14 @@
 import numpy as np
 from qibo import gates, symbols
 from qibo.backends import GlobalBackend
-
+from rlnoise.rewards.utils import run_qiskit
 
 class ClassicalShadows:
     def __init__(self, circuit, shadow_size):
         self.circuit = circuit
         self.shadow_size = shadow_size
         self.shadows = None
-    def get_classical_shadow(self, backend=None):
+    def get_classical_shadow(self, backend=None, backend_qiskit=None, layout=None):
 
         if backend == None:
             self.backend = GlobalBackend()
@@ -17,6 +17,8 @@ class ClassicalShadows:
         unitary_ensemble = [symbols.X, symbols.Y, symbols.Z]
         unitary_ids = np.random.randint(0, 3, size=(self.shadow_size, num_qubits))
         outcomes = np.zeros((self.shadow_size, num_qubits))
+
+        circuits = []
         for k in range(self.shadow_size):
             circuit = self.circuit.copy(True)
             for i in range(num_qubits):
@@ -25,9 +27,22 @@ class ClassicalShadows:
                     circuit.add(gates.H(i))
                 elif mat.name[0] == 'Y':
                     circuit.add([gates.S(i).dagger(),gates.H(i)])
-                circuit.add(gates.M(i))
-            sample = backend.execute_circuit(circuit,nshots=1).samples()[0]
+            circuit.add(gates.M(*range(num_qubits)))
+            circuits.append(circuit)
+            if backend_qiskit is None:
+                sample = backend.execute_circuit(circuit,nshots=1).samples()[0]
+                for i in range(len(sample)):
+                    if sample[i] == 0:
+                        sample[i] = 1
+                    elif sample[i] == 1:
+                        sample[i] = -1
+                outcomes[k, :] = sample
+        if backend_qiskit is not None:
+            samples = run_qiskit(circuits, backend_qiskit, 1, layout)
+        for k in range(self.shadow_size):
+            sample = list(list(samples[k].keys())[0])
             for i in range(len(sample)):
+                sample[i] = int(sample[i])
                 if sample[i] == 0:
                     sample[i] = 1
                 elif sample[i] == 1:
