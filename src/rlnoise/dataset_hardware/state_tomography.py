@@ -5,7 +5,7 @@ from qibo.hamiltonians import Hamiltonian
 from itertools import product
 from functools import reduce
 import numpy as np
-from rlnoise.rewards.utils import run_qiskit, calibration_matrix, apply_readout_mitigation
+from rlnoise.dataset_hardware.utils import run_qiskit, calibration_matrix, apply_readout_mitigation
 
 class StateTomography:
     def __init__(self, nshots = 10000, backend = None, backend_qiskit = None, layout=None):
@@ -43,7 +43,6 @@ class StateTomography:
         exps = []
         if readout_mit:
             self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend,backend_qiskit=self.backend_qiskit,layout=self.layout)
-        
         if self.backend_qiskit is not None:
             freqs_list = run_qiskit(self.tomo_circuits, self.backend_qiskit, self.nshots, self.layout)
 

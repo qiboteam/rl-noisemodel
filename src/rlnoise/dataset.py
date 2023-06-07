@@ -3,8 +3,8 @@ import numpy as np
 from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
-from rlnoise.rewards.classical_shadows import ClassicalShadows
-from rlnoise.rewards.state_tomography import StateTomography
+from rlnoise.dataset_hardware.classical_shadows import ClassicalShadows
+from rlnoise.dataset_hardware.state_tomography import StateTomography
 
 def check_nmoments(circuit: Circuit, len):
     new_circuit=Circuit(circuit.nqubits)

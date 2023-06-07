@@ -1,7 +1,7 @@
 import numpy as np
 from qibo import gates, symbols
 from qibo.backends import GlobalBackend
-from rlnoise.rewards.utils import run_qiskit
+from rlnoise.dataset_hardware.utils import run_qiskit
 
 class ClassicalShadows:
     def __init__(self, circuit, shadow_size):
@@ -39,15 +39,15 @@ class ClassicalShadows:
                 outcomes[k, :] = sample
         if backend_qiskit is not None:
             samples = run_qiskit(circuits, backend_qiskit, 1, layout)
-        for k in range(self.shadow_size):
-            sample = list(list(samples[k].keys())[0])
-            for i in range(len(sample)):
-                sample[i] = int(sample[i])
-                if sample[i] == 0:
-                    sample[i] = 1
-                elif sample[i] == 1:
-                    sample[i] = -1
-            outcomes[k, :] = sample
+            for k in range(self.shadow_size):
+                sample = list(list(samples[k].keys())[0])
+                for i in range(len(sample)):
+                    sample[i] = int(sample[i])
+                    if sample[i] == 0:
+                        sample[i] = 1
+                    elif sample[i] == 1:
+                        sample[i] = -1
+                outcomes[k, :] = sample
         self.shadows = (outcomes, unitary_ids)
     def get_snapshot_state(self, b_list, obs_list):
         num_qubits = len(b_list)
