@@ -1,14 +1,14 @@
 from qibo import gates, symbols
 from qibo.backends import GlobalBackend
 from qibo.hamiltonians import Hamiltonian
-from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
+#from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
 from itertools import product
 from functools import reduce
 import numpy as np
-
+from rlnoise.rewards.utils import run_qiskit, calibration_matrix, apply_readout_mitigation
 
 class StateTomography:
-    def __init__(self, nshots = 10000, backend = None):
+    def __init__(self, nshots = 10000, backend = None, backend_qiskit = None, layout=None):
         self.circuit = None
         self.nqubits = None
         self.backend = backend
@@ -16,6 +16,8 @@ class StateTomography:
         self.obs = None
         self.exps_vals = None
         self.nshots = nshots
+        self.backend_qiskit = backend_qiskit
+        self.layout = layout
 
         if backend == None:
             self.backend = GlobalBackend()
@@ -40,7 +42,11 @@ class StateTomography:
     def meas_obs(self, noise = None, readout_mit = False):
         exps = []
         if readout_mit:
-            self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend)
+            self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend,backend_qiskit=self.backend_qiskit,layout=self.layout)
+        
+        if self.backend_qiskit is not None:
+            freqs_list = run_qiskit(self.tomo_circuits, self.backend_qiskit, self.nshots, self.layout)
+
         for k, circ in enumerate(self.tomo_circuits):
             obs = self.obs[k+1]
             term = np.eye(2**self.nqubits)
@@ -49,12 +55,17 @@ class StateTomography:
                     term = term@symbols.Z(q).full_matrix(self.nqubits)            
             obs = Hamiltonian(self.nqubits,term,self.backend)
 
-            if noise is not None:
+            if noise is not None and self.backend_qiskit is None:
                 circ = noise.apply(circ)
-            result = self.backend.execute_circuit(circ, nshots=self.nshots)
+
+            if self.backend_qiskit is not None:
+                freqs = freqs_list[k]
+            else:
+                result = self.backend.execute_circuit(circ, nshots=self.nshots)
+                freqs = result.frequencies()
             if readout_mit:
-                result = apply_readout_mitigation(result, self.cal_mat)
-            exp = result.expectation_from_samples(obs)
+                freqs = apply_readout_mitigation(freqs, self.cal_mat)
+            exp = obs.expectation_from_samples(freqs)
             exps.append([self.obs[k],exp])
         self.exps_vals = exps
 
