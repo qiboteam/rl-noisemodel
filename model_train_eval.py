@@ -18,7 +18,7 @@ config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=10
-nqubits=1
+nqubits=3
 n_circuit_in_dataset=500
 dataset_name="train_dataset"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
 

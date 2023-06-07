@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
-from typing import ClassVar
-from dataclasses import dataclass
+from typing import List
+from dataclasses import dataclass, field
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,ResetError
 from qibo import gates
 from qibo.models import Circuit
@@ -28,15 +28,15 @@ def string_to_gate(gate_string):
 
 @dataclass
 class CustomNoiseModel(object):
-    primitive_gates: ClassVar[list[str]] = noise_params['primitive_gates'] 
+    primitive_gates: List = field(default_factory=lambda: noise_params['primitive_gates'])
     lam: float = noise_params['dep_lambda']
     p0: float = noise_params['p0']
     epsilon_x: float = noise_params['epsilon_x']
     epsilon_z: float = noise_params['epsilon_z']
-    x_coherent_on_gate: ClassVar[list[str]] = noise_params['x_coherent_on_gate']
-    z_coherent_on_gate: ClassVar[list[str]] = noise_params['z_coherent_on_gate']
-    damping_on_gate: ClassVar[list[str]] = noise_params['damping_on_gate'] 
-    depol_on_gate: ClassVar[list[str]] = noise_params['depol_on_gate']
+    x_coherent_on_gate: List = field(default_factory=lambda: noise_params['x_coherent_on_gate'])
+    z_coherent_on_gate: List = field(default_factory=lambda: noise_params['z_coherent_on_gate'])
+    damping_on_gate: List = field(default_factory=lambda: noise_params['damping_on_gate'] )
+    depol_on_gate: List = field(default_factory=lambda: noise_params['depol_on_gate'])
         
        
     def apply(self, circuit):

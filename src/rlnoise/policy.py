@@ -139,7 +139,7 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        debug = True
+        debug = False
 
         if self.n_calls == 1 or self.n_calls % self.check_freq == 0:
           # Retrieve training reward

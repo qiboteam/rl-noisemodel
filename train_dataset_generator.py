@@ -16,7 +16,7 @@ rep = CircuitRepresentation()
 
 
 number_of_gates_per_qubit=[10]
-qubits=1
+qubits=3
 number_of_circuits=500
 dataset_name='train_dataset'
 
