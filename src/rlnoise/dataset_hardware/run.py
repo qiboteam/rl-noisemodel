@@ -32,6 +32,7 @@ qiskit = True
 nshots = 100
 shadow_size = 100
 method = 'CS'
+likelihood = True
 njobs = 2
 backend_qibo = 'tii1q_b1'
 backend_qiskit = 'ibmq_qasm_simulator'
@@ -51,8 +52,8 @@ else:
     backend_qiskit = None
 
 if method == 'ST':
-    result_train = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(state_tomography)(circ, nshots, backend, backend_qiskit) for circ in qibo_training_circuits)
-    result_val = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(state_tomography)(circ, nshots, backend, backend_qiskit) for circ in qibo_validation_circuits)
+    result_train = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(state_tomography)(circ, nshots, likelihood, backend, backend_qiskit) for circ in qibo_training_circuits)
+    result_val = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(state_tomography)(circ, nshots, likelihood, backend, backend_qiskit) for circ in qibo_validation_circuits)
 elif method == 'CS':
     result_train = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(classical_shadows)(circ, shadow_size, backend, backend_qiskit) for circ in qibo_training_circuits)
     result_val = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(classical_shadows)(circ, shadow_size, backend, backend_qiskit) for circ in qibo_validation_circuits)

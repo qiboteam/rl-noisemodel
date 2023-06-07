@@ -144,18 +144,18 @@ def x_rule(gate, platform):
     return sequence, {}
 
 
-def state_tomography(circ, nshots, backend, backend_qiskit):
+def state_tomography(circ, nshots, likelihood, backend, backend_qiskit):
     from rlnoise.dataset_hardware.state_tomography import StateTomography
     
     st = StateTomography(nshots=nshots,backend=backend, backend_qiskit=backend_qiskit)
 
     st.get_circuits(circ)
     st.meas_obs(noise=None,readout_mit=False)
-    rho = st.get_rho()
+    rho = st.get_rho(likelihood=likelihood)
 
     st.meas_obs(noise=None,readout_mit=True)
     cal_mat = st.cal_mat
-    rho_mit = st.get_rho()
+    rho_mit = st.get_rho(likelihood=likelihood)
 
     circ.density_matrix = True
     backend_exact = construct_backend('numpy')
