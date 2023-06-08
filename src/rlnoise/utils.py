@@ -239,13 +239,16 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
                 probs[depth].append(0)
             else:
                 probs[depth].append(freq[init_state]/nshots)
-    probs = [ (d, np.mean(p)) for d,p in probs.items() ]
-    probs = sorted(probs, key=lambda x: x[0])
+    avg_probs = [ (d, np.mean(p)) for d,p in probs.items() ]
+    std_probs = [ (d, np.std(p)) for d,p in probs.items() ]
+    avg_probs = sorted(avg_probs, key=lambda x: x[0])
+    std_probs = sorted(std_probs, key=lambda x: x[0])
     model = lambda depth,a,l,b: a * np.power(l,depth) + b
-    depths, survival_probs = zip(*probs)
+    depths, survival_probs = zip(*avg_probs)
+    _, err = zip(*std_probs)
     optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
     model = lambda depth: optimal_params[0] * np.power(optimal_params[1],depth) + optimal_params[2]
-    return depths, survival_probs, optimal_params, model
+    return depths, survival_probs, err, optimal_params, model
 
 
 class RL_NoiseModel(object):
@@ -288,7 +291,7 @@ if __name__ == "__main__":
         d = Dataset(20, depth, 3, rep, noise_model=noise_model)
         circs += d.circuits
 
-    depths, survival_probs, optimal_params, model = randomized_benchmarking(circs, noise_model=noise_model)
+    depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circs, noise_model=noise_model)
     print(f"> Decay: {optimal_params[1]}")
     print(optimal_params)
     plt.scatter(depths, survival_probs)
