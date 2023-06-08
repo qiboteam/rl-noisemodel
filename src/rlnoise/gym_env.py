@@ -122,6 +122,7 @@ class QuantumCircuit(gym.Env):
         action2=action.reshape((self.n_qubits,4))*self.discrete_step
         
         return action2
+    
     def step(self, action):
         if self.action_space_type=="Discrete":
             action=self.transform_action(action)

@@ -260,11 +260,8 @@ class RL_NoiseModel(object):
 
     def apply(self, circuit):
         if isinstance(circuit, Circuit):
-            observation = self.rep.circuit_to_array(circuit)
-        elif isinstance(circuit, np.ndarray):
-            observation = circuit
-        else:
-            assert False, "Invalid circuit type"
+            circuit = self.rep.circuit_to_array(circuit)
+        observation = np.transpose(circuit, axes=[2,1,0])
         for i in range(circuit.shape[0]):
             action = self.agent.predict(observation, deterministic=True)
             observation = self.rep.make_action(action=action, circuit=observation, position=i)
@@ -277,7 +274,7 @@ if __name__ == "__main__":
     from rlnoise.custom_noise import CustomNoiseModel
     import matplotlib.pyplot as plt
 
-    nqubits=3
+    nqubits = 3
     noise_model = CustomNoiseModel()
 
     rep = CircuitRepresentation(
