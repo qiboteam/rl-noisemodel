@@ -248,6 +248,24 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
     return depths, survival_probs, optimal_params, model
 
 
+def fill_identity(circuit: Circuit):
+    """Fill the circuit with identity gates where no gate is present to apply RB noisemodel.
+    Works with circuits with no more than 3 qubits."""
+    new_circuit = Circuit(circuit.nqubits)
+    for moment in circuit.queue.moments:
+        f=0
+        for qubit, gate in enumerate(moment):
+            if gate is not None:
+                if gate.__class__ is gates.CZ and f==0:
+                    new_circuit.add(gate)
+                    f=1
+                elif not gate.__class__ is gates.CZ:
+                    new_circuit.add(gate)
+            else:
+                new_circuit.add(gates.I(qubit))
+    return new_circuit
+
+
 class RL_NoiseModel(object):
 
     def __init__(self, agent, circuit_representation):

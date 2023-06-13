@@ -60,7 +60,7 @@ class QuantumCircuit(gym.Env):
         self.actual_mse = None
         self.previous_mse = None
         #self.labels = self.labels
-       #self.reward = reward
+        #self.reward = reward
         self.encoding_dim = 8
         self.action = None
         self.state_after_act = None
@@ -120,8 +120,8 @@ class QuantumCircuit(gym.Env):
         Trasform discrete action in the form of a continuos action with"""
         
         action2=action.reshape((self.n_qubits,4))*self.discrete_step
-        
         return action2
+    
     def step(self, action):
         if self.action_space_type=="Discrete":
             action=self.transform_action(action)
