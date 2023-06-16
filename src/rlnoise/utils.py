@@ -254,17 +254,30 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
 class RL_NoiseModel(object):
 
     def __init__(self, agent, circuit_representation):
-        super(self, ).__init__()
         self.agent = agent
         self.rep = circuit_representation
+        self.ker_size = self.agent.policy.features_extractor._observation_space.shape[-1]
 
     def apply(self, circuit):
+        print(circuit.draw())
         if isinstance(circuit, Circuit):
             circuit = self.rep.circuit_to_array(circuit)
+        print("circ shape: ",circuit.shape)
+        print("Input circuit:\n", circuit)
         observation = np.transpose(circuit, axes=[2,1,0])
+        left_idx = lambda idx: max(0, idx)
+        right_idx = lambda idx: min(idx, circuit.shape[0])
+        padding = np.zeros((*observation.shape[:2], 1))
+        padder = lambda array, idx: np.concatenate((padding, array), axis=-1) if idx == 0 else np.concatenate((array, padding), axis=-1) 
         for i in range(circuit.shape[0]):
-            action = self.agent.predict(observation, deterministic=True)
+            #print("obs shape: ", observation.shape)
+            window = observation[:,:, left_idx(i-1):right_idx(i+2)]
+            if i == 0 or i == circuit.shape[0] - 1:
+                window = padder(window, i)
+            #print("window shape: ",window.shape)
+            action, _ = self.agent.predict(window, deterministic=True)
             observation = self.rep.make_action(action=action, circuit=observation, position=i)
+        print("Output circuit:\n", np.transpose(observation, axes=[2,1,0]))
         return self.rep.rep_to_circuit(observation)
             
             

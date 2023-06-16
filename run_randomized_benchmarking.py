@@ -59,11 +59,12 @@ plt.plot(depths, model(depths+np.ones(len(depths))), c='blue')
 patches.append(mpatches.Patch(color='blue', label=f"Depolarizing toy model, Decay: {optimal_params[1]:.2f}"))
 
 if args.agent is not None:
-    from rlnoise.utils import RLNoiseModel
-
+    from rlnoise.utils import RL_NoiseModel
+    from stable_baselines3 import PPO
+    
     # load trained agent
-    agent = ""
-    agent_noise_model = RLNoiseModel(agent, rep)
+    agent = PPO.load(args.agent)
+    agent_noise_model = RL_NoiseModel(agent, rep)
     depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model)
 
 plt.legend(handles=patches)
