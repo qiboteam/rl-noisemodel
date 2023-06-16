@@ -2,6 +2,7 @@ import os
 import json
 import copy
 from rlnoise.custom_noise import CustomNoiseModel
+from rlnoise.dataset import CircuitRepresentation
 from qibo.quantum_info import trace_distance
 import numpy as np
 from pathlib import Path
@@ -130,7 +131,7 @@ def bures_distance(density_matrix0, density_matrix1):
     """
     return np.sqrt(2*(1-np.sqrt(compute_fidelity(density_matrix0, density_matrix1))))
 
-def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
+def model_evaluation(evaluation_circ,evaluation_labels,model,reward,representation):
     '''
     Function for evaluating the model
     Args:
@@ -153,9 +154,9 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
     
     environment = QuantumCircuit(
     circuits = circuits,
-    representation = train_environment.rep,
+    representation = representation,
     labels = evaluation_labels,
-    reward = train_environment.reward, 
+    reward = reward, 
     )
     for i in range(n_circ):
         
@@ -192,7 +193,50 @@ def model_evaluation(evaluation_circ,evaluation_labels,train_environment,model):
                             ])
     return results
 
-
+def RB_evaluation(lambda_RB,circ_representation,target_label):
+    dataset_size = len(target_label)
+    trace_distance_rb_list = []
+    bures_distance_rb_list = []
+    fidelity_rb_list = []
+    trace_distance_no_noise_list = []
+    bures_distance_no_noise_list = []
+    fidelity_no_noise_list = []
+    rb_noise_model=CustomNoiseModel(["RX","RZ"],lam=lambda_RB,p0=0,epsilon_x=0,epsilon_z=0,
+                               x_coherent_on_gate=["none"],z_coherent_on_gate=["none"],
+                               depol_on_gate=["rx","rz"],damping_on_gate=["none"])
+    RB_label = np.array([rb_noise_model.apply(CircuitRepresentation().rep_to_circuit(circ_representation[i]))().state() 
+                         for i in range(dataset_size)])
+    label_no_noise_added = np.array([CircuitRepresentation().rep_to_circuit(circ_representation[i])().state() 
+                         for i in range(dataset_size)])
+    for idx,label in enumerate(RB_label):
+        fidelity_rb_list.append(compute_fidelity(label,target_label[idx]))
+        trace_distance_rb_list.append(trace_distance(label,target_label[idx]))
+        bures_distance_rb_list.append(bures_distance(label,target_label[idx]))
+        fidelity_no_noise_list.append(compute_fidelity(label_no_noise_added[idx],target_label[idx]))
+        trace_distance_no_noise_list.append(trace_distance(label_no_noise_added[idx],target_label[idx]))
+        bures_distance_no_noise_list.append(bures_distance(label_no_noise_added[idx],target_label[idx]))
+    fidelity = np.array(fidelity_rb_list)
+    trace_dist = np.array(trace_distance_rb_list)
+    bures_dist = np.array(bures_distance_rb_list)
+    no_noise_fidelity = np.array(fidelity_no_noise_list)
+    no_noise_trace_dist = np.array(trace_distance_no_noise_list)
+    no_noise_bures_dist = np.array(bures_distance_no_noise_list)
+    results = np.array([(
+                       fidelity.mean(),fidelity.std(),
+                       trace_dist.mean(),trace_dist.std(),
+                       bures_dist.mean(),bures_dist.std(),
+                       no_noise_fidelity.mean(),no_noise_fidelity.std(),
+                       no_noise_trace_dist.mean(),no_noise_trace_dist.std(),
+                       no_noise_bures_dist.mean(),no_noise_bures_dist.std()  )],
+                       dtype=[
+                              ('fidelity','<f4'),('fidelity_std','<f4'),
+                              ('trace_distance','<f4'),('trace_distance_std','<f4'),
+                              ('bures_distance','<f4'),('bures_distance_std','<f4'),
+                              ('fidelity_no_noise','<f4'),('fidelity_no_noise_std','<f4'),
+                              ('trace_distance_no_noise','<f4'),('trace_distance_no_noise_std','<f4'),
+                              ('bures_distance_no_noise','<f4'),('bures_distance_no_noise_std','<f4')  ])
+    
+    return results
 
 '''
 def test_representation():
