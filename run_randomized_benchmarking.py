@@ -48,7 +48,7 @@ plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3,
 plt.plot(depths, model(depths), c='orange')
 
 import matplotlib.patches as mpatches
-patches = [mpatches.Patch(color='orange', label=f"Decay: {optimal_params[1]:.2f}")]
+patches = [mpatches.Patch(color='orange', label=f"True Noise, Decay: {optimal_params[1]:.2f}")]
 
 # Build a Depolarizing toy model
 depolarizing_toy_model = NoiseModel()
@@ -66,7 +66,10 @@ if args.agent is not None:
     # load trained agent
     agent = PPO.load(args.agent)
     agent_noise_model = RL_NoiseModel(agent, rep)
-    depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model)
+    _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model)
+    plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='green')
+    plt.plot(depths, model(depths), c='green')
+    patches.append(mpatches.Patch(color='green', label=f"RL Agent, Decay: {optimal_params[1]:.2f}"))
 
 plt.legend(handles=patches)
 
