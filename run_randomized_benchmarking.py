@@ -21,6 +21,7 @@ for file in os.listdir(args.dataset):
         with open(f"{args.dataset}/{file}", 'rb') as f:
             for c in np.load(f, allow_pickle=True)['clean_rep']:
                 circuits.append(rep.rep_to_circuit(c))
+                
 
 if os.path.isfile(f"{args.dataset}/config.json"):
     with open(f"{args.dataset}/config.json", 'r') as f:
@@ -55,7 +56,7 @@ depolarizing_toy_model.add(DepolarizingError(1 - optimal_params[1]))
 _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=depolarizing_toy_model)
 
 plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='blue')
-plt.plot(depths, model(depths+np.ones(len(depths))), c='blue')
+plt.plot(depths, model(depths), c='blue')
 patches.append(mpatches.Patch(color='blue', label=f"Depolarizing toy model, Decay: {optimal_params[1]:.2f}"))
 
 if args.agent is not None:

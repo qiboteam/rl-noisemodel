@@ -13,6 +13,7 @@ from qibo import gates
 from qibo.quantum_info import trace_distance
 from qibo.models.circuit import Circuit
 from scipy.linalg import sqrtm
+from tqdm import tqdm
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 with open(config_path) as f:
@@ -257,7 +258,7 @@ from scipy.optimize import curve_fit
 from qibo import gates
 
 def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=None):
-    
+    circuits = [ c.copy() for c in circuits ] 
     if backend is None:  # pragma: no cover
         from qibo.backends import GlobalBackend
         
@@ -266,17 +267,18 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
     nqubits = circuits[0].nqubits
     
     circ = { c.depth: [] for c in circuits }
-    for c in circuits:
+    for c in tqdm(circuits):
         depth = c.depth
-        c.add(gates.Unitary(c.invert().unitary(), *range(nqubits)))
+        inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
+        c = fill_identity(c)
         if noise_model is not None:
-            circ[depth].append(noise_model.apply(c))
-        else:
-            circ[depth].append(c)
+            c = noise_model.apply(c)
+        c.add(inverse_unitary)
+        circ[depth].append(c)        
         
     probs = { d: [] for d in circ.keys() }
     init_state = f"{0:0{nqubits}b}"
-    for depth, circs in circ.items():
+    for depth, circs in tqdm(circ.items()):
         for c in circs:
             c.add(gates.M(*range(nqubits)))
             freq = backend.execute_circuit(c, nshots=nshots).frequencies()
@@ -299,7 +301,8 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
 def fill_identity(circuit: Circuit):
     """Fill the circuit with identity gates where no gate is present to apply RB noisemodel.
     Works with circuits with no more than 3 qubits."""
-    new_circuit = Circuit(circuit.nqubits)
+    #new_circuit = Circuit(circuit.nqubits)
+    new_circuit = circuit.__class__(**circuit.init_kwargs)
     for moment in circuit.queue.moments:
         f=0
         for qubit, gate in enumerate(moment):
