@@ -3,6 +3,7 @@ import json
 import copy
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.dataset import CircuitRepresentation
+from rlnoise.rewards.rewards import DensityMatrixReward
 from qibo.quantum_info import trace_distance
 import numpy as np
 from pathlib import Path
@@ -131,7 +132,7 @@ def bures_distance(density_matrix0, density_matrix1):
     """
     return np.sqrt(2*(1-np.sqrt(compute_fidelity(density_matrix0, density_matrix1))))
 
-def model_evaluation(evaluation_circ,evaluation_labels,model,reward,representation):
+def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatrixReward(),representation=CircuitRepresentation()):
     '''
     Function for evaluating the model
     Args:

@@ -9,13 +9,13 @@ from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation, RB_evaluation
-
-benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/1Qubit_sets/'
+#IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
+benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 model_path=os.getcwd()+'/src/rlnoise/saved_models/'
 bench_results_path=os.getcwd()+'/src/rlnoise/bench_results/'
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 
-'''
+
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=10
 nqubits=3
@@ -28,13 +28,13 @@ train_set=copy.deepcopy(tmp['train_set'])
 train_label=copy.deepcopy(tmp['train_label'])
 val_set=copy.deepcopy(tmp['val_set'])
 val_label=copy.deepcopy(tmp['val_label'])
-'''
+
 #Setting up training env and policy model
 
 noise_model = CustomNoiseModel()
 reward = DensityMatrixReward()
 rep = CircuitRepresentation()
-'''
+
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
     representation = rep,
@@ -50,9 +50,9 @@ policy_kwargs = dict(
     )
 )
 #model=PPO.load(model_path+"rew_each_step_D7_box")
-'''
+
                                                 #SINGLE TRAIN AND VALID
-'''
+
 callback=CustomCallback(check_freq=5000,verbose=True,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth)                                          
 model = PPO(
 policy,
@@ -61,24 +61,24 @@ policy_kwargs=policy_kwargs,
 verbose=0,
 )
 
-model.learn(1000000,progress_bar=True,callback=callback)
+model.learn(2000000,progress_bar=True,callback=callback)
 
 f.close()
-'''
-                                            #TEST A SAVED MODEL ON DIFFERENT DEPTHS
 
+                                            #TEST A SAVED MODEL ON DIFFERENT DEPTHS
+'''
 results_list_untrained=[]
 results_list_trained = []
 
 result_RB_list = []
-'''
+
 model1= PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 )
-'''
+
 model=PPO.load(model_path+"/1Q_D10_AllNoises_mseReward_705000")
 
 nqubits=1
@@ -107,7 +107,7 @@ np.savez(f,trained=model_results,RB=rb_results)
 f.close()
 
 
-
+'''
                         #TRAIN & TEST ON DATASET W SAME PARAMS BUT DIFFERENT SIZE(n_circ)
 '''
 circuits_depth=7                       
