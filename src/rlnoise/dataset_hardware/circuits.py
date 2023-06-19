@@ -12,7 +12,7 @@ from qibolab.pulses import PulseSequence
 
 
 benchmark_circ_path=os.getcwd()+'/src/rlnoise/dataset_hardware/'
-bench_name='hardware_len500_D5_1Q_len500.npz'
+bench_name='hardware_D10_3Q_len500.npz'
 
 f = open(benchmark_circ_path+bench_name,"rb")
 tmp=np.load(f,allow_pickle=True)

@@ -103,7 +103,7 @@ class CustomCallback(BaseCallback):
         self.train_results = []
         self.timestep_list = []
         self.save_path = os.path.join(self.log_dir, self.best_model_name)
-        self.plot_1_title = '%dQ D%d K3 SR-off,Penal=0, Trainset_size=%d Valset_size=%d, p0=0.05 lam=0.05 e_z=0.1 e_x=0.05'%(self.n_qubits,self.trainset_depth,self.dataset_size,len(self.val_circ))
+        self.plot_1_title = '%dQ D%d K3 logReward,Penal=0, Trainset_size=%d Valset_size=%d, p0=0.05 lam=0.05 e_z=0.1 e_x=0.05'%(self.n_qubits,self.trainset_depth,self.dataset_size,len(self.val_circ))
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -143,8 +143,8 @@ class CustomCallback(BaseCallback):
 
         if self.n_calls == 1 or self.n_calls % self.check_freq == 0:
           # Retrieve training reward
-            training_results = model_evaluation(self.train_circ,self.train_label,self.environment,self.model)
-            evaluation_results = model_evaluation(self.val_circ,self.val_label,self.environment,self.model)
+            training_results = model_evaluation(self.train_circ,self.train_label,model=self.model)
+            evaluation_results = model_evaluation(self.val_circ,self.val_label,model=self.model)
             self.train_results.append(training_results)
             self.eval_results.append(evaluation_results)
             self.timestep_list.append(self.num_timesteps)
