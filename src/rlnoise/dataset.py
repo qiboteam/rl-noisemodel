@@ -20,7 +20,7 @@ def check_nmoments(circuit: Circuit, lenght,fill=False):
     Args:
         circuit: qibo circuit to reshape with the correct n_moments
         lenght: n_moments of the final circuit
-        fill: bool to specify if filling the "None" gates with rx or rz randomly choosen
+        fill: bool to specify if filling the "None" gates with rx or rz randomly choosen. Useful to generate circuit with maximum "density"
     Returns: 
         new_circuit: circuit with the correct number of moments
     '''
