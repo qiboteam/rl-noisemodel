@@ -322,6 +322,7 @@ class RL_NoiseModel(object):
         self.agent = agent
         self.rep = circuit_representation
         self.ker_size = self.agent.policy.features_extractor._observation_space.shape[-1]
+        self.ker_radius = int(self.ker_size/2)
 
     def apply(self, circuit):
         if isinstance(circuit, Circuit):
@@ -329,12 +330,14 @@ class RL_NoiseModel(object):
         observation = np.transpose(circuit, axes=[2,1,0])
         left_idx = lambda idx: max(0, idx)
         right_idx = lambda idx: min(idx, circuit.shape[0])
-        padding = np.zeros((*observation.shape[:2], 1))
-        padder = lambda array, idx: np.concatenate((padding, array), axis=-1) if idx == 0 else np.concatenate((array, padding), axis=-1) 
+        padding = lambda idx: np.zeros((*observation.shape[:2], np.abs(idx)))
+        padder = lambda array, idx: np.concatenate((padding(idx), array), axis=-1) if idx < 0 else np.concatenate((array, padding(idx)), axis=-1) 
         for i in range(circuit.shape[0]):
             window = observation[:,:, left_idx(i-1):right_idx(i+2)]
-            if i == 0 or i == circuit.shape[0] - 1:
-                window = padder(window, i)
+            if i - self.ker_radius < 0:
+                window = padder(window, i - self.ker_radius)
+            elif i + self.ker_radius > circuit.shape[0] - 1:
+                window = padder(window, i + self.ker_radius - circuit.shape[0] + 1)
             action, _ = self.agent.predict(window, deterministic=True)
             observation = self.rep.make_action(action=action, circuit=observation, position=i)
         return self.rep.rep_to_circuit(np.transpose(observation, axes=[2,1,0]))
