@@ -5,8 +5,8 @@ from qibo.noise import DepolarizingError, NoiseModel
 from qibo import gates
 from rlnoise.custom_noise import CustomNoiseModel
 
-nqubits = 1
-depth = 5
+nqubits = 3
+depth = 10
 ncirc = 10
 val_split = 0.2
 
@@ -30,4 +30,6 @@ dataset = Dataset(
 
 for i in range(ncirc):
     circ = dataset[i]
-    print(len(circ))
+    #print(len(circ))
+    #print('test n moments:',len(rep.rep_to_circuit(circ).queue.moments))
+    print(circ)

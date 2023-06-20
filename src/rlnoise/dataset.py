@@ -1,19 +1,46 @@
 import random
+import json
 import numpy as np
+from pathlib import Path
 from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.rewards.classical_shadows import ClassicalShadows
 from rlnoise.rewards.state_tomography import StateTomography
+from rlnoise.custom_noise import string_to_gate
 
-def check_nmoments(circuit: Circuit, len):
+config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+with open(config_path) as f:
+    config = json.load(f)
+
+def check_nmoments(circuit: Circuit, lenght,fill=False):
+    '''
+    Return a qibo Circuit with the correct number of moments.
+    
+    Args:
+        circuit: qibo circuit to reshape with the correct n_moments
+        lenght: n_moments of the final circuit
+        fill: bool to specify if filling the "None" gates with rx or rz randomly choosen
+    Returns: 
+        new_circuit: circuit with the correct number of moments
+    '''
     new_circuit=Circuit(circuit.nqubits)
     for i, moment in enumerate(circuit.queue.moments):
-        if i == len:
-            return new_circuit
-        for gate in moment:
-            new_circuit.add(gate)
+        count = 0
+        if i < lenght:
+            for q, gate in enumerate(moment):
+                if gate is not None:
+                    if type(gate) == gates.CZ:
+                        if count != 0:
+                            new_circuit.add(gate)
+                        count = 1
+                    else: new_circuit.add(gate)
+                else: 
+                    if fill == True:
+                        theta = random.choice([0, 0.25, 0.5, 0.75])*2*np.pi
+                        new_circuit.add(random.choice([gates.RZ(q,theta),gates.RX(q,theta)]))
     return new_circuit
+
 
 
 class Dataset(object):
@@ -26,7 +53,7 @@ class Dataset(object):
             representation: object of class CircuitRepresentation()
         '''
         super(Dataset, self).__init__()
-
+        self.primitive_gates = config['noise']['primitive_gates']
         self.n_gates = n_gates
         self.n_qubits = n_qubits
         self.rep = representation
@@ -86,7 +113,7 @@ class Dataset(object):
         circuit = Circuit(self.n_qubits, density_matrix=True)
         for _ in range(self.n_gates):
             for q0 in range(self.n_qubits):
-                gate = random.choice([gates.RX, gates.RZ])#, gates.CZ])
+                gate = string_to_gate(random.choice(self.primitive_gates))
                 params = signature(gate).parameters
                 # 2 qubit gate
                 if 'q0' in params and 'q1' in params:
@@ -109,6 +136,7 @@ class Dataset(object):
                     else:
                         circuit.add(gate(q0))
         circuit = check_nmoments(circuit, self.n_gates)
+        #print(len(circuit.queue.moments))
         return circuit
 
     def train_val_split(self, split=0.2):

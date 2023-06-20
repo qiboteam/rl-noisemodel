@@ -154,7 +154,7 @@ class CustomCallback(BaseCallback):
                 print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, evaluation_results['reward'].item()))
                 print('Standard deviations: Reward_std={:.2f}, Fidelity_std={:.2f}, Trace distance_std={:.2f}'.format(
                     evaluation_results["reward_std"].item(),evaluation_results["fidelity_std"].item(),evaluation_results["trace_distance_std"].item()))
-                print('Average correction applied: \n',evaluation_results["avg_correction"])
+                #print('Average correction applied: \n',evaluation_results["avg_correction"])
             if self.save_best is True:
                 self.save_best_model(evaluation_results["reward"])
             self.save_best_results(evaluation_results["reward"],evaluation_results["fidelity"],evaluation_results["trace_distance"],evaluation_results["bures_distance"])

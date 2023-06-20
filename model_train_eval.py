@@ -34,7 +34,7 @@ val_label=copy.deepcopy(tmp['val_label'])
 noise_model = CustomNoiseModel()
 reward = DensityMatrixReward()
 rep = CircuitRepresentation()
-
+[print(rep.rep_to_circuit(val_set[i]).draw()) for i in range(len(val_set))]
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
     representation = rep,

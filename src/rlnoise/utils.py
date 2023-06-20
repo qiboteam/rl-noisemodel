@@ -170,7 +170,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatri
         predicted_circ = environment.get_qibo_circuit()
         dm_untrained = np.array(predicted_circ().state())
         #print(environment.get_circuit_rep()[:,:,4:].shape)
-        correction.append(environment.get_circuit_rep()[:,:,4:])
+        #correction.append(environment.get_circuit_rep()[:,:,4:])
         avg_rew.append(rewards)
         avg_fidelity.append(compute_fidelity(evaluation_labels[i],dm_untrained))
         avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
@@ -180,17 +180,17 @@ def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatri
     fid = np.array(avg_fidelity)
     trace_d = np.array(avg_trace_distance)
     bures_d = np.array(avg_bures_distance)
-    correction = np.array(correction)
+    #correction = np.array(correction)
     results = np.array([(rew.mean(),rew.std(),
                        fid.mean(),fid.std(),
                        trace_d.mean(),trace_d.std(),
-                       bures_d.mean(),bures_d.std(),
-                       correction.mean(axis=0))],
+                       bures_d.mean(),bures_d.std(),)],
+                       #correction.mean(axis=0))],
                        dtype=[('reward','<f4'),('reward_std','<f4'),
                               ('fidelity','<f4'),('fidelity_std','<f4'),
                               ('trace_distance','<f4'),('trace_distance_std','<f4'),
-                              ('bures_distance','<f4'),('bures_distance_std','<f4'),
-                              ('avg_correction', np.float64, (evaluation_circ.shape[2],evaluation_circ.shape[1],4))                                                  
+                              ('bures_distance','<f4'),('bures_distance_std','<f4')
+                              #('avg_correction', np.float64, (evaluation_circ.shape[2],evaluation_circ.shape[1],4))                                                  
                             ])
     return results
 

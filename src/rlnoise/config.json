@@ -28,7 +28,7 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "3Q_D10_AllNoises_LogReward_",
-    "plot_name": "3Q_D10_AllNoises_LogReward_"
+    "plot_name": "(corrected dataset)3Q_D10_AllNoises_LogReward_"
   },
   "reward": {
     "reward_type": "log"
