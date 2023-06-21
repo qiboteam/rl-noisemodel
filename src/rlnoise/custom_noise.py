@@ -35,7 +35,7 @@ class CustomNoiseModel(object):
     epsilon_z: float = noise_params['epsilon_z']
     x_coherent_on_gate: List = field(default_factory=lambda: noise_params['x_coherent_on_gate'])
     z_coherent_on_gate: List = field(default_factory=lambda: noise_params['z_coherent_on_gate'])
-    damping_on_gate: List = field(default_factory=lambda: noise_params['damping_on_gate'] )
+    damping_on_gate: List = field(default_factory=lambda: noise_params['damping_on_gate'])
     depol_on_gate: List = field(default_factory=lambda: noise_params['depol_on_gate'])
         
        

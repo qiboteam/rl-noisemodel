@@ -13,6 +13,7 @@ from qibo import gates
 from qibo.quantum_info import trace_distance
 from qibo.models.circuit import Circuit
 from scipy.linalg import sqrtm
+from tqdm import tqdm
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 with open(config_path) as f:
@@ -257,7 +258,7 @@ from scipy.optimize import curve_fit
 from qibo import gates
 
 def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=None):
-    
+    circuits = [ c.copy() for c in circuits ] 
     if backend is None:  # pragma: no cover
         from qibo.backends import GlobalBackend
         
@@ -266,17 +267,18 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
     nqubits = circuits[0].nqubits
     
     circ = { c.depth: [] for c in circuits }
-    for c in circuits:
+    for c in tqdm(circuits):
         depth = c.depth
-        c.add(gates.Unitary(c.invert().unitary(), *range(nqubits)))
+        inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
+        c = fill_identity(c)
         if noise_model is not None:
-            circ[depth].append(noise_model.apply(c))
-        else:
-            circ[depth].append(c)
+            c = noise_model.apply(c)
+        c.add(inverse_unitary)
+        circ[depth].append(c)        
         
     probs = { d: [] for d in circ.keys() }
     init_state = f"{0:0{nqubits}b}"
-    for depth, circs in circ.items():
+    for depth, circs in tqdm(circ.items()):
         for c in circs:
             c.add(gates.M(*range(nqubits)))
             freq = backend.execute_circuit(c, nshots=nshots).frequencies()
@@ -284,19 +286,22 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
                 probs[depth].append(0)
             else:
                 probs[depth].append(freq[init_state]/nshots)
-    probs = [ (d, np.mean(p)) for d,p in probs.items() ]
-    probs = sorted(probs, key=lambda x: x[0])
+    avg_probs = [ (d, np.mean(p)) for d,p in probs.items() ]
+    std_probs = [ (d, np.std(p)) for d,p in probs.items() ]
+    avg_probs = sorted(avg_probs, key=lambda x: x[0])
+    std_probs = sorted(std_probs, key=lambda x: x[0])
     model = lambda depth,a,l,b: a * np.power(l,depth) + b
-    depths, survival_probs = zip(*probs)
+    depths, survival_probs = zip(*avg_probs)
+    _, err = zip(*std_probs)
     optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
     model = lambda depth: optimal_params[0] * np.power(optimal_params[1],depth) + optimal_params[2]
-    return depths, survival_probs, optimal_params, model
+    return depths, survival_probs, err, optimal_params, model
 
 
 def fill_identity(circuit: Circuit):
     """Fill the circuit with identity gates where no gate is present to apply RB noisemodel.
     Works with circuits with no more than 3 qubits."""
-    new_circuit = Circuit(circuit.nqubits)
+    new_circuit = circuit.__class__(**circuit.init_kwargs)
     for moment in circuit.queue.moments:
         f=0
         for qubit, gate in enumerate(moment):
@@ -314,21 +319,28 @@ def fill_identity(circuit: Circuit):
 class RL_NoiseModel(object):
 
     def __init__(self, agent, circuit_representation):
-        super(self, ).__init__()
         self.agent = agent
         self.rep = circuit_representation
+        self.ker_size = self.agent.policy.features_extractor._observation_space.shape[-1]
+        self.ker_radius = int(self.ker_size/2)
 
     def apply(self, circuit):
         if isinstance(circuit, Circuit):
-            observation = self.rep.circuit_to_array(circuit)
-        elif isinstance(circuit, np.ndarray):
-            observation = circuit
-        else:
-            assert False, "Invalid circuit type"
+            circuit = self.rep.circuit_to_array(circuit)
+        observation = np.transpose(circuit, axes=[2,1,0])
+        left_idx = lambda idx: max(0, idx)
+        right_idx = lambda idx: min(idx, circuit.shape[0])
+        padding = lambda idx: np.zeros((*observation.shape[:2], np.abs(idx)))
+        padder = lambda array, idx: np.concatenate((padding(idx), array), axis=-1) if idx < 0 else np.concatenate((array, padding(idx)), axis=-1) 
         for i in range(circuit.shape[0]):
-            action = self.agent.predict(observation, deterministic=True)
+            window = observation[:,:, left_idx(i-1):right_idx(i+2)]
+            if i - self.ker_radius < 0:
+                window = padder(window, i - self.ker_radius)
+            elif i + self.ker_radius > circuit.shape[0] - 1:
+                window = padder(window, i + self.ker_radius - circuit.shape[0] + 1)
+            action, _ = self.agent.predict(window, deterministic=True)
             observation = self.rep.make_action(action=action, circuit=observation, position=i)
-        return self.rep.rep_to_circuit(observation)
+        return self.rep.rep_to_circuit(np.transpose(observation, axes=[2,1,0]))
             
             
 if __name__ == "__main__":
@@ -337,7 +349,7 @@ if __name__ == "__main__":
     from rlnoise.custom_noise import CustomNoiseModel
     import matplotlib.pyplot as plt
 
-    nqubits=3
+    nqubits = 3
     noise_model = CustomNoiseModel()
 
     rep = CircuitRepresentation(
@@ -351,7 +363,7 @@ if __name__ == "__main__":
         d = Dataset(20, depth, 3, rep, noise_model=noise_model)
         circs += d.circuits
 
-    depths, survival_probs, optimal_params, model = randomized_benchmarking(circs, noise_model=noise_model)
+    depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circs, noise_model=noise_model)
     print(f"> Decay: {optimal_params[1]}")
     print(optimal_params)
     plt.scatter(depths, survival_probs)
