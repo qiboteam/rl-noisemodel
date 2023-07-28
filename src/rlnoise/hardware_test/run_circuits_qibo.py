@@ -6,7 +6,7 @@ from qibo.config import log
 from qibolab.compilers.compiler import Compiler
 from qibo.backends import construct_backend
 from rlnoise.dataset import CircuitRepresentation
-from rlnoise.rewards.state_tomography import StateTomography
+from rlnoise.hardware_test.state_tomography import StateTomography
 import math
 from qibolab.pulses import PulseSequence
 

@@ -5,8 +5,8 @@ from pathlib import Path
 from qibo import gates
 from qibo.models import Circuit
 from inspect import signature
-from rlnoise.rewards.classical_shadows import ClassicalShadows
-from rlnoise.rewards.state_tomography import StateTomography
+from rlnoise.hardware_test.classical_shadows import ClassicalShadows
+from rlnoise.hardware_test.state_tomography import StateTomography
 from rlnoise.custom_noise import string_to_gate
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
@@ -119,7 +119,11 @@ class Dataset(object):
                 if 'q0' in params and 'q1' in params:
                     q1 = random.choice(
                         list( set(range(self.n_qubits)) - {q0} )
-                    )                    
+                    )       
+                    if self.backend == "IBM" and np.abs(q1-q0)==2 :
+                        q1 = random.choice(
+                        list( set(range(self.n_qubits)) - {q0,q1} )
+                    )             
                     if 'theta' in params:
                         theta = random.choice([0, 0.25, 0.5, 0.75])
                         circuit.add(gate(q1,q0,theta))
