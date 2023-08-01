@@ -16,9 +16,9 @@ rep = CircuitRepresentation()
 
 
 number_of_gates_per_qubit=[10]
-qubits=3
-number_of_circuits=500
-dataset_name='train_dataset'
+qubits=1
+number_of_circuits=100
+dataset_name='hardware_train'
 
 
 for i in number_of_gates_per_qubit:
@@ -34,7 +34,8 @@ for i in number_of_gates_per_qubit:
         clifford = True,
         shadows = False,
         noise_model = noise_model,
-        mode = 'rep'
+        mode = 'rep',
+        backend="IBM"
     )
     train_set=np.asarray(dataset.train_circuits)
     train_label=np.asarray(dataset.train_noisy_label)

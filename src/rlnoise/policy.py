@@ -25,7 +25,7 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
         super().__init__(observation_space, features_dim)
         indim = observation_space.shape[0]
         sample = torch.as_tensor(observation_space.sample()[None]).float()
-        filter_shape = (1,2)
+        #filter_shape = (1,2)
         conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=64, kernel_size=filter_shape) #adding pooling layer?
         
         # Compute shape by doing one forward pass
@@ -33,14 +33,14 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
             #shape = torch.nn.functional.avg_pool2d(conv1(sample),kernel_size=filter_shape).shape
             shape = conv1(sample).shape
             
-        conv2 = torch.nn.Conv2d(64, 32, (max(int(shape[2]/2), 1), shape[3]))
+        #conv2 = torch.nn.Conv2d(64, 32, (max(int(shape[2]/2), 1), shape[3]))
 
         self.cnn = torch.nn.Sequential(
             conv1,
             torch.nn.ReLU(), # Relu might not be great if we have negative angles, ELU
             #torch.nn.AvgPool2d(kernel_size=filter_shape),
-            conv2,
-            torch.nn.ReLU(),
+            #conv2,
+            #torch.nn.ReLU(),
             torch.nn.Flatten(1,-1),
         )
         
@@ -192,16 +192,16 @@ class CustomCallback(BaseCallback):
         train_results = self.train_results.reshape(-1)
         eval_results = self.eval_results.reshape(-1)
         time_steps = self.timestep_list
-        errorevery=20
+        errorevery=100000000
         if self.test_on_data_size is None:
             fig, ax = plt.subplots(2, 2, figsize=(15, 8))
             fig.suptitle(self.plot_1_title, fontsize=15)
   
             plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
-            ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=eval_results["reward_std"],label='evaluation_set',errorevery=errorevery,capsize=4) #use list comprehension
+            ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4) #use list comprehension
             ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
             ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4)
-            ax[0,1].set(xlabel='timesteps/1000', ylabel='Fidelity',title='Bures Distance between DM')
+            ax[0,1].set(xlabel='timesteps/1000', ylabel='Fidelity',title='Fidelity between DM')
             ax[1,0].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=errorevery,capsize=4)
             ax[1,0].set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance between DM')
             ax[1,1].errorbar(time_steps,eval_results["bures_distance"],yerr=eval_results["bures_distance_std"],errorevery=errorevery,capsize=4)

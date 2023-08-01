@@ -25,10 +25,10 @@
     "depol_on_gate": ["rz","cz"]
   },
   "policy": {
-    "save_best_model": true,
+    "save_best_model": false,
     "plot_results": true,
     "model_name": "3Q_D10_AllNoises_LogReward_",
-    "plot_name": "(corrected dataset)3Q_D10_AllNoises_LogReward_"
+    "plot_name": "1Q_D5_Tii_hardware_"
   },
   "reward": {
     "reward_type": "log"

@@ -1,9 +1,9 @@
 import json
-from pathlib import Path
 import numpy as np
+from pathlib import Path
 from abc import ABC, abstractmethod
 from qibo import gates
-from qibo.quantum_info import trace_distance,fidelity
+from rlnoise.metrics import trace_distance,compute_fidelity
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 with open(config_path) as f:
@@ -55,7 +55,7 @@ class DensityMatrixReward(Reward):
             if reward_type=="log" or reward_type=="Log":
                 dm_mse=alpha*self.metric(circuit_dm, target)
                 if -np.log(dm_mse) < 1000:
-                    reward=-np.log(dm_mse) #mae or exp
+                    reward=-np.log(dm_mse) 
                 else:
                     reward=1000.
             elif reward_type=="mse":
@@ -65,7 +65,15 @@ class DensityMatrixReward(Reward):
                 reward=1-trace_distance(circuit_dm,target)
                 
             elif reward_type.lower()=="mixed":
-                reward=fidelity(circuit_dm, target)*(1-5*self.metric(circuit_dm, target))*(1-trace_distance(circuit_dm, target))
+                reward=compute_fidelity(circuit_dm, target)*(1-5*self.metric(circuit_dm, target))*(1-trace_distance(circuit_dm, target))
+            
+            elif reward_type.lower()=="fidelity":
+                if -np.log(compute_fidelity(circuit_dm, target)) < 1000:
+                    reward=-np.log(compute_fidelity(circuit_dm, target)) 
+                else:
+                    reward=1000.
+                
+
         else:
             reward = 0.
         return reward  #other possible metric to evaluate distance between DMs is Bures distance. See https://arxiv.org/pdf/2105.02743.pdf

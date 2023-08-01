@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import torch
 from configparser import ConfigParser
 import copy
 from rlnoise.dataset import CircuitRepresentation
@@ -16,15 +17,15 @@ nqubits=1
 n_circuit_in_dataset=500
 
 #benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
-benchmark_dm_train=os.getcwd()+'/src/rlnoise/dataset_hardware/30_05_2023/density_matrices_training2.npy'
-benchmark_dm_val=os.getcwd()+'/src/rlnoise/dataset_hardware/30_05_2023/density_matrices_validation2.npy'
+benchmark_dm_train=os.getcwd()+'/src/rlnoise/hardware_test/dm_1Q_TII/density_matrices_training2.npy'
+benchmark_dm_val=os.getcwd()+'/src/rlnoise/hardware_test/dm_1Q_TII/density_matrices_validation2.npy'
 
 
 f = open(benchmark_dm_train,"rb")
 tmp=np.load(f,allow_pickle=True)
 training_circ_rep=np.array([copy.deepcopy(rep.circuit_to_array(tmp[i,0])) for i in range(tmp.shape[0])])
 training_dm_mit=np.array(copy.deepcopy(tmp[:,3]))
-train_dm_true=np.array(copy.deepcopy(tmp[:,1]))
+training_dm_true=np.array(copy.deepcopy(tmp[:,1]))
 f.close()
 
 f2 = open(benchmark_dm_val,"rb")
@@ -58,9 +59,11 @@ policy = "MlpPolicy"
 policy_kwargs = dict(
     features_extractor_class = CNNFeaturesExtractor,
     features_extractor_kwargs = dict(
-        features_dim = 64,
-        filter_shape = (nqubits,1)
-    )
+        features_dim = 32,
+        filter_shape = (nqubits,3),
+    ),
+        #activation_fn=torch.nn.ReLU,
+        net_arch=dict(pi=[32, 32], vf=[32, 32])
 )
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
@@ -74,7 +77,9 @@ policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
+clip_range=0.4,
+#n_epochs=4,
 )
 
-model.learn(500000,progress_bar=True,callback=callback)
+model.learn(800000,progress_bar=True,callback=callback)
 

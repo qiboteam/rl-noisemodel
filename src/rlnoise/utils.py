@@ -1,19 +1,17 @@
 import os
 import json
 import copy
+import numpy as np
+from tqdm import tqdm
+from pathlib import Path
+from qibo import gates
+from qibo.models.circuit import Circuit
+import matplotlib.pyplot as plt
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards.rewards import DensityMatrixReward
-from qibo.quantum_info import trace_distance
-import numpy as np
-from pathlib import Path
-import matplotlib.pyplot as plt
 from rlnoise.gym_env import QuantumCircuit
-from qibo import gates
-from qibo.quantum_info import trace_distance
-from qibo.models.circuit import Circuit
-from scipy.linalg import sqrtm
-from tqdm import tqdm
+from rlnoise.metrics import trace_distance,bures_distance,compute_fidelity
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
 with open(config_path) as f:
@@ -113,25 +111,6 @@ def plot_results(train_history, val_history, n_steps=20, filename="train_info.pn
     plt.legend()
     plt.show()
     plt.savefig(figures_folder()+ '/' +filename)
-
-def compute_fidelity(density_matrix0, density_matrix1):
-    """Compute the fidelity for two density matrices (pure or mixed states).
-
-    .. math::
-            F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
-    """
-    sqrt_mat1_mat2 = sqrtm(density_matrix0 @ density_matrix1)
-    trace = np.real(np.trace(sqrt_mat1_mat2)**2)
-    if trace > 1:
-        trace=1 #TODO: problem the trace can be sligtlhy > 1! This problem appeared only on the hardware test, so probably the dm matrices are not perfect
-    return trace
-
-def bures_distance(density_matrix0, density_matrix1):
-    """ Compute the Bures distance between density matrices
-    .. math::
-        B( \rho , \sigma ) = -\sqrt{2*(1-sqrt(F(\sigma,\rho)))} where F is the fidelity
-    """
-    return np.sqrt(2*(1-np.sqrt(compute_fidelity(density_matrix0, density_matrix1))))
 
 def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatrixReward(),representation=CircuitRepresentation()):
     '''
