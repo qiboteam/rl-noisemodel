@@ -21,19 +21,29 @@ print(val_set.shape)
 print(train_set.shape)
 
 #Those lists contain 400 and 100 qibo circuits respectively 
-qibo_training_circuits=[CircuitRepresentation().rep_to_circuit(train_set[i]) for i in range(train_set.shape[0])]
-qibo_validation_circuits=[CircuitRepresentation().rep_to_circuit(val_set[i]) for i in range(val_set.shape[0])]
+qibo_training_circuits=[CircuitRepresentation().rep_to_circuit(train_set[i]) for i in range(train_set.shape[0])][0:5]
+qibo_validation_circuits=[CircuitRepresentation().rep_to_circuit(val_set[i]) for i in range(val_set.shape[0])][0:5]
 qibo_training_circuits[0]
 qibo_validation_circuits[0]
 
+from qibo.models import Circuit
+c = Circuit(3)
+c.add(gates.H(0))
+c.add(gates.H(1))
+c.add(gates.CNOT(0, 2))
+c.add(gates.CNOT(1, 2))
+c.add(gates.H(2))
+
+qibo_training_circuits = [c,c]
+qibo_validation_circuits = [c,c]
 #IBMProvider.save_account(token='')
 
 qiskit = True
-nshots = 1000
+nshots = 10000
 shadow_size = 100
 method = 'ST'
 likelihood = True
-njobs = 4
+njobs = 2 #Only for 'CS' and 'ST_qiskit'
 backend_qibo = 'tii1q_b1'
 backend_qiskit = 'ibmq_qasm_simulator'
 
@@ -52,8 +62,9 @@ else:
     backend_qiskit = None
 
 if method == 'ST':
-    result_train = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(state_tomography)(circ, nshots, likelihood, backend, backend_qiskit) for circ in qibo_training_circuits)
-    result_val = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(state_tomography)(circ, nshots, likelihood, backend, backend_qiskit) for circ in qibo_validation_circuits)
+    results = state_tomography(qibo_training_circuits + qibo_validation_circuits, nshots, likelihood, backend, backend_qiskit)
+    result_train = results[0:len(qibo_training_circuits)]
+    result_val = results[len(qibo_training_circuits)::]
 elif method == 'CS':
     result_train = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(classical_shadows)(circ, shadow_size, backend, backend_qiskit) for circ in qibo_training_circuits)
     result_val = joblib.Parallel(n_jobs=njobs,backend='threading')(joblib.delayed(classical_shadows)(circ, shadow_size, backend, backend_qiskit) for circ in qibo_validation_circuits)

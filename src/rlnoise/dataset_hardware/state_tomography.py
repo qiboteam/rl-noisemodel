@@ -1,11 +1,11 @@
 from qibo import gates, symbols
 from qibo.backends import GlobalBackend
 from qibo.hamiltonians import Hamiltonian
-#from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
 from itertools import product
 from functools import reduce
 import numpy as np
-from rlnoise.dataset_hardware.utils import run_qiskit, calibration_matrix, apply_readout_mitigation
+from rlnoise.dataset_hardware.utils import run_qiskit, run_qibo, calibration_matrix, apply_readout_mitigation
+from itertools import chain
 
 class StateTomography:
     def __init__(self, nshots = 10000, backend = None, backend_qiskit = None, layout=None):
@@ -18,6 +18,8 @@ class StateTomography:
         self.nshots = nshots
         self.backend_qiskit = backend_qiskit
         self.layout = layout
+        self.freqs = None
+        self.mit_freqs = None
 
         if backend == None:
             self.backend = GlobalBackend()
@@ -37,15 +39,41 @@ class StateTomography:
             circuit.add(gates.M(*range(self.nqubits)))
             circuits.append(circuit)
         self.tomo_circuits = circuits
+
         return circuits
     
-    def meas_obs(self, noise = None, readout_mit = False):
-        exps = []
-        if readout_mit:
-            self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend,backend_qiskit=self.backend_qiskit,layout=self.layout)
-        if self.backend_qiskit is not None:
-            freqs_list = run_qiskit(self.tomo_circuits, self.backend_qiskit, self.nshots, self.layout)
+    def run_circuits(self):
+        dims = np.shape(self.tomo_circuits)
+        circs = list(chain.from_iterable(self.tomo_circuits))
 
+        if self.backend_qiskit is not None:
+            freqs_list = run_qiskit(circs, self.backend_qiskit, self.nshots, self.layout)
+        else:
+            freqs_list = run_qibo(circs, self.backend, self.nshots)
+
+        freqs_list = list(np.reshape(freqs_list,dims))
+        self.freqs = freqs_list
+
+        return freqs_list
+    
+    def _get_cal_mat(self, noise=None):
+        self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend,backend_qiskit=self.backend_qiskit,layout=self.layout)
+    
+    def redadout_mit(self, freqs, noise = None):
+        dims = np.shape(freqs)
+        freqs = list(chain.from_iterable(freqs))
+        if self.cal_mat is None:
+            self._get_cal_mat(noise)
+        mit_freqs = []
+        for freq in freqs:
+            mit_freqs.append(apply_readout_mitigation(freq, self.cal_mat))
+        mit_freqs = list(np.reshape(mit_freqs,dims))
+        self.mit_freqs = mit_freqs
+
+        return mit_freqs
+    
+    def meas_obs(self, noise = None, readout_mit = False):
+        exps = []   
         for k, circ in enumerate(self.tomo_circuits):
             obs = self.obs[k+1]
             term = np.eye(2**self.nqubits)
@@ -57,13 +85,9 @@ class StateTomography:
             if noise is not None and self.backend_qiskit is None:
                 circ = noise.apply(circ)
 
-            if self.backend_qiskit is not None:
-                freqs = freqs_list[k]
-            else:
-                result = self.backend.execute_circuit(circ, nshots=self.nshots)
-                freqs = result.frequencies()
+            freqs = self.freqs[k]
             if readout_mit:
-                freqs = apply_readout_mitigation(freqs, self.cal_mat)
+                freqs = self.mit_freqs[k]
             exp = obs.expectation_from_samples(freqs)
             exps.append([self.obs[k],exp])
         self.exps_vals = exps
@@ -89,6 +113,7 @@ class StateTomography:
         for i in range(2**self.nqubits):
             vec = np.reshape(vecs[:,i],(-1,1))
             rho += lamb[i]*vec@np.conjugate(np.transpose(vec))
+
         return rho
 
     def get_rho(self, likelihood=True):
@@ -107,5 +132,6 @@ class StateTomography:
         rho /=2**self.nqubits
         if likelihood:
             rho = self._likelihood(rho)
+
         return rho
     

@@ -5,9 +5,7 @@ from qibo import gates
 from qibo.backends import construct_backend
 from qibo.config import log
 from qibo.models import Circuit
-from qiskit import QuantumCircuit, execute
-from qiskit.quantum_info import DensityMatrix
-from qiskit_aer import StatevectorSimulator
+from qiskit import QuantumCircuit
 from qiskit_experiments.library import MitigatedStateTomography
 from qiskit_experiments.library import StateTomography as StateTomography_qiskit
 
@@ -16,8 +14,10 @@ def run_qiskit(circuits, backend, nshots=10000, layout=None):
     circuits_qiskit = []
     for circ in circuits:
         circuits_qiskit.append(QuantumCircuit().from_qasm_str(circ.to_qasm()))
-    job = execute(circuits_qiskit,shots=nshots,backend=backend,initial_layout=layout,optimization_level=0)
+    job = backend.run(circuits_qiskit, shots=nshots, initial_layout=layout, optimization_level=0)
+    print(job.status())
     result = job.result()
+
     counts = []
     for qc in circuits_qiskit:
         counts_qiskit = Counter(result.get_counts(qc))
@@ -28,6 +28,14 @@ def run_qiskit(circuits, backend, nshots=10000, layout=None):
         del counts_qiskit
         counts.append(counts_qibo)
     return counts
+
+def run_qibo(circuits, backend, nshots=10000):
+    freqs = []
+    for circ in circuits:
+        result = backend.execute_circuit(circ, nshots=nshots)
+        freqs.append(result.frequencies())
+    return freqs
+
 
 
 def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None, backend_qiskit=None, layout=None):
@@ -69,9 +77,7 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
     if backend_qiskit is not None:
         freqs = run_qiskit(cal_circs, backend_qiskit, nshots=nshots, layout=layout)
     else:
-        freqs = []
-        for i in range(2**nqubits):
-            freqs.append(backend.execute_circuit(cal_circs[i], nshots=nshots).frequencies())
+        freqs = run_qibo(cal_circs, backend, nshots=nshots)
 
     for i in range(2**nqubits):
         freq = freqs[i]
@@ -144,28 +150,40 @@ def x_rule(gate, platform):
     return sequence, {}
 
 
-def state_tomography(circ, nshots, likelihood, backend, backend_qiskit):
+def state_tomography(circs, nshots, likelihood, backend, backend_qiskit):
     from rlnoise.dataset_hardware.state_tomography import StateTomography
     
     st = StateTomography(nshots=nshots,backend=backend, backend_qiskit=backend_qiskit)
 
-    st.get_circuits(circ)
-    st.meas_obs(noise=None,readout_mit=False)
-    rho = st.get_rho(likelihood=likelihood)
+    tomo_circs = []
+    for circ in circs:
+        tomo_circs.append(st.get_circuits(circ))
+    st.tomo_circuits = tomo_circs
 
-    st.meas_obs(noise=None,readout_mit=True)
-    cal_mat = st.cal_mat
-    rho_mit = st.get_rho(likelihood=likelihood)
+    st._get_cal_mat()
+    freqs = st.run_circuits()
+    mit_freqs = st.redadout_mit(freqs)
 
-    circ.density_matrix = True
-    backend_exact = construct_backend('numpy')
-    rho_exact = backend_exact.execute_circuit(circ).state()
+    results = []
+    for k, circ in enumerate(circs):
+        st.tomo_circuits = np.array(tomo_circs)[k,:]
+        st.freqs =  np.array(freqs)[k,:]
+        st.mit_freqs =  np.array(mit_freqs)[k,:]
+
+        st.meas_obs(noise=None,readout_mit=False)
+        rho = st.get_rho(likelihood=likelihood)
+
+        st.meas_obs(noise=None,readout_mit=True)
+        rho_mit = st.get_rho(likelihood=likelihood)
+
+        circ.density_matrix = True
+        backend_exact = construct_backend('numpy')
+        rho_exact = backend_exact.execute_circuit(circ).state()
     
-    log.info(circ.draw())
-    result = [circ, rho_exact, rho, rho_mit, cal_mat]
-    log.info(result)
+        log.info(circ.draw())
+        results.append([circ, rho_exact, rho, rho_mit, st.cal_mat])
 
-    return result
+    return results
 
 
 def classical_shadows(circ, shadow_size, backend, backend_qiskit):
