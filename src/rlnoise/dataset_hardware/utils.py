@@ -160,6 +160,7 @@ def state_tomography(circ, nshots, likelihood, backend, backend_qiskit):
     circ.density_matrix = True
     backend_exact = construct_backend('numpy')
     rho_exact = backend_exact.execute_circuit(circ).state()
+    
     log.info(circ.draw())
     result = [circ, rho_exact, rho, rho_mit, cal_mat]
     log.info(result)
@@ -178,6 +179,7 @@ def classical_shadows(circ, shadow_size, backend, backend_qiskit):
     circ.density_matrix = True
     backend_exact = construct_backend('numpy')
     rho_exact = backend_exact.execute_circuit(circ).state()
+
     log.info(circ.draw())
     result = [circ, rho_exact, rho]
     log.info(result)
@@ -187,7 +189,7 @@ def classical_shadows(circ, shadow_size, backend, backend_qiskit):
 
 def qiskit_state_tomography(circ, nshots, backend):
 
-    circ_qiskit = QuantumCircuit().from_qasm_str(circ.to_qasm())
+    circ_qiskit = QuantumCircuit().from_qasm_str(circ.to_qasm()).reverse_bits()
 
 
     st = StateTomography_qiskit(circ_qiskit,backend=backend)
@@ -203,9 +205,9 @@ def qiskit_state_tomography(circ, nshots, backend):
 
     cal_mat = results.analysis_results("Local Readout Mitigator").value.assignment_matrix()
 
-    backend_exact = StatevectorSimulator()
-    state_exact = backend_exact.run(circ_qiskit).result().get_statevector()
-    rho_exact = DensityMatrix(state_exact).to_operator().data
+    circ.density_matrix = True
+    backend_exact = construct_backend('numpy')
+    rho_exact = backend_exact.execute_circuit(circ).state()
 
 
     log.info(circ.draw())

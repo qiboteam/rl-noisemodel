@@ -29,11 +29,11 @@ qibo_validation_circuits[0]
 #IBMProvider.save_account(token='')
 
 qiskit = True
-nshots = 100
+nshots = 1000
 shadow_size = 100
-method = 'CS'
+method = 'ST'
 likelihood = True
-njobs = 2
+njobs = 4
 backend_qibo = 'tii1q_b1'
 backend_qiskit = 'ibmq_qasm_simulator'
 

@@ -72,7 +72,7 @@ class StateTomography:
         vals, vecs = np.linalg.eig(mu)
         index = vals.argsort()[::-1]
         vals = vals[index]
-        vecs = vecs[index]
+        vecs = vecs[:,index]
 
         lamb = np.zeros(2**self.nqubits,dtype=complex)
         i = 2**self.nqubits
@@ -87,7 +87,7 @@ class StateTomography:
 
         rho = 0
         for i in range(2**self.nqubits):
-            vec = np.reshape(vecs[i,:],(-1,1))
+            vec = np.reshape(vecs[:,i],(-1,1))
             rho += lamb[i]*vec@np.conjugate(np.transpose(vec))
         return rho
 
