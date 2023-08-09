@@ -21,21 +21,9 @@ print(val_set.shape)
 print(train_set.shape)
 
 #Those lists contain 400 and 100 qibo circuits respectively 
-qibo_training_circuits=[CircuitRepresentation().rep_to_circuit(train_set[i]) for i in range(train_set.shape[0])][0:5]
-qibo_validation_circuits=[CircuitRepresentation().rep_to_circuit(val_set[i]) for i in range(val_set.shape[0])][0:5]
-qibo_training_circuits[0]
-qibo_validation_circuits[0]
+qibo_training_circuits=[CircuitRepresentation().rep_to_circuit(train_set[i]) for i in range(train_set.shape[0])]
+qibo_validation_circuits=[CircuitRepresentation().rep_to_circuit(val_set[i]) for i in range(val_set.shape[0])]
 
-from qibo.models import Circuit
-c = Circuit(3)
-c.add(gates.H(0))
-c.add(gates.H(1))
-c.add(gates.CNOT(0, 2))
-c.add(gates.CNOT(1, 2))
-c.add(gates.H(2))
-
-qibo_training_circuits = [c,c]
-qibo_validation_circuits = [c,c]
 #IBMProvider.save_account(token='')
 
 qiskit = True
