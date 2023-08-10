@@ -34,6 +34,7 @@ likelihood = True
 njobs = 2 #Only for 'CS' and 'ST_qiskit'
 backend_qibo = 'tii1q_b1'
 backend_qiskit = 'ibmq_qasm_simulator'
+layout = [3, 5, 8]
 
 if qiskit or method=='ST_qiskit':
     from qiskit_ibm_provider import IBMProvider
@@ -50,7 +51,7 @@ else:
     backend_qiskit = None
 
 if method == 'ST':
-    results = state_tomography(qibo_training_circuits + qibo_validation_circuits, nshots, likelihood, backend, backend_qiskit)
+    results = state_tomography(qibo_training_circuits + qibo_validation_circuits, nshots, likelihood, backend, backend_qiskit, layout)
     result_train = results[0:len(qibo_training_circuits)]
     result_val = results[len(qibo_training_circuits)::]
 elif method == 'CS':

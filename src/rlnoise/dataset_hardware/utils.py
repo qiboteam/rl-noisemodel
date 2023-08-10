@@ -6,6 +6,7 @@ from qibo.backends import construct_backend
 from qibo.config import log
 from qibo.models import Circuit
 from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
 from qiskit_experiments.library import MitigatedStateTomography
 from qiskit_experiments.library import StateTomography as StateTomography_qiskit
 
@@ -14,7 +15,8 @@ def run_qiskit(circuits, backend, nshots=10000, layout=None):
     circuits_qiskit = []
     for circ in circuits:
         circuits_qiskit.append(QuantumCircuit().from_qasm_str(circ.to_qasm()))
-    job = backend.run(circuits_qiskit, shots=nshots, initial_layout=layout, optimization_level=0)
+    circuits_qiskit = transpile(circuits_qiskit, initial_layout=layout, optimization_level=0)
+    job = backend.run(circuits_qiskit, shots=nshots)
     print(job.status())
     result = job.result()
 
@@ -150,10 +152,10 @@ def x_rule(gate, platform):
     return sequence, {}
 
 
-def state_tomography(circs, nshots, likelihood, backend, backend_qiskit):
+def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, layout):
     from rlnoise.dataset_hardware.state_tomography import StateTomography
     
-    st = StateTomography(nshots=nshots,backend=backend, backend_qiskit=backend_qiskit)
+    st = StateTomography(nshots=nshots,backend=backend, backend_qiskit=backend_qiskit, layout=layout)
 
     tomo_circs = []
     for circ in circs:
