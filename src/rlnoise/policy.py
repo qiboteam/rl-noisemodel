@@ -192,25 +192,25 @@ class CustomCallback(BaseCallback):
         train_results = self.train_results.reshape(-1)
         eval_results = self.eval_results.reshape(-1)
         time_steps = self.timestep_list
-        errorevery=100000000
+        errorevery=20
         if self.test_on_data_size is None:
             fig, ax = plt.subplots(2, 2, figsize=(15, 8))
             fig.suptitle(self.plot_1_title, fontsize=15)
   
             plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
-            ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4) #use list comprehension
+            ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4, marker='.') #use list comprehension
             ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
-            ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4)
+            ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4, marker='.')
             ax[0,1].set(xlabel='timesteps/1000', ylabel='Fidelity',title='Fidelity between DM')
-            ax[1,0].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=errorevery,capsize=4)
+            ax[1,0].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=errorevery,capsize=4, marker='.')
             ax[1,0].set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance between DM')
-            ax[1,1].errorbar(time_steps,eval_results["bures_distance"],yerr=eval_results["bures_distance_std"],errorevery=errorevery,capsize=4)
+            ax[1,1].errorbar(time_steps,eval_results["bures_distance"],yerr=eval_results["bures_distance_std"],errorevery=errorevery,capsize=4, marker='.')
             ax[1,1].set(xlabel='timesteps/1000', ylabel='Bures Distance',title='Bures distance between DM')
    
-            ax[0,0].errorbar(time_steps,train_results["reward"],yerr=train_results["reward_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4)
-            ax[0,1].errorbar(time_steps,train_results["fidelity"],yerr=train_results["fidelity_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4)
-            ax[1,0].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4)
-            ax[1,1].errorbar(time_steps,train_results["bures_distance"],yerr=train_results["bures_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4)
+            ax[0,0].errorbar(time_steps,train_results["reward"],yerr=train_results["reward_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
+            ax[0,1].errorbar(time_steps,train_results["fidelity"],yerr=train_results["fidelity_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
+            ax[1,0].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
+            ax[1,1].errorbar(time_steps,train_results["bures_distance"],yerr=train_results["bures_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
             ax[0,0].legend()
             fig.savefig(self.plot_dir+self.plot_name+'_Q%d_D%d_steps%d.png'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]),dpi=300)
             plt.show()
@@ -235,7 +235,7 @@ class CustomCallback(BaseCallback):
         reward = reward.item() 
         fidelity = fidelity.item()
         trace_dist = trace_dist.item()
-        if fidelity > self.best_mean_fidelity and trace_dist < self.best_mean_trace_dist:
+        if fidelity > self.best_mean_fidelity:
             self.best_mean_reward = reward
             self.best_mean_fidelity = fidelity
             self.best_mean_trace_dist = trace_dist           

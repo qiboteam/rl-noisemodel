@@ -8,45 +8,35 @@ from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
+from rlnoise.metrics import compute_fidelity
 
 rep = CircuitRepresentation()
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=5
-nqubits=1
+circuits_depth=15
+nqubits=3
 n_circuit_in_dataset=500
+train_size = 300
 
-#benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
-benchmark_dm_train=os.getcwd()+'/src/rlnoise/hardware_test/dm_1Q_TII/density_matrices_training2.npy'
-benchmark_dm_val=os.getcwd()+'/src/rlnoise/hardware_test/dm_1Q_TII/density_matrices_validation2.npy'
+hardware_results_set = 'src/rlnoise/hardware_test/dm_3Q_IBM/Hanoi_optimized_and_fixed/train_set_Hanoi_3Q.npy'
 
-
-f = open(benchmark_dm_train,"rb")
-tmp=np.load(f,allow_pickle=True)
-training_circ_rep=np.array([copy.deepcopy(rep.circuit_to_array(tmp[i,0])) for i in range(tmp.shape[0])])
-training_dm_mit=np.array(copy.deepcopy(tmp[:,3]))
-training_dm_true=np.array(copy.deepcopy(tmp[:,1]))
+f = open(hardware_results_set,"rb")
+data = np.load(f,allow_pickle=True)
 f.close()
+training_dm_mit = data[:train_size,3]
+training_circ_rep = np.array([CircuitRepresentation().circuit_to_array(circ) for circ in data[:train_size,0]], dtype=object)
+training_dm_true = data[:train_size,1]
 
-f2 = open(benchmark_dm_val,"rb")
-tmp2=np.load(f2,allow_pickle=True)
-val_circ_rep=np.array([copy.deepcopy(rep.circuit_to_array(tmp2[i,0])) for i in range(tmp2.shape[0])])
-val_dm_mit=np.array(copy.deepcopy(tmp2[:,3]))
-val_dm_true=np.array(copy.deepcopy(tmp2[:,1]))
-f2.close()
-
-print(training_dm_mit.shape, val_dm_mit.shape)
+evaluation_dm_mit = data[train_size:,3]
+evaluation_circ_rep = np.array([CircuitRepresentation().circuit_to_array(circ) for circ in data[train_size:,0]], dtype=object)
+evaluation_dm_true = data[train_size:,1]
 #Setting up training env and policy model
 
 dataset={'train_set': training_circ_rep,
          'train_label': training_dm_mit,
-         'val_set': val_circ_rep,
-         'val_label': val_dm_mit}
+         'val_set': evaluation_circ_rep,
+         'val_label': evaluation_dm_mit}
 
-#print(dataset['train_set'].shape,dataset['train_label'].shape,dataset['val_set'].shape,dataset['val_label'].shape)
-#print(type(dataset['train_label'][0]))
-print(np.array(training_dm_mit)[0])
-print(np.sqrt(np.abs(((val_dm_true-val_dm_mit)**2)).mean()).mean())
 reward = DensityMatrixReward()
 
 circuit_env_training = QuantumCircuit(
@@ -77,9 +67,9 @@ policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
-clip_range=0.4,
-#n_epochs=4,
+clip_range=0.3,
+#n_epochs=5,
 )
 
-model.learn(800000,progress_bar=True,callback=callback)
+model.learn(300000,progress_bar=True,callback=callback)
 

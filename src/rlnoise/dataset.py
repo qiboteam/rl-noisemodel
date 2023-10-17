@@ -30,7 +30,7 @@ def check_nmoments(circuit: Circuit, lenght,fill=False):
         if i < lenght:
             for q, gate in enumerate(moment):
                 if gate is not None:
-                    if type(gate) == gates.CZ:
+                    if type(gate) == gates.CZ or type(gate) == gates.CNOT:
                         if count != 0:
                             new_circuit.add(gate)
                         count = 1
@@ -39,6 +39,11 @@ def check_nmoments(circuit: Circuit, lenght,fill=False):
                     if fill == True:
                         theta = random.choice([0, 0.25, 0.5, 0.75])*2*np.pi
                         new_circuit.add(random.choice([gates.RZ(q,theta),gates.RX(q,theta)]))
+    while len(new_circuit.queue.moments) < lenght:
+        q = [random.choice([0,1,2]) for add_gate_on_n_qubits in range(random.choice([1,2,3]))]
+        theta = [random.choice([0, 0.25, 0.5, 0.75])*2*np.pi for _ in range(len(q))]
+        [new_circuit.add(random.choice([gates.RZ(q[i],theta[i]),gates.X(q[i])])) for i in range(len(q))] #IBM has RZ and X as native gates
+
     return new_circuit
 
 
@@ -74,6 +79,8 @@ class Dataset(object):
                 self.noise_model.apply(c)
                 for c in self.circuits
             ]
+        else: 
+            self.noisy_circuits = self.circuits
             
         self.circ_rep = np.asarray([
             self.rep.circuit_to_array(c)
@@ -120,15 +127,15 @@ class Dataset(object):
                     q1 = random.choice(
                         list( set(range(self.n_qubits)) - {q0} )
                     )       
-                    if self.backend == "IBM" and np.abs(q1-q0)==2 :
+                    if self.backend == "IBM" and np.abs(q1-q0) >= 2 :
                         q1 = random.choice(
                         list( set(range(self.n_qubits)) - {q0,q1} )
                     )             
-                    if 'theta' in params:
+                        circuit.add(gate(q1,q0))
+                    elif 'theta' in params:
                         theta = random.choice([0, 0.25, 0.5, 0.75])
                         circuit.add(gate(q1,q0,theta))
-                    else:
-                        circuit.add(gate(q1,q0))
+                        
                 else:
                     if issubclass(gate, gates.ParametrizedGate):
                         if self.clifford:
@@ -195,9 +202,9 @@ class Dataset(object):
 def gate_to_idx(gate):
         if gate is gates.RZ:
             return 0
-        if gate is gates.RX:
+        if gate is gates.RX or gate is gates.X:
             return 1
-        if gate is gates.CZ:
+        if gate is gates.CZ or gate is gates.CNOT:
             return 2
         if gate =="param":
             return 3
@@ -226,14 +233,21 @@ class CircuitRepresentation(object):
     """  
     def __init__(self):
         self.encoding_dim = 8
+        self.primitive_gates = config['noise']['primitive_gates']
 
-    def gate_to_array(self, gate):
+    def gate_to_array(self, gate, qubit):
         """Provide the one-hot encoding of a gate."""
         one_hot = np.zeros(self.encoding_dim)
         if gate is None:
             return one_hot
         gate_idx = gate_to_idx(type(gate))
-        one_hot[gate_idx] = 1
+        if type(gate) is gates.CNOT and qubit == gate.target_qubits[0]:
+            one_hot[gate_idx] = -1
+        elif type(gate) is gates.CNOT and qubit != gate.target_qubits[0]:
+            
+            one_hot[gate_idx] = 1
+        else:
+            one_hot[gate_idx] = 1
         param_idx = gate_to_idx("param")
         if 'theta' in gate.init_kwargs:
             one_hot[param_idx] = gate.init_kwargs['theta'] / (2 * np.pi)
@@ -245,9 +259,9 @@ class CircuitRepresentation(object):
         Maps non noisy qibo circuits to numpy array representation.
         """
         rep = np.asarray([
-            self.gate_to_array(gate)
+            self.gate_to_array(gate,qubit)
             for m in circuit.queue.moments
-            for gate in m
+            for qubit, gate in enumerate(m)
         ])  
         rep = rep.reshape(-1, circuit.nqubits, self.encoding_dim)
         return rep
@@ -259,13 +273,17 @@ class CircuitRepresentation(object):
             array: 1-D array that is the representation of a specific moment of the circuit
             qubit: the qubit that corresponds to that moment
         """
+        
         channel_list=[]
         if array[gate_to_idx(gates.RX)] == 1:
-            gate = gates.RX(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
+            #gate = gates.RX(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
+            gate = gates.X(qubit) #this is for IBM hanoi
         elif array[gate_to_idx(gates.RZ)] == 1:
             gate = gates.RZ(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
-        elif array[gate_to_idx(gates.CZ)] == 1:
-            gate = gates.CZ(qubit, qubit2)
+        elif array[gate_to_idx(gates.CZ)] == 1 and "CNOT" not in self.primitive_gates:
+            gate = gates.CZ(qubit, qubit2) 
+        elif array[gate_to_idx(gates.CNOT)] == 1 or array[gate_to_idx(gates.CNOT)] == -1 and "CNOT" in self.primitive_gates:
+            gate = gates.CNOT(qubit, qubit2)
         else:
             gate = None
         if array[gate_to_idx("epsilon_x")] != 0:
@@ -289,8 +307,9 @@ class CircuitRepresentation(object):
         c = Circuit(rep_array.shape[1], density_matrix=True)
         for moment in range(len(rep_array)):
             count=-1
+            target = None
             for qubit, row in enumerate(rep_array[moment]):
-                if row[gate_to_idx(gates.CZ)]==1: 
+                if row[gate_to_idx(gates.CZ)]==1 and "CNOT" not in self.primitive_gates: 
                     if count == -1:
                         _, pending_channels = self.array_to_gate(row,qubit)
                         count=qubit        
@@ -305,7 +324,28 @@ class CircuitRepresentation(object):
                             c.add(channel)
                         avg_lam=(lam_0+lam_1)/2.
                         if avg_lam !=0:
-                            c.add(gates.DepolarizingChannel((count, qubit), lam=avg_lam))
+                            c.add(gates.DepolarizingChannel((count, qubit), lam=avg_lam))               
+                elif "CNOT" in self.primitive_gates and row[gate_to_idx(gates.CZ)] == -1 or row[gate_to_idx(gates.CZ)] == 1:
+                    if row[gate_to_idx(gates.CZ)] == -1:
+                        target = qubit
+                    elif row[gate_to_idx(gates.CZ)] == 1:
+                        control = qubit
+
+                    if count == -1:
+                        _, pending_channels = self.array_to_gate(row,qubit)
+                        count=qubit        
+                        lam_0=row[gate_to_idx(gates.DepolarizingChannel)]                   
+                    elif count != -1:
+                        gate, channels = self.array_to_gate(row, control, target) 
+                        lam_1=row[gate_to_idx(gates.DepolarizingChannel)]
+                        c.add(gate)
+                        for channel in pending_channels[0:-1]:
+                            c.add(channel)
+                        for channel in channels[0:-1]:
+                            c.add(channel)
+                        avg_lam=(lam_0+lam_1)/2.
+                        if avg_lam !=0:
+                            c.add(gates.DepolarizingChannel((count, qubit), lam=avg_lam))  
                 else:
                     gate, channels = self.array_to_gate(row, qubit)
                     if gate is not None:

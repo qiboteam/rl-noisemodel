@@ -1,9 +1,9 @@
 import numpy as np
-from qibo import quantum_info
+from qibo.quantum_info import trace_distance as qibo_trace_distance
 from scipy.linalg import sqrtm
 
 def trace_distance(rho1,rho2):
-    return quantum_info.trace_distance(rho1,rho2)
+    return qibo_trace_distance(rho1,rho2)
 
 def compute_fidelity(density_matrix0, density_matrix1):
     """Compute the fidelity for two density matrices (pure or mixed states).

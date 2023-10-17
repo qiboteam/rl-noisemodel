@@ -15,10 +15,10 @@ noise_model = CustomNoiseModel()
 rep = CircuitRepresentation()
 
 
-number_of_gates_per_qubit=[10]
-qubits=1
-number_of_circuits=100
-dataset_name='hardware_train'
+number_of_gates_per_qubit=[15]
+qubits=3
+number_of_circuits=500
+dataset_name='IBM_train'
 
 
 for i in number_of_gates_per_qubit:
@@ -33,15 +33,15 @@ for i in number_of_gates_per_qubit:
         representation = rep,
         clifford = True,
         shadows = False,
-        noise_model = noise_model,
+        noise_model = None,
         mode = 'rep',
         backend="IBM"
     )
     train_set=np.asarray(dataset.train_circuits)
-    train_label=np.asarray(dataset.train_noisy_label)
+    #train_label=np.asarray(dataset.train_noisy_label)
     val_set=np.asarray(dataset.val_circuits)
-    val_label=np.asarray(dataset.val_noisy_label)
-    np.savez(f,train_set=train_set, train_label=train_label, val_set=val_set,val_label=val_label,allow_pickle=True)
+    #val_label=np.asarray(dataset.val_noisy_label)
+    np.savez(f,train_set=train_set, val_set=val_set,allow_pickle=True)
 
 f.close()
 

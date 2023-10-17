@@ -18,10 +18,14 @@ def string_to_gate(gate_string):
         return None
     if gate_str_low == 'rx':
         gate=gates.RX
+    if gate_str_low == 'x':
+        gate=gates.X
     elif gate_str_low == 'rz':
         gate=gates.RZ
     elif gate_str_low == 'cz':
         gate=gates.CZ
+    elif gate_str_low == 'cnot':
+        gate = gates.CNOT
     else:
         raise('Error: unrecognised gate in string_to_gate()')
     return gate
