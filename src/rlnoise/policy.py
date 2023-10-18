@@ -8,8 +8,9 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.callbacks import BaseCallback
 from rlnoise.utils import model_evaluation
 
+SAVE_TRAIN_DATA = True
 
-config_path = str(Path().parent.absolute())+'/src/rlnoise/config.json'
+config_path = f'{str(Path().parent.absolute())}/src/rlnoise/config.json'
 with open(config_path) as f:
     config = json.load(f)
 
@@ -77,9 +78,13 @@ class CustomCallback(BaseCallback):
         self.plot = policy_params['plot_results']
         self.best_model_name = policy_params['model_name']
         self.plot_name = policy_params['plot_name']
-        self.log_dir = str(Path().parent.absolute())+'/src/rlnoise/saved_models/'
-        self.plot_dir = str(Path().parent.absolute())+'/src/rlnoise/data_analysis/plots/'
-        self.results_path = str(Path().parent.absolute())+'/src/rlnoise/bench_results/'
+        self.log_dir = f'{str(Path().parent.absolute())}/src/rlnoise/saved_models/'
+        self.plot_dir = (
+            f'{str(Path().parent.absolute())}/src/rlnoise/data_analysis/plots/'
+        )
+        self.results_path = (
+            f'{str(Path().parent.absolute())}/src/rlnoise/bench_results/'
+        )
         self.check_freq = check_freq
         self.test_on_data_size = test_on_data_size
         self.environment = train_environment
@@ -139,8 +144,6 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        debug = True
-
         if self.n_calls == 1 or self.n_calls % self.check_freq == 0:
           # Retrieve training reward
             training_results = model_evaluation(self.train_circ,self.train_label,model=self.model)
@@ -148,17 +151,20 @@ class CustomCallback(BaseCallback):
             self.train_results.append(training_results)
             self.eval_results.append(evaluation_results)
             self.timestep_list.append(self.num_timesteps)
-           
+
             if self.verbose:
-                print("Num timesteps: {}".format(self.num_timesteps))
+                print(f"Num timesteps: {self.num_timesteps}")
                 print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, evaluation_results['reward'].item()))
                 print('Standard deviations: Reward_std={:.2f}, Fidelity_std={:.2f}, Trace distance_std={:.2f}'.format(
                     evaluation_results["reward_std"].item(),evaluation_results["fidelity_std"].item(),evaluation_results["trace_distance_std"].item()))
-                #print('Average correction applied: \n',evaluation_results["avg_correction"])
+                        #print('Average correction applied: \n',evaluation_results["avg_correction"])
             if self.save_best is True:
                 self.save_best_model(evaluation_results["reward"])
             self.save_best_results(evaluation_results["reward"],evaluation_results["fidelity"],evaluation_results["trace_distance"],evaluation_results["bures_distance"])
-            if debug is True:
+
+            debug = True
+
+            if debug:
                 print('Considering action: \n',self.environment._get_info()['Action'],' at last position')
                 print('State AFTER action: \n',self.environment._get_info()['State_after'])
         return True
@@ -179,50 +185,64 @@ class CustomCallback(BaseCallback):
         print('Best average results obtained on the evaluation set are:\n Reward=%f, Fidelity=%f, Trace distance=%f, Bures=%f'%(self.best_mean_reward,self.best_mean_fidelity,self.best_mean_trace_dist,self.best_mean_bures_dist))
         if self.plot is True:
             self.plot_results()
+        
+        if SAVE_TRAIN_DATA:
+            filename = 'src/rlnoise/data_analysis/simulation_phase/training_analysis/1Q/train_results'
+            np.savez(
+                filename, timesteps=self.timestep_list, 
+                train_results=self.train_results, 
+                val_results=self.eval_results,
+                allow_pickle = True)
         '''
         if self.test_on_data_size is not None:
             f = open(self.results_path+"test_size%d_D_%d_Dep-Term_CZ_3Q.npz"%(self.dataset_size,self.trainset_depth),"wb")
             np.savez(f,train_results=self.train_results, val_results=self.eval_results, timesteps=self.timestep_list)
             f.close()
-        '''
-
-        pass 
+        ''' 
 
     def plot_results(self):
         train_results = self.train_results.reshape(-1)
         eval_results = self.eval_results.reshape(-1)
         time_steps = self.timestep_list
-        errorevery=20
         if self.test_on_data_size is None:
-            fig, ax = plt.subplots(2, 2, figsize=(15, 8))
-            fig.suptitle(self.plot_1_title, fontsize=15)
-  
-            plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
-            ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4, marker='.') #use list comprehension
-            ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
-            ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4, marker='.')
-            ax[0,1].set(xlabel='timesteps/1000', ylabel='Fidelity',title='Fidelity between DM')
-            ax[1,0].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=errorevery,capsize=4, marker='.')
-            ax[1,0].set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance between DM')
-            ax[1,1].errorbar(time_steps,eval_results["bures_distance"],yerr=eval_results["bures_distance_std"],errorevery=errorevery,capsize=4, marker='.')
-            ax[1,1].set(xlabel='timesteps/1000', ylabel='Bures Distance',title='Bures distance between DM')
-   
-            ax[0,0].errorbar(time_steps,train_results["reward"],yerr=train_results["reward_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
-            ax[0,1].errorbar(time_steps,train_results["fidelity"],yerr=train_results["fidelity_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
-            ax[1,0].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
-            ax[1,1].errorbar(time_steps,train_results["bures_distance"],yerr=train_results["bures_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
-            ax[0,0].legend()
-            fig.savefig(self.plot_dir+self.plot_name+'_Q%d_D%d_steps%d.png'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]),dpi=300)
-            plt.show()
+            self._extracted_from_plot_results_7(time_steps, eval_results, train_results)
         else:
-            fig=plt.figure(figsize=(5,5))
-            fig.suptitle('1Q w CZ D5 K3 SR-off train dataset size=%d, val dataset size=%d'%(self.dataset_size,len(self.val_circ)) , fontsize=15)
-            ax=fig.add_subplot(111)
-            ax.set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
-            ax.plot(time_steps,eval_results[:,0],label='evaluation_set',marker='x')
-            ax.plot(time_steps,train_results[:,0],color='orange',label='train_set',marker='x')
-            ax.legend()
-            fig.savefig(self.plot_dir+'test_size%d_D_%d_Dep-Term_CZ_%dQ.png'%(self.dataset_size,self.trainset_depth,self.n_qubits),dpi=300)
+            self._extracted_from_plot_results_28(time_steps, eval_results, train_results)
+
+    # TODO Rename this here and in `plot_results`
+    def _extracted_from_plot_results_28(self, time_steps, eval_results, train_results):
+        fig=plt.figure(figsize=(5,5))
+        fig.suptitle('1Q w CZ D5 K3 SR-off train dataset size=%d, val dataset size=%d'%(self.dataset_size,len(self.val_circ)) , fontsize=15)
+        ax=fig.add_subplot(111)
+        ax.set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
+        ax.plot(time_steps,eval_results[:,0],label='evaluation_set',marker='x')
+        ax.plot(time_steps,train_results[:,0],color='orange',label='train_set',marker='x')
+        ax.legend()
+        fig.savefig(self.plot_dir+'test_size%d_D_%d_Dep-Term_CZ_%dQ.png'%(self.dataset_size,self.trainset_depth,self.n_qubits),dpi=300)
+
+    # TODO Rename this here and in `plot_results`
+    def _extracted_from_plot_results_7(self, time_steps, eval_results, train_results):
+        fig, ax = plt.subplots(2, 2, figsize=(15, 8))
+        fig.suptitle(self.plot_1_title, fontsize=15)
+
+        plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
+        errorevery=20
+        ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4, marker='.') #use list comprehension
+        ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
+        ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4, marker='.')
+        ax[0,1].set(xlabel='timesteps/1000', ylabel='Fidelity',title='Fidelity between DM')
+        ax[1,0].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=errorevery,capsize=4, marker='.')
+        ax[1,0].set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance between DM')
+        ax[1,1].errorbar(time_steps,eval_results["bures_distance"],yerr=eval_results["bures_distance_std"],errorevery=errorevery,capsize=4, marker='.')
+        ax[1,1].set(xlabel='timesteps/1000', ylabel='Bures Distance',title='Bures distance between DM')
+
+        ax[0,0].errorbar(time_steps,train_results["reward"],yerr=train_results["reward_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
+        ax[0,1].errorbar(time_steps,train_results["fidelity"],yerr=train_results["fidelity_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
+        ax[1,0].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
+        ax[1,1].errorbar(time_steps,train_results["bures_distance"],yerr=train_results["bures_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
+        ax[0,0].legend()
+        fig.savefig(self.plot_dir+self.plot_name+'_Q%d_D%d_steps%d.png'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]),dpi=300)
+        plt.show()
             #plt.show()
         
 
@@ -243,7 +263,7 @@ class CustomCallback(BaseCallback):
     def save_best_model(self,reward):
         if reward.item() > self.best_mean_reward:
             if self.verbose:
-                print("Saving new best model at {} timesteps".format(self.num_timesteps))
-                print("Saving new best model to {}.zip".format(self.save_path))
+                print(f"Saving new best model at {self.num_timesteps} timesteps")
+                print(f"Saving new best model to {self.save_path}.zip")
             self.model.save(self.save_path+str(self.num_timesteps))
         

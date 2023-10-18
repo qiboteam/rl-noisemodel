@@ -140,7 +140,7 @@ def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatri
     reward = reward, 
     )
     for i in range(n_circ):
-        
+
         obs = environment.reset(i=i)
         done = False
         while not done:
@@ -160,19 +160,32 @@ def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatri
     fid = np.array(avg_fidelity)
     trace_d = np.array(avg_trace_distance)
     bures_d = np.array(avg_bures_distance)
-    #correction = np.array(correction)
-    results = np.array([(rew.mean(),rew.std(),
-                       fid.mean(),fid.std(),
-                       trace_d.mean(),trace_d.std(),
-                       bures_d.mean(),bures_d.std(),)],
-                       #correction.mean(axis=0))],
-                       dtype=[('reward','<f4'),('reward_std','<f4'),
-                              ('fidelity','<f4'),('fidelity_std','<f4'),
-                              ('trace_distance','<f4'),('trace_distance_std','<f4'),
-                              ('bures_distance','<f4'),('bures_distance_std','<f4')
-                              #('avg_correction', np.float64, (evaluation_circ.shape[2],evaluation_circ.shape[1],4))                                                  
-                            ])
-    return results
+    return np.array(
+        [
+            (
+                rew.mean(),
+                rew.std(),
+                fid.mean(),
+                fid.std(),
+                trace_d.mean(),
+                trace_d.std(),
+                bures_d.mean(),
+                bures_d.std(),
+            )
+        ],
+        # correction.mean(axis=0))],
+        dtype=[
+            ('reward', '<f4'),
+            ('reward_std', '<f4'),
+            ('fidelity', '<f4'),
+            ('fidelity_std', '<f4'),
+            ('trace_distance', '<f4'),
+            ('trace_distance_std', '<f4'),
+            ('bures_distance', '<f4'),
+            ('bures_distance_std', '<f4')
+            # ('avg_correction', np.float64, (evaluation_circ.shape[2],evaluation_circ.shape[1],4))
+        ],
+    )
 
 def RB_evaluation(lambda_RB,circ_representation,target_label):
     dataset_size = len(target_label)

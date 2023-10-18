@@ -1,34 +1,35 @@
 {
   "general": {
-    "dataset_length": 1000,
-    "dataset_depth": 7
+    "dataset_length": 500,
+    "dataset_depth": 15
   },
   "gym_env": {
     "kernel_size": 3,
     "step_reward": false,
     "step_r_metric": "mse",
-    "neg_reward": -0.1,
+    "neg_reward": 0.0,
     "pos_reward": 0.2,
     "action_penalty": 0.0,
-    "action_space": "Continuous"
+    "action_space": "Continuous",
+    "action_space_max_value": 0.1
   },
   "noise": {
-    "primitive_gates": ["RZ", "X","CNOT"],
+    "primitive_gates": ["RZ", "RX"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
-    "dep_lambda": 0.05,
+    "dep_lambda": 0.005,
     "p0": 0.05,
     "epsilon_x": 0.05,
     "epsilon_z": 0.1,
-    "x_coherent_on_gate": ["x"],
+    "x_coherent_on_gate": ["rx"],
     "z_coherent_on_gate": ["rz"],
-    "damping_on_gate": ["x"],
-    "depol_on_gate": ["rz","cnot"]
+    "damping_on_gate": ["rx"],
+    "depol_on_gate": ["rz"]
   },
   "policy": {
-    "save_best_model": false,
+    "save_best_model": true,
     "plot_results": true,
-    "model_name": "3Q_D10_AllNoises_LogReward_",
-    "plot_name": "IBM_Hanoi"
+    "model_name": "3Q_D15_AllNoises_LogReward_",
+    "plot_name": "Simulation_1Q_D15"
   },
   "reward": {
     "reward_type": "log"

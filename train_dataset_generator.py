@@ -6,7 +6,7 @@ from rlnoise.custom_noise import CustomNoiseModel
 
 #benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 
-benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
+benchmark_circ_path = 'src/rlnoise/data_analysis/simulation_phase/training_analysis/1Q/'
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
@@ -16,9 +16,9 @@ rep = CircuitRepresentation()
 
 
 number_of_gates_per_qubit=[15]
-qubits=3
+qubits=1
 number_of_circuits=500
-dataset_name='IBM_train'
+dataset_name='train_set'
 
 
 for i in number_of_gates_per_qubit:
@@ -33,15 +33,18 @@ for i in number_of_gates_per_qubit:
         representation = rep,
         clifford = True,
         shadows = False,
-        noise_model = None,
+        noise_model = noise_model,
         mode = 'rep',
-        backend="IBM"
+        # backend = "IBM"
     )
-    train_set=np.asarray(dataset.train_circuits)
-    #train_label=np.asarray(dataset.train_noisy_label)
-    val_set=np.asarray(dataset.val_circuits)
-    #val_label=np.asarray(dataset.val_noisy_label)
-    np.savez(f,train_set=train_set, val_set=val_set,allow_pickle=True)
+    train_set=np.array(dataset.train_circuits)
+    train_label=np.array(dataset.train_noisy_label)
+    val_set=np.array(dataset.val_circuits)
+    val_label=np.array(dataset.val_noisy_label)
+    np.savez(f,train_set=train_set, 
+             train_label=train_label, 
+             val_label=val_label, 
+             val_set=val_set, allow_pickle=True)
 
 f.close()
 

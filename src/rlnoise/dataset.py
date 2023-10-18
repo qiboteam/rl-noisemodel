@@ -276,8 +276,8 @@ class CircuitRepresentation(object):
         
         channel_list=[]
         if array[gate_to_idx(gates.RX)] == 1:
-            #gate = gates.RX(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
-            gate = gates.X(qubit) #this is for IBM hanoi
+            gate = gates.RX(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
+            # gate = gates.X(qubit) #this is for IBM hanoi
         elif array[gate_to_idx(gates.RZ)] == 1:
             gate = gates.RZ(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
         elif array[gate_to_idx(gates.CZ)] == 1 and "CNOT" not in self.primitive_gates:
