@@ -1,7 +1,7 @@
 {
   "general": {
     "dataset_length": 500,
-    "dataset_depth": 15
+    "dataset_depth": 7
   },
   "gym_env": {
     "kernel_size": 3,
@@ -11,25 +11,25 @@
     "pos_reward": 0.2,
     "action_penalty": 0.0,
     "action_space": "Continuous",
-    "action_space_max_value": 0.1
+    "action_space_max_value": 0.05
   },
   "noise": {
-    "primitive_gates": ["RZ", "RX"],
+    "primitive_gates": ["RZ", "RX", "CZ"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
     "dep_lambda": 0.005,
-    "p0": 0.05,
+    "p0": 0.08,
     "epsilon_x": 0.05,
-    "epsilon_z": 0.1,
+    "epsilon_z": 0.07,
     "x_coherent_on_gate": ["rx"],
     "z_coherent_on_gate": ["rz"],
     "damping_on_gate": ["rx"],
-    "depol_on_gate": ["rz"]
+    "depol_on_gate": ["rz", "cz"]
   },
   "policy": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "3Q_D15_AllNoises_LogReward_",
-    "plot_name": "Simulation_1Q_D15"
+    "model_name": "1Q_hardware_TII",
+    "plot_name": "Simulation"
   },
   "reward": {
     "reward_type": "log"

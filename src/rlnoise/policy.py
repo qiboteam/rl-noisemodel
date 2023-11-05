@@ -21,27 +21,21 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
             observation_space,
             features_dim,
             filter_shape,
-            n_filters = 32                 
+            n_filters = 64                 
     ):
         super().__init__(observation_space, features_dim)
         indim = observation_space.shape[0]
         sample = torch.as_tensor(observation_space.sample()[None]).float()
-        #filter_shape = (1,2)
-        conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=64, kernel_size=filter_shape) #adding pooling layer?
+        conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=n_filters, 
+                                kernel_size=filter_shape) #adding pooling layer?
         
         # Compute shape by doing one forward pass
-        with torch.no_grad():
-            #shape = torch.nn.functional.avg_pool2d(conv1(sample),kernel_size=filter_shape).shape
-            shape = conv1(sample).shape
+        # with torch.no_grad():
+        #     shape = conv1(sample).shape
             
-        #conv2 = torch.nn.Conv2d(64, 32, (max(int(shape[2]/2), 1), shape[3]))
-
         self.cnn = torch.nn.Sequential(
             conv1,
             torch.nn.ReLU(), # Relu might not be great if we have negative angles, ELU
-            #torch.nn.AvgPool2d(kernel_size=filter_shape),
-            #conv2,
-            #torch.nn.ReLU(),
             torch.nn.Flatten(1,-1),
         )
         
@@ -70,7 +64,7 @@ class CustomCallback(BaseCallback):
         trainset_depth: number of gates per qubit used in the bench dataset
 
     """
-    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=False ,test_on_data_size = None):
+    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=False ,test_on_data_size = None, result_filename=None):
         super(CustomCallback, self).__init__(verbose)
 
         policy_params  =  config['policy']
@@ -80,11 +74,9 @@ class CustomCallback(BaseCallback):
         self.plot_name = policy_params['plot_name']
         self.log_dir = f'{str(Path().parent.absolute())}/src/rlnoise/saved_models/'
         self.plot_dir = (
-            f'{str(Path().parent.absolute())}/src/rlnoise/data_analysis/plots/'
+            f'{str(Path().parent.absolute())}/src/rlnoise/'
         )
-        self.results_path = (
-            f'{str(Path().parent.absolute())}/src/rlnoise/bench_results/'
-        )
+        self.results_path = result_filename
         self.check_freq = check_freq
         self.test_on_data_size = test_on_data_size
         self.environment = train_environment
@@ -183,16 +175,17 @@ class CustomCallback(BaseCallback):
         self.eval_results = np.asarray(self.eval_results)
         self.timestep_list = np.asarray(self.timestep_list)/1000
         print('Best average results obtained on the evaluation set are:\n Reward=%f, Fidelity=%f, Trace distance=%f, Bures=%f'%(self.best_mean_reward,self.best_mean_fidelity,self.best_mean_trace_dist,self.best_mean_bures_dist))
-        if self.plot is True:
-            self.plot_results()
         
         if SAVE_TRAIN_DATA:
-            filename = 'src/rlnoise/data_analysis/simulation_phase/training_analysis/1Q/train_results'
             np.savez(
-                filename, timesteps=self.timestep_list, 
+                self.results_path, 
+                timesteps=self.timestep_list, 
                 train_results=self.train_results, 
                 val_results=self.eval_results,
                 allow_pickle = True)
+        
+        if self.plot is True:
+            self.plot_results()
         '''
         if self.test_on_data_size is not None:
             f = open(self.results_path+"test_size%d_D_%d_Dep-Term_CZ_3Q.npz"%(self.dataset_size,self.trainset_depth),"wb")

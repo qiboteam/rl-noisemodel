@@ -6,7 +6,7 @@ from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,Res
 from qibo import gates
 from qibo.models import Circuit
 
-config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+config_path = 'src/rlnoise/config.json' 
 with open(config_path) as f:
     config = json.load(f)
 
@@ -46,7 +46,7 @@ class CustomNoiseModel(object):
        
     def apply(self, circuit):
         self.check_gates_compatibility()
-        nqubits = circuit.nqubits 
+        nqubits = circuit.nqubits
         apply_noise = False
         simple_noise = NoiseModel()
         for damping_gate in self.damping_on_gate :
@@ -59,10 +59,8 @@ class CustomNoiseModel(object):
             if target_gate is not None:
                 simple_noise.add(DepolarizingError(self.lam),target_gate )
                 apply_noise=True
-        if apply_noise:
-            simple_noisy_circuit=simple_noise.apply(circuit)
-        else:
-            simple_noisy_circuit=circuit
+                
+        simple_noisy_circuit = simple_noise.apply(circuit) if apply_noise else circuit
         noisy_circuit=Circuit(nqubits, density_matrix=True)
         for gate in simple_noisy_circuit.queue:
             noisy_circuit.add(gate)
@@ -83,9 +81,9 @@ class CustomNoiseModel(object):
         return noisy_circuit
 
     def check_gates_compatibility(self):
-        primitive_gate_list=[]
-        for gate_str in self.primitive_gates:
-            primitive_gate_list.append(string_to_gate(gate_str))
+        primitive_gate_list = [
+            string_to_gate(gate_str) for gate_str in self.primitive_gates
+        ]
         primitive_gate_list.append(None)
         for epsilon_z_gate in self.z_coherent_on_gate:
             gate=string_to_gate(epsilon_z_gate)
@@ -94,13 +92,13 @@ class CustomNoiseModel(object):
         for epsilon_x_gate in self.z_coherent_on_gate:
             gate=string_to_gate(epsilon_x_gate)
             if (gate not in primitive_gate_list):
-                raise('Error: Attaching epsilon_x channel to gate not present in PrimitiveGates')                
+                raise('Error: Attaching epsilon_x channel to gate not present in PrimitiveGates')
         for damp_gate_str in self.damping_on_gate:
             damp_gate=string_to_gate(damp_gate_str)
             if (damp_gate not in primitive_gate_list):
-                raise('Error: Attaching Damping channel to gate '+ damp_gate_str +' that is not one of the primitive gate')  
+                raise f'Error: Attaching Damping channel to gate {damp_gate_str} that is not one of the primitive gate'
         for depol_gate_str in self.depol_on_gate:
             depol_gate=string_to_gate(depol_gate_str)
             if (depol_gate not in primitive_gate_list):
-                raise('Error: Attaching Depolarizing channel to gate '+ depol_gate_str +' that is not one of the primitive gate')          
+                raise f'Error: Attaching Depolarizing channel to gate {depol_gate_str} that is not one of the primitive gate'          
          

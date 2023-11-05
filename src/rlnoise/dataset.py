@@ -9,7 +9,7 @@ from rlnoise.hardware_test.classical_shadows import ClassicalShadows
 from rlnoise.hardware_test.state_tomography import StateTomography
 from rlnoise.custom_noise import string_to_gate
 
-config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
+config_path = 'src/rlnoise/config.json'
 with open(config_path) as f:
     config = json.load(f)
 
@@ -29,20 +29,19 @@ def check_nmoments(circuit: Circuit, lenght,fill=False):
         count = 0
         if i < lenght:
             for q, gate in enumerate(moment):
-                if gate is not None:
-                    if type(gate) == gates.CZ or type(gate) == gates.CNOT:
-                        if count != 0:
-                            new_circuit.add(gate)
-                        count = 1
-                    else: new_circuit.add(gate)
-                else: 
+                if gate is None: 
                     if fill == True:
                         theta = random.choice([0, 0.25, 0.5, 0.75])*2*np.pi
                         new_circuit.add(random.choice([gates.RZ(q,theta),gates.RX(q,theta)]))
+                elif type(gate) in [gates.CZ, gates.CNOT]:
+                    if count != 0:
+                        new_circuit.add(gate)
+                    count = 1
+                else: new_circuit.add(gate)
     while len(new_circuit.queue.moments) < lenght:
-        q = [random.choice([0,1,2]) for add_gate_on_n_qubits in range(random.choice([1,2,3]))]
+        q = [random.choice([0,1,2]) for _ in range(random.choice([1,2,3]))]
         theta = [random.choice([0, 0.25, 0.5, 0.75])*2*np.pi for _ in range(len(q))]
-        [new_circuit.add(random.choice([gates.RZ(q[i],theta[i]),gates.X(q[i])])) for i in range(len(q))] #IBM has RZ and X as native gates
+        [new_circuit.add(random.choice([gates.RZ(q[i],theta[i]),gates.RX(q[i],theta[i])])) for i in range(len(q))] #IBM has RZ and X as native gates
 
     return new_circuit
 
@@ -70,10 +69,7 @@ class Dataset(object):
         self.readout_mit = readout_mit
         self.backend = backend
         self.tomography=False
-        self.circuits = [
-            self.generate_random_circuit()
-            for i in range(n_circuits)
-        ]
+        self.circuits = [self.generate_random_circuit() for _ in range(n_circuits)]
         if self.noise_model is not None:
             self.noisy_circuits = [
                 self.noise_model.apply(c)
@@ -81,7 +77,7 @@ class Dataset(object):
             ]
         else: 
             self.noisy_circuits = self.circuits
-            
+
         self.circ_rep = np.asarray([
             self.rep.circuit_to_array(c)
             for c in self.circuits
@@ -107,7 +103,7 @@ class Dataset(object):
         return np.asarray(states)
 
     def get_frequencies(self, nshots=1000):
-        assert self.mode == 'circ' or self.mode == 'noisy_circ'
+        assert self.mode in ['circ', 'noisy_circ']
         freq = []
         for i in range(self.__len__()):
             c = self.__getitem__(i)
@@ -135,18 +131,21 @@ class Dataset(object):
                     elif 'theta' in params:
                         theta = random.choice([0, 0.25, 0.5, 0.75])
                         circuit.add(gate(q1,q0,theta))
-                        
-                else:
-                    if issubclass(gate, gates.ParametrizedGate):
-                        if self.clifford:
-                            theta = random.choice([0, 0.25, 0.5, 0.75])
-                        else:
-                            theta = np.random.random()
-                        theta *= 2 * np.pi
-                        circuit.add(gate(q0, theta=theta))
                     else:
-                        circuit.add(gate(q0))
+                        circuit.add(gate(q1,q0))
+                elif issubclass(gate, gates.ParametrizedGate):
+                    theta = (
+                        random.choice([0, 0.25, 0.5, 0.75])
+                        if self.clifford
+                        else np.random.random()
+                    )
+                    theta *= 2 * np.pi
+                    circuit.add(gate(q0, theta=theta))
+                else:
+                    circuit.add(gate(q0))
+        print(circuit.draw())
         circuit = check_nmoments(circuit, self.n_gates)
+        print(circuit.draw())
         #print(len(circuit.queue.moments))
         return circuit
 
@@ -175,15 +174,15 @@ class Dataset(object):
         
     def get_train_loader(self):
         ''' Returns training set circuits'''
-        return (c for c in self.train_circuits)
+        return iter(self.train_circuits)
 
     def get_val_loader(self):
         ''' Returns validation set circuits'''
-        return (c for c in self.val_circuits)
+        return iter(self.val_circuits)
 
     def get_circuits(self):
         ''' Returns all circuits'''
-        return (c for c in self.circuits)
+        return iter(self.circuits)
 
     def __len__(self):
         return len(self.circuits)
@@ -243,8 +242,8 @@ class CircuitRepresentation(object):
         gate_idx = gate_to_idx(type(gate))
         if type(gate) is gates.CNOT and qubit == gate.target_qubits[0]:
             one_hot[gate_idx] = -1
-        elif type(gate) is gates.CNOT and qubit != gate.target_qubits[0]:
-            
+        elif type(gate) is gates.CNOT:
+
             one_hot[gate_idx] = 1
         else:
             one_hot[gate_idx] = 1
@@ -313,18 +312,18 @@ class CircuitRepresentation(object):
                     if count == -1:
                         _, pending_channels = self.array_to_gate(row,qubit)
                         count=qubit        
-                        lam_0=row[gate_to_idx(gates.DepolarizingChannel)]                   
-                    elif count != -1:
-                        gate, channels = self.array_to_gate(row, qubit, count) 
+                        lam_0=row[gate_to_idx(gates.DepolarizingChannel)]
+                    else:
+                        gate, channels = self.array_to_gate(row, qubit, count)
                         lam_1=row[gate_to_idx(gates.DepolarizingChannel)]
                         c.add(gate)
-                        for channel in pending_channels[0:-1]:
+                        for channel in pending_channels[:-1]:
                             c.add(channel)
-                        for channel in channels[0:-1]:
+                        for channel in channels[:-1]:
                             c.add(channel)
                         avg_lam=(lam_0+lam_1)/2.
                         if avg_lam !=0:
-                            c.add(gates.DepolarizingChannel((count, qubit), lam=avg_lam))               
+                            c.add(gates.DepolarizingChannel((count, qubit), lam=avg_lam))
                 elif "CNOT" in self.primitive_gates and row[gate_to_idx(gates.CZ)] == -1 or row[gate_to_idx(gates.CZ)] == 1:
                     if row[gate_to_idx(gates.CZ)] == -1:
                         target = qubit
@@ -334,18 +333,18 @@ class CircuitRepresentation(object):
                     if count == -1:
                         _, pending_channels = self.array_to_gate(row,qubit)
                         count=qubit        
-                        lam_0=row[gate_to_idx(gates.DepolarizingChannel)]                   
-                    elif count != -1:
-                        gate, channels = self.array_to_gate(row, control, target) 
+                        lam_0=row[gate_to_idx(gates.DepolarizingChannel)]
+                    else:
+                        gate, channels = self.array_to_gate(row, control, target)
                         lam_1=row[gate_to_idx(gates.DepolarizingChannel)]
                         c.add(gate)
-                        for channel in pending_channels[0:-1]:
+                        for channel in pending_channels[:-1]:
                             c.add(channel)
-                        for channel in channels[0:-1]:
+                        for channel in channels[:-1]:
                             c.add(channel)
                         avg_lam=(lam_0+lam_1)/2.
                         if avg_lam !=0:
-                            c.add(gates.DepolarizingChannel((count, qubit), lam=avg_lam))  
+                            c.add(gates.DepolarizingChannel((count, qubit), lam=avg_lam))
                 else:
                     gate, channels = self.array_to_gate(row, qubit)
                     if gate is not None:
