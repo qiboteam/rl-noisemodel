@@ -13,3 +13,8 @@ The data is saved in two .npy files. Each file is an array of lists. In each lis
 
 The data saved in the files ending in 2 has been obtained using the standard compiler where each RX and X gate is transpiled to a U3 gate, and this gate is compiled with two RX90 pulses (and virtual RZs).
 In this way, we expect the noise to be different because the number of pulses changes, and it would be good to check if our model is able to learn these differences.
+
+dataset_1Q_D5_TII.npz is the train2[circuit and rho_mit]+valid2[circuit and rho_mit] unified toghether inside a structured npz array.
+so dataset_1Q_D5_TII['train_set'] == density_matrix_training2[0]
+dataset_1Q_D5_TII['train_label'] == density_matrix_training2[3] (rho_mit)
+same for 'val_set' and 'val_label'.

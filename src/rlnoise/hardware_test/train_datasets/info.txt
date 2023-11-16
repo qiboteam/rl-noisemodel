@@ -1,0 +1,9 @@
+The dataset that starts with "IBM" have as primary gates [X,RZ,CNOT]
+The connection between the CNOT are only allowed on neighbour qubits
+The dataset contain both the train and evaluation circuits array representations
+and they should be loaded as:
+
+dataset = np.load(file, allow_pickle=True)
+train_set = dataset["train_set"]
+evaluation_set = dataset["val_set"]
+

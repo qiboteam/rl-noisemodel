@@ -43,6 +43,7 @@ class QuantumCircuit(gym.Env):
     step_r_metric: str = gym_env_params['step_r_metric']
     action_penality: float = gym_env_params['action_penalty']
     action_space_type: str = gym_env_params['action_space']
+    action_space_max_value: float = gym_env_params['action_space_max_value']
     circuits: object = None
     labels: np = None
     representation: object = None
@@ -71,7 +72,8 @@ class QuantumCircuit(gym.Env):
             dtype = np.float32
         )
         if self.action_space_type == "Continuous":
-            self.action_space = spaces.Box( low=0, high=0.005, shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
+            self.action_space = spaces.Box( low=0, high=self.action_space_max_value, 
+                                           shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
 
         elif self.action_space_type == "Discrete":
             if self.noise_param_space is None:
@@ -140,14 +142,14 @@ class QuantumCircuit(gym.Env):
             for a in action[q]:
                 if a!=0:
                     reward -= self.action_penality
-                
+
         self.current_state = self.rep.make_action(action, self.current_state, position)
 
         if self.step_reward:
-            for q in range(self.n_qubits):          
-                for idx, a in enumerate(action[q]):
+            for q in range(self.n_qubits):  
+                for a in action[q]:
                     reward += self.step_reward_fun(a)
-                
+
         if position == self.circuit_lenght - 1:
             terminated = True
         else:

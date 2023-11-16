@@ -52,27 +52,24 @@ class DensityMatrixReward(Reward):
         reward_type=config['reward']['reward_type']
         if final:
             circuit_dm=np.array(circuit().state())
-            if reward_type=="log" or reward_type=="Log":
+            if reward_type in ["log", "Log"]:
                 dm_mse=alpha*self.metric(circuit_dm, target)
-                if -np.log(dm_mse) < 1000:
-                    reward=-np.log(dm_mse) 
-                else:
-                    reward=1000.
+                reward = -np.log(dm_mse) if -np.log(dm_mse) < 1000 else 1000.
             elif reward_type=="mse":
                 reward=1-alpha*self.metric(circuit_dm, target)
 
-            elif reward_type=="trace_distance" or reward_type=="trace distance":
+            elif reward_type in ["trace_distance", "trace distance"]:
                 reward=1-trace_distance(circuit_dm,target)
-                
+
             elif reward_type.lower()=="mixed":
                 reward=compute_fidelity(circuit_dm, target)*(1-5*self.metric(circuit_dm, target))*(1-trace_distance(circuit_dm, target))
-            
+
             elif reward_type.lower()=="fidelity":
                 if -np.log(compute_fidelity(circuit_dm, target)) < 1000:
                     reward=-np.log(compute_fidelity(circuit_dm, target)) 
                 else:
                     reward=1000.
-                
+
 
         else:
             reward = 0.

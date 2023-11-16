@@ -131,16 +131,16 @@ def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatri
     correction = []
     n_circ=len(evaluation_circ)
 
-    circuits=copy.deepcopy(evaluation_circ)
-    
+    circuits = copy.deepcopy(evaluation_circ)
+    labels = copy.deepcopy(evaluation_labels)
     environment = QuantumCircuit(
-    circuits = circuits,
+    circuits = copy.deepcopy(circuits),
     representation = representation,
-    labels = evaluation_labels,
+    labels = copy.deepcopy(labels),
     reward = reward, 
     )
     for i in range(n_circ):
-        
+
         obs = environment.reset(i=i)
         done = False
         while not done:
@@ -148,31 +148,44 @@ def model_evaluation(evaluation_circ,evaluation_labels,model,reward=DensityMatri
             action = action[0]          
             obs, rewards, done, info = environment.step(action)
         predicted_circ = environment.get_qibo_circuit()
-        dm_untrained = np.array(predicted_circ().state())
+        dm_untrained = predicted_circ().state()
         #print(environment.get_circuit_rep()[:,:,4:].shape)
         #correction.append(environment.get_circuit_rep()[:,:,4:])
         avg_rew.append(rewards)
-        avg_fidelity.append(compute_fidelity(evaluation_labels[i],dm_untrained))
-        avg_trace_distance.append(trace_distance(evaluation_labels[i],dm_untrained))
-        avg_bures_distance.append(bures_distance(evaluation_labels[i],dm_untrained))
+        avg_fidelity.append(compute_fidelity(labels[i],dm_untrained))
+        avg_trace_distance.append(trace_distance(labels[i],dm_untrained))
+        avg_bures_distance.append(bures_distance(labels[i],dm_untrained))
 
     rew = np.array(avg_rew)
     fid = np.array(avg_fidelity)
     trace_d = np.array(avg_trace_distance)
     bures_d = np.array(avg_bures_distance)
-    #correction = np.array(correction)
-    results = np.array([(rew.mean(),rew.std(),
-                       fid.mean(),fid.std(),
-                       trace_d.mean(),trace_d.std(),
-                       bures_d.mean(),bures_d.std(),)],
-                       #correction.mean(axis=0))],
-                       dtype=[('reward','<f4'),('reward_std','<f4'),
-                              ('fidelity','<f4'),('fidelity_std','<f4'),
-                              ('trace_distance','<f4'),('trace_distance_std','<f4'),
-                              ('bures_distance','<f4'),('bures_distance_std','<f4')
-                              #('avg_correction', np.float64, (evaluation_circ.shape[2],evaluation_circ.shape[1],4))                                                  
-                            ])
-    return results
+    return np.array(
+        [
+            (
+                rew.mean(),
+                rew.std(),
+                fid.mean(),
+                fid.std(),
+                trace_d.mean(),
+                trace_d.std(),
+                bures_d.mean(),
+                bures_d.std(),
+            )
+        ],
+        # correction.mean(axis=0))],
+        dtype=[
+            ('reward', '<f4'),
+            ('reward_std', '<f4'),
+            ('fidelity', '<f4'),
+            ('fidelity_std', '<f4'),
+            ('trace_distance', '<f4'),
+            ('trace_distance_std', '<f4'),
+            ('bures_distance', '<f4'),
+            ('bures_distance_std', '<f4')
+            # ('avg_correction', np.float64, (evaluation_circ.shape[2],evaluation_circ.shape[1],4))
+        ],
+    )
 
 def RB_evaluation(lambda_RB,circ_representation,target_label):
     dataset_size = len(target_label)
@@ -350,3 +363,10 @@ if __name__ == "__main__":
     plt.show()
     
 
+def test_avg_fidelity(rho1,rho2):
+    fidelity = []
+    for i in range(len(rho1)):
+        print(i, "fidelity: ", compute_fidelity(rho1[i],rho2[i]))
+        fidelity.append(compute_fidelity(rho1[i],rho2[i]))
+    avg_fidelity = np.array(fidelity).mean()
+    return avg_fidelity
