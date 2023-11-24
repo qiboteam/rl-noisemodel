@@ -11,8 +11,9 @@ parser.add_argument('--dataset')
 parser.add_argument('--agent')
 
 args = parser.parse_args()
-args.dataset = 'src/rlnoise/simulation_phase/RB/1Q/dataset/'
-args.agent = 'src/rlnoise/simulation_phase/1Q_training/1Q_D10_AllNoises_LogReward_452000.zip'
+nqubits = 3
+args.dataset = f'src/rlnoise/simulation_phase/RB/{nqubits}Q/dataset/'
+args.agent = f'src/rlnoise/simulation_phase/{nqubits}Q_training/3Q_D7_AllNoises_LogReward_798000.zip'
 
 assert args.dataset is not None, "Specify the path to the dataset dir."
 

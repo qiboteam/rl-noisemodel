@@ -17,7 +17,7 @@
     "primitive_gates": ["RZ", "RX", "CZ"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
     "dep_lambda": 0.005,
-    "p0": 0.08, 
+    "p0": 0.08,
     "epsilon_x": 0.05,
     "epsilon_z": 0.07,
     "x_coherent_on_gate": ["rx"],
@@ -35,5 +35,6 @@
     "reward_type": "log"
   }
 }
+
 
 

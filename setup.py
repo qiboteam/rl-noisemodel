@@ -34,9 +34,14 @@ setup(
         "matplotlib",
         "numpy",
         "gymnasium",
-        "qibo",
-        "stable_baselines3"
+        "qibo==0.1.14",
+        "stable_baselines3",
+        "tqdm",
+        "qiskit",
+        "qiskit_experiments"
+        "gym",
+        "shimmy==0.2.1"
         
     ],
-    python_requires="==3.10.9",
+    python_requires=">3.10.9",
 )

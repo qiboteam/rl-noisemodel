@@ -3,7 +3,7 @@ import numpy as np
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.custom_noise import CustomNoiseModel
 
-benchmark_circ_path = 'src/rlnoise/simulation_phase/RB/1Q/dataset/'
+benchmark_circ_path = 'src/rlnoise/simulation_phase/RB/3Q/dataset/'
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
@@ -13,7 +13,7 @@ rep = CircuitRepresentation()
 
 
 number_of_gates_per_qubit=np.arange(3,31,3)
-qubits=1
+qubits=3
 number_of_circuits=50
 dataset_name='RB_set'
 
