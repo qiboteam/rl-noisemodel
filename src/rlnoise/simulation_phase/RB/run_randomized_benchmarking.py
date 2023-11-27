@@ -11,6 +11,7 @@ parser.add_argument('--dataset')
 parser.add_argument('--agent')
 parser.add_argument('--backend', default=None)
 parser.add_argument('--platform', default=None)
+parser.add_argument('--nqubits')
 
 args = parser.parse_args()
 
@@ -19,7 +20,7 @@ if args.backend is not None:
 
     set_backend(args.backend, platform=args.platform)
 
-nqubits = 3
+nqubits = args.nqubits
 args.dataset = f'src/rlnoise/simulation_phase/RB/{nqubits}Q/dataset/'
 #args.agent = f'src/rlnoise/simulation_phase/{nqubits}Q_training/3Q_D7_AllNoises_LogReward_798000.zip'
 
