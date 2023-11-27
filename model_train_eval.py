@@ -10,7 +10,7 @@ from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation, RB_evaluation
 #IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
-dataset_path= 'src/rlnoise/hardware_test/dm_1Q_TII/'
+dataset_path= 'src/rlnoise/simulation_phase/1Q_training_new/'
 model_path = 'src/rlnoise/saved_models/'
 results_filename = f'{dataset_path}train_results'
 
@@ -18,11 +18,11 @@ config_path = 'src/rlnoise/config.json'
 
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=5
+circuits_depth=7
 nqubits=1
 n_circuit_in_dataset=500
 # dataset_name="train_set"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
-dataset_name = 'dataset_1Q_D5_TII.npz'
+dataset_name = 'train_set_new_qibo_D7_1Q_len500.npz'
 f = open(dataset_path+dataset_name,"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=copy.deepcopy(tmp['train_set'])
@@ -59,7 +59,7 @@ circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
 # clip_range=0.08,
-n_epochs=2
+# n_epochs=2
 )
 #                             #STANDARD TRAINING
 
@@ -69,7 +69,7 @@ callback=CustomCallback(check_freq=2000,
                         trainset_depth=circuits_depth, verbose=True,
                         result_filename=results_filename)                                          
 
-model.learn(300000,progress_bar=True, callback=callback)
+model.learn(100000,progress_bar=True, callback=callback)
 f.close()
 
 # TESTING A PREVIOUSLY TRAINED MODEL ON DIFFERENT DEPTHS AND COMPARING WITH RB AND WITH UNTRAINED MODEL

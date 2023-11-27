@@ -6,7 +6,7 @@ from rlnoise.custom_noise import CustomNoiseModel
 
 #benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 
-benchmark_circ_path = 'src/rlnoise/simulation_phase/3Q_training/'
+benchmark_circ_path = 'src/rlnoise/simulation_phase/1Q_training_new/'
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
@@ -16,7 +16,7 @@ rep = CircuitRepresentation()
 
 
 number_of_gates_per_qubit=[7]
-qubits=3
+qubits=1
 number_of_circuits=500
 dataset_name='train_set'
 

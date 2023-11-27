@@ -28,7 +28,7 @@
   "policy": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "1Q_D7_Simulation",
+    "model_name": "1Q_D10_AllNoises_LogReward_",
     "plot_name": "Simulation"
   },
   "reward": {
