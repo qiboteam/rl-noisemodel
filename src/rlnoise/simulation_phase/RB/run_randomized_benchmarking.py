@@ -9,8 +9,16 @@ from qibo.noise import NoiseModel, DepolarizingError
 parser = argparse.ArgumentParser(description='Runs randomized benchmarking.')
 parser.add_argument('--dataset')
 parser.add_argument('--agent')
+parser.add_argument('--backend', default=None)
+parser.add_argument('--platform', default=None)
 
 args = parser.parse_args()
+
+if args.backend is not None:
+    from qibo import set_backend
+
+    set_backend(args.backend, platform=args.platform)
+
 nqubits = 3
 args.dataset = f'src/rlnoise/simulation_phase/RB/{nqubits}Q/dataset/'
 args.agent = f'src/rlnoise/simulation_phase/{nqubits}Q_training/3Q_D7_AllNoises_LogReward_798000.zip'
