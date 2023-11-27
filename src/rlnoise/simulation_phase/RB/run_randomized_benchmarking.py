@@ -36,7 +36,7 @@ for file in os.listdir(args.dataset):
                 
 
 
-noise_model = CustomNoiseModel()
+noise_model = None if args.backend == 'qibolab' else CustomNoiseModel()
 
 depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=noise_model)
 
@@ -72,5 +72,6 @@ plt.legend(handles=patches)
 
 plt.ylabel('Survival Probability')
 plt.xlabel('Depth')
+plt.savefig('RB.pdf', format='pdf', dpi=300)
 plt.show()
 
