@@ -19,9 +19,9 @@ if args.backend is not None:
 
     set_backend(args.backend, platform=args.platform)
 
-nqubits = 3
+nqubits = 1
 args.dataset = f'src/rlnoise/simulation_phase/RB/{nqubits}Q/dataset/'
-args.agent = f'src/rlnoise/simulation_phase/{nqubits}Q_training/3Q_D7_AllNoises_LogReward_798000.zip'
+#args.agent = f'src/rlnoise/simulation_phase/{nqubits}Q_training/3Q_D7_AllNoises_LogReward_798000.zip'
 
 assert args.dataset is not None, "Specify the path to the dataset dir."
 
@@ -46,11 +46,12 @@ plt.plot(depths, model(depths), c='orange')
 
 import matplotlib.patches as mpatches
 patches = [mpatches.Patch(color='orange', label=f"True Noise, Decay: {optimal_params[1]:.2f}")]
+from qibo.backends import NumpyBackend
 
 # Build a Depolarizing toy model
 depolarizing_toy_model = NoiseModel()
 depolarizing_toy_model.add(DepolarizingError(1 - optimal_params[1]))
-_, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=depolarizing_toy_model)
+_, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=depolarizing_toy_model, backend=NumpyBackend())
 
 plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='blue')
 plt.plot(depths, model(depths), c='blue')
