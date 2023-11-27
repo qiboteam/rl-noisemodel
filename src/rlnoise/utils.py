@@ -272,7 +272,8 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
     init_state = f"{0:0{nqubits}b}"
     for depth, circs in tqdm(circ.items()):
         for c in circs:
-            c.add(gates.M(*range(nqubits)))
+            for i range(nqubits):
+                c.add(gates.M(i))
             freq = backend.execute_circuit(c, nshots=nshots).frequencies()
             if init_state not in freq:
                 probs[depth].append(0)
