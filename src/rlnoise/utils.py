@@ -275,7 +275,6 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
         for c in circs:
             for i in range(nqubits):
                 c.add(gates.M(i))
-            print(c.draw())
             freq = backend.execute_circuit(c, nshots=nshots).frequencies()
             if init_state not in freq:
                 probs[depth].append(0)

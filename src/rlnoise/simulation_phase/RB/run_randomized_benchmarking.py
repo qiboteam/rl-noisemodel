@@ -19,7 +19,7 @@ if args.backend is not None:
 
     set_backend(args.backend, platform=args.platform)
 
-nqubits = 1
+nqubits = 3
 args.dataset = f'src/rlnoise/simulation_phase/RB/{nqubits}Q/dataset/'
 #args.agent = f'src/rlnoise/simulation_phase/{nqubits}Q_training/3Q_D7_AllNoises_LogReward_798000.zip'
 
@@ -64,7 +64,7 @@ if args.agent is not None:
     # load trained agent
     agent = PPO.load(args.agent)
     agent_noise_model = RL_NoiseModel(agent, rep)
-    _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model)
+    _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model, backend=NumpyBackend())
     plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='green')
     plt.plot(depths, model(depths), c='green')
     patches.append(mpatches.Patch(color='green', label=f"RL Agent, Decay: {optimal_params[1]:.2f}"))
