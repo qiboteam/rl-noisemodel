@@ -248,8 +248,10 @@ def test_representation():
 
 from scipy.optimize import curve_fit
 from qibo import gates
+from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
 
 def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=None):
+    calibration_matrix = calibreation_matrix(args.nqubits, backend=backend, noise_model=noise_model, nshots=nshots)
     circuits = [ c.copy() for c in circuits ] 
     if backend is None:  # pragma: no cover
         from qibo.backends import GlobalBackend
@@ -275,7 +277,9 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
         for c in circs:
             for i in range(nqubits):
                 c.add(gates.M(i))
-            freq = backend.execute_circuit(c, nshots=nshots).frequencies()
+            result = apply_readout_mitigation(backend.execute_circuit(c, nshots=nshots), calibration_matrix)
+            freq = result.frequencies()
+            
             if init_state not in freq:
                 probs[depth].append(0)
             else:

@@ -41,6 +41,9 @@ noise_model = None if args.backend == 'qibolab' else CustomNoiseModel()
 
 depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=noise_model)
 
+with open('RB.json', 'w') as f:
+    json.dump({"depths": depths, "survival probs": survival_probs, "errors": err, "optimal params": optimal_params.tolist()}, f, indent=2)
+
 import matplotlib.pyplot as plt
 plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='orange')
 plt.plot(depths, model(depths), c='orange')
