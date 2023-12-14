@@ -1,9 +1,7 @@
-import os
 import copy
 import numpy as np
-from pathlib import Path
 from rlnoise.dataset import CircuitRepresentation
-from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
+from rlnoise.rewards.rewards import DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
@@ -35,8 +33,7 @@ val_label=copy.deepcopy(tmp['val_label'])
 noise_model = CustomNoiseModel()
 reward = DensityMatrixReward()
 rep = CircuitRepresentation()
-# [print(rep.rep_to_circuit(val_set[i]).draw()) for i in range(len(val_set))]
-# [print(val_set[i]) for i in range(len(val_set))]
+
 circuit_env_training = QuantumCircuit(
     circuits = train_set,
     representation = rep,

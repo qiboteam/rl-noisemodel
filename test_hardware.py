@@ -1,14 +1,9 @@
 import numpy as np
-import os
-import torch
-from configparser import ConfigParser
-import copy
 from rlnoise.dataset import CircuitRepresentation
-from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
+from rlnoise.rewards.rewards import DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
-from rlnoise.metrics import compute_fidelity
 
 rep = CircuitRepresentation()
 
@@ -52,12 +47,11 @@ policy_kwargs = dict(
         features_dim = 32,
         filter_shape = (nqubits,3),
     ),
-        #activation_fn=torch.nn.ReLU,
         net_arch=dict(pi=[32, 32], vf=[32, 32])
 )
 #model=PPO.load(model_path+"rew_each_step_D7_box")
 
-                                                #SINGLE TRAIN AND VALID
+#SINGLE TRAIN AND VALID
 
 callback=CustomCallback(check_freq=5000,evaluation_set=dataset,
                         train_environment=circuit_env_training,
