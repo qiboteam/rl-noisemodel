@@ -1,7 +1,6 @@
 import random
 import json
 import numpy as np
-from pathlib import Path
 from qibo import gates
 from qibo.models import Circuit
 from inspect import signature

@@ -251,7 +251,7 @@ from qibo import gates
 from qibo.models.error_mitigation import calibration_matrix, apply_readout_mitigation
 
 def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=None):
-    calibration_matrix = calibreation_matrix(args.nqubits, backend=backend, noise_model=noise_model, nshots=nshots)
+    calibration_matrix = calibration_matrix(args.nqubits, backend=backend, noise_model=noise_model, nshots=nshots)
     circuits = [ c.copy() for c in circuits ] 
     if backend is None:  # pragma: no cover
         from qibo.backends import GlobalBackend

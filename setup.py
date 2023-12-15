@@ -34,12 +34,12 @@ setup(
         "matplotlib",
         "numpy",
         "gymnasium",
-        "qibo==0.2.2",
+        "qibo==0.2.3",
         "stable_baselines3",
         "tqdm",
         "rich",
         "qiskit",
-        "qiskit_experiments"
+        "qiskit_experiments",
         "gym",
         "shimmy==0.2.1"
         
