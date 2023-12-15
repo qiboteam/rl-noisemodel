@@ -3,8 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-SMALL_SIZE = 15
-MEDIUM_SIZE = 18
+qubits = 1
+
+SMALL_SIZE = 18
+MEDIUM_SIZE = 22
 BIGGER_SIZE = 20
 
 plt.rc('font', size=BIGGER_SIZE)          # controls default text sizes
@@ -17,7 +19,12 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 depths=np.arange(3,31,3)
 
-with open('src/rlnoise/simulation_phase/RB/1Q/results/comparison2_results_1Q.npz',"rb") as f:
+if qubits == 1:
+    filepath = 'src/rlnoise/simulation_phase/RB/1Q/results/comparison2_results_1Q.npz'
+else:
+    filepath = 'src/rlnoise/simulation_phase/RB/3Q/results/comparison_results_3Q.npz'
+
+with open(filepath,"rb") as f:
     tmp=np.load(f,allow_pickle=True)
     results_train=tmp['trained'].reshape(-1)
     results_rb = tmp['RB'].reshape(-1)
@@ -37,16 +44,15 @@ trace_distance = {'model': np.array([results_train[i][4] for i in range(len(resu
                   'no_noise_std': np.array([results_rb[i][9] for i in range(len(results_rb))])
                   }
 
-bures_distance = {'model': np.array([results_train[i][5] for i in range(len(results_train))]),
-                  'RB': np.array([results_rb[i][4] for i in range(len(results_rb))]),
-                  'std_model': np.array([results_train[i][6] for i in range(len(results_train))]),
-                  'std_RB': np.array([results_rb[i][5] for i in range(len(results_rb))]),
-                  'no_noise': np.array([results_rb[i][10] for i in range(len(results_rb))]),
-                  'no_noise_std': np.array([results_rb[i][11] for i in range(len(results_rb))])
-                  }
+# bures_distance = {'model': np.array([results_train[i][5] for i in range(len(results_train))]),
+#                   'RB': np.array([results_rb[i][4] for i in range(len(results_rb))]),
+#                   'std_model': np.array([results_train[i][6] for i in range(len(results_train))]),
+#                   'std_RB': np.array([results_rb[i][5] for i in range(len(results_rb))]),
+#                   'no_noise': np.array([results_rb[i][10] for i in range(len(results_rb))]),
+#                   'no_noise_std': np.array([results_rb[i][11] for i in range(len(results_rb))])
+#                   }
 
-fig=plt.figure()
-# fig.suptitle('Train D=10,Val D= np.arange(3,31,3), len=50, Q=1, K=3, Coherent(e_z=0.1,e_x=0.05),Std_noise(lam=0.05,p0=0.05) ', fontsize=15)
+fig=plt.figure(figsize=(16, 9))
 ax=fig.add_subplot(111)
 # ax1=fig.add_subplot(132)
 # ax2=fig.add_subplot(133)
@@ -57,6 +63,8 @@ ax.fill_between(depths,fidelity['RB']-fidelity['std_RB'],fidelity['RB']+fidelity
 ax.plot(depths,fidelity['no_noise'],marker='.',label='w/o adding noise',color='green')
 ax.fill_between(depths,fidelity['no_noise']-fidelity['no_noise_std'],fidelity['no_noise']+fidelity['no_noise_std'],alpha=0.2,color='green')
 ax.legend()
+ax.set(xlabel='Circuit Depth', ylabel='Fidelity', xticks=depths)
+
 # ax1.plot(depths,bures_distance['model'],marker='.',label='RL-Model',color='orange')
 # ax1.fill_between(depths,bures_distance['model']-bures_distance['std_model'],bures_distance['model']+bures_distance['std_model'],alpha=0.2,color='orange')
 # ax1.plot(depths,bures_distance['RB'],marker='.',label='RB')
@@ -73,7 +81,6 @@ ax.legend()
 # ax2.fill_between(depths,trace_distance['no_noise']-trace_distance['no_noise_std'],trace_distance['no_noise']+trace_distance['no_noise_std'],alpha=0.2,color='green')
 # ax2.legend()
 # ax.set_ylim(0.8,1.1)
-ax.set(xlabel='Circuit Depth', ylabel='Fidelity',xticks=depths,title="RL model benchmarking")
 # ax1.set(xlabel='Circuit Depth', ylabel='Bures distance',title='RL model benchmarking',xticks=depths)
 # ax2.set(xlabel='Circuit Depth', ylabel='Trace distance',xticks=depths)
 
@@ -85,11 +92,8 @@ ax.set(xlabel='Circuit Depth', ylabel='Fidelity',xticks=depths,title="RL model b
 # ax2.errorbar(depths,bures_distance['RB'],yerr=bures_distance['std_RB'],marker='x',label='RB',capsize=4)
 # ax2.errorbar(depths,bures_distance['no_noise'],yerr=bures_distance['no_noise_std'],marker='x',label='w/o adding noise',capsize=4,color='green')
 # ax2.set(xlabel='Circuit Depth', ylabel='Bures Distance',title='Average Bures distance between DM',xticks=depths)
-
+plt.savefig(f"{qubits}Q_rb.png", )
 plt.show()
-
-
-
 
 # PLOTTING TRAINING RESULTS FOR DIFFERENT DATASET SIZE
 
