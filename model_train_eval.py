@@ -20,7 +20,7 @@ circuits_depth=7
 nqubits=1
 n_circuit_in_dataset=500
 # dataset_name="train_set"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
-dataset_name = 'train_set_new_qibo_D7_1Q_len500.npz'
+dataset_name = 'train_set_D7_1Q_len500.npz'
 f = open(dataset_path+dataset_name,"rb")
 tmp=np.load(f,allow_pickle=True)
 train_set=copy.deepcopy(tmp['train_set'])
@@ -74,7 +74,7 @@ f.close()
 # results_list_untrained=[]
 # results_list_trained = []
 # result_RB_list = []
-# model_trained = PPO.load(f"{model_path}1Q_D10_AllNoises_LogReward_452000.zip")
+# model_trained = PPO.load("src/rlnoise/simulation_phase/1Q_training_new/1Q_D7_Simulation546000.zip")
 
 # nqubits=1
 # n_circuit_in_dataset=50

@@ -35,7 +35,7 @@ setup(
         "numpy",
         "gymnasium",
         "qibo==0.2.3",
-        "stable_baselines3",
+        "stable_baselines3==2.0.0",
         "tqdm",
         "rich",
         "qiskit",

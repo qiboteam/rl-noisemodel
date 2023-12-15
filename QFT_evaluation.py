@@ -103,11 +103,9 @@ policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
-# clip_range=0.08,
-# n_epochs=2
 )
-
-agent = model.load("src/rlnoise/simulation_phase/3Q_training_new/3Q_D7_Simulation296000.zip")
+print('MODEL')
+agent = model.load("src/rlnoise/simulation_phase/3Q_training/3Q_D7_AllNoises_LogReward_798000.zip")
 rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation = rep)
 
 rl_noisy_circuit = rl_noise_model.apply(deepcopy(final_circuit))
