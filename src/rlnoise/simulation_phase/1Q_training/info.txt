@@ -1,7 +1,0 @@
-In this folder there everything that regards the model training on 1Q circuits:
-
-- config.json contains the info about the noise model used and primary gates
-- train_set.npz is the dataset used for training and evaluating the model
-- train_results.npz contains the metric evaluated at each step of the training
-- the plot refers to the above metrics
-- the .zip file is the saved best model
