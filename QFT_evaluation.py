@@ -60,7 +60,7 @@ for gate in queue:
 print("TRANSPILED CIRCUIT")
 print(final_circuit.draw())
 
-noise_model = CustomNoiseModel(args.config)
+noise_model = CustomNoiseModel(config_file=args.config)
 noisy_circuit = noise_model.apply(deepcopy(final_circuit))
 print("NOISY CIRCUIT")
 print(noisy_circuit.draw())

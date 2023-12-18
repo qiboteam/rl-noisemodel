@@ -44,7 +44,7 @@ class CustomNoiseModel(object):
     damping_on_gate: List = None
     depol_on_gate: List = None
 
-    def __postinit__(self):
+    def __post_init__(self):
         with open(self.config_file) as f:
             self.noise_params = json.load(f)['noise']
         self.primitive_gates = self.noise_params['primitive_gates']
