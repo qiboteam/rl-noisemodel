@@ -11,28 +11,29 @@
     "pos_reward": 0.2,
     "action_penalty": 0.0,
     "action_space": "Continuous",
-    "action_space_max_value": 0.15
+    "action_space_max_value": 0.1
   },
   "noise": {
-      "primitive_gates": ["RZ", "RX", "CZ"],
-      "channels": ["DepolarizingChannel", "ResetChannel"],
-      "dep_lambda": 0.02,
-      "p0": 0.08, 
-      "epsilon_x": 0.1,
-      "epsilon_z": 0.07,
-      "x_coherent_on_gate": ["rx"],
-      "z_coherent_on_gate": ["rz"],
-      "damping_on_gate": ["rx", "cz"],
-      "depol_on_gate": ["rz", "cz"]
+    "primitive_gates": ["RZ", "RX", "CZ"],
+    "channels": ["DepolarizingChannel", "ResetChannel"],
+    "dep_lambda": 0.02,
+    "p0": 0.08, 
+    "epsilon_x": 0.1,
+    "epsilon_z": 0.07,
+    "x_coherent_on_gate": ["rx"],
+    "z_coherent_on_gate": ["rz"],
+    "damping_on_gate": ["rx", "cz"],
+    "depol_on_gate": ["rz", "cz"]
   },
   "policy": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "1Q_D7_Simulation",
+    "model_name": "3Q_D7_Simulation",
     "plot_name": "Simulation"
   },
   "reward": {
     "reward_type": "log"
   }
 }
+
 

@@ -64,7 +64,7 @@ class CustomCallback(BaseCallback):
         trainset_depth: number of gates per qubit used in the bench dataset
 
     """
-    def __init__(self, check_freq,  evaluation_set,train_environment,trainset_depth, verbose=False ,test_on_data_size = None, result_filename=None):
+    def __init__(self, check_freq, evaluation_set, train_environment, trainset_depth, verbose=False ,test_on_data_size = None, result_filename=None):
         super(CustomCallback, self).__init__(verbose)
 
         policy_params  =  config['policy']
@@ -74,7 +74,7 @@ class CustomCallback(BaseCallback):
         self.plot_name = policy_params['plot_name']
         self.log_dir = f'{str(Path().parent.absolute())}/src/rlnoise/saved_models/'
         self.plot_dir = (
-            f'{str(Path().parent.absolute())}/src/rlnoise/'
+            f'{str(Path().parent.absolute())}/src/'
         )
         self.results_path = result_filename
         self.check_freq = check_freq

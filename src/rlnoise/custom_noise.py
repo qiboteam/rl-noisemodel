@@ -6,11 +6,11 @@ from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,Res
 from qibo import gates
 from qibo.models import Circuit
 
-config_path = 'src/rlnoise/config.json' 
-with open(config_path) as f:
-    config = json.load(f)
+# config_path = 'src/rlnoise/config.json' 
+# with open(config_path) as f:
+#     config = json.load(f)
 
-noise_params = config['noise']
+# self.noise_params = config['noise']
 
 def string_to_gate(gate_string):   
     gate_str_low=gate_string.lower()
@@ -33,15 +33,29 @@ def string_to_gate(gate_string):
 
 @dataclass
 class CustomNoiseModel(object):
-    primitive_gates: List = field(default_factory=lambda: noise_params['primitive_gates'])
-    lam: float = noise_params['dep_lambda']
-    p0: float = noise_params['p0']
-    epsilon_x: float = noise_params['epsilon_x']
-    epsilon_z: float = noise_params['epsilon_z']
-    x_coherent_on_gate: List = field(default_factory=lambda: noise_params['x_coherent_on_gate'])
-    z_coherent_on_gate: List = field(default_factory=lambda: noise_params['z_coherent_on_gate'])
-    damping_on_gate: List = field(default_factory=lambda: noise_params['damping_on_gate'])
-    depol_on_gate: List = field(default_factory=lambda: noise_params['depol_on_gate'])
+    config_file: str
+    primitive_gates: List = None
+    lam: float = None
+    p0: float = None
+    epsilon_x: float = None
+    epsilon_z: float = None
+    x_coherent_on_gate: List = None
+    z_coherent_on_gate: List = None
+    damping_on_gate: List = None
+    depol_on_gate: List = None
+
+    def __postinit__(self):
+        with open(self.config_file) as f:
+            self.noise_params = json.load(f)['noise']
+        self.primitive_gates = self.noise_params['primitive_gates']
+        self.lam = self.noise_params['dep_lambda']
+        self.p0 = self.noise_params['p0']
+        self.epsilon_x = self.noise_params['epsilon_x']
+        self.epsilon_z = self.noise_params['epsilon_z']
+        self.x_coherent_on_gate = self.noise_params['x_coherent_on_gate']
+        self.z_coherent_on_gate = self.noise_params['z_coherent_on_gate']
+        self.damping_on_gate = self.noise_params['damping_on_gate']
+        self.depol_on_gate = self.noise_params['depol_on_gate']
         
        
     def apply(self, circuit):
@@ -69,14 +83,14 @@ class CustomNoiseModel(object):
                     if type(gate) == string_to_gate(x_coherent_on_gate):   
                         qubit=gate.qubits[0]                    
                         theta=self.epsilon_x*gate.init_kwargs['theta']
-                        #print('Real theta %f, epsilon_x %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.noise_params["x"],theta))
+                        #print('Real theta %f, epsilon_x %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.self.noise_params["x"],theta))
                         noisy_circuit.add(gates.RX(q=qubit, theta=theta))
             if self.z_coherent_on_gate is not None:
                 for z_coherent_on_gate in self.z_coherent_on_gate:
                     if type(gate) == string_to_gate(z_coherent_on_gate):
                         qubit=gate.qubits[0]
                         theta=self.epsilon_z*gate.init_kwargs['theta']
-                        #print('Real theta %f, epsilon_z %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.noise_params["z"],theta))
+                        #print('Real theta %f, epsilon_z %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.self.noise_params["z"],theta))
                         noisy_circuit.add(gates.RZ(q=qubit, theta=theta))
         return noisy_circuit
 

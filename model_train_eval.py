@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import argparse
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards.rewards import DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
@@ -7,30 +8,32 @@ from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.utils import model_evaluation, RB_evaluation
-#IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
-dataset_path= 'src/rlnoise/simulation_phase/1Q_training_new/'
-model_path = 'src/rlnoise/saved_models/'
-results_filename = f'{dataset_path}train_results'
 
-config_path = 'src/rlnoise/config.json'
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', type=str)
+parser.add_argument('--dataset', type=str)
+parser.add_argument('--output', type=str)
+args = parser.parse_args()
+
+#IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
+model_path = 'src/rlnoise/saved_models/'
+results_filename = f'{args.output}/train_results'
+
 
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=7
-nqubits=1
-n_circuit_in_dataset=500
-# dataset_name="train_set"+"_D%d_%dQ_len%d.npz"%(circuits_depth,nqubits,n_circuit_in_dataset)
-dataset_name = 'train_set_D7_1Q_len500.npz'
-f = open(dataset_path+dataset_name,"rb")
-tmp=np.load(f,allow_pickle=True)
-train_set=copy.deepcopy(tmp['train_set'])
-train_label=copy.deepcopy(tmp['train_label'])
-val_set=copy.deepcopy(tmp['val_set'])
-val_label=copy.deepcopy(tmp['val_label'])
+tmp = np.load(args.dataset, allow_pickle=True)
+train_set = copy.deepcopy(tmp['train_set'])
+train_label = copy.deepcopy(tmp['train_label'])
+val_set = copy.deepcopy(tmp['val_set'])
+val_label = copy.deepcopy(tmp['val_label'])
 
+n_circuit_in_dataset = train_set.shape[0] + val_set.shape[0]
+nqubits = train_set.shape[2]
+circuits_depth = train_set.shape[1]
 #Setting up training env and policy model
 
-noise_model = CustomNoiseModel()
+noise_model = CustomNoiseModel(args.config)
 reward = DensityMatrixReward()
 rep = CircuitRepresentation()
 
@@ -60,14 +63,13 @@ verbose=0,
 )
 #                             #STANDARD TRAINING
 
-callback=CustomCallback(check_freq=2000,
+callback=CustomCallback(check_freq=1000,
                         evaluation_set=tmp,
                         train_environment=circuit_env_training,
                         trainset_depth=circuits_depth, verbose=True,
                         result_filename=results_filename)                                          
 
-model.learn(100000,progress_bar=True, callback=callback)
-f.close()
+model.learn(150000,progress_bar=True, callback=callback)
 
 # TESTING A PREVIOUSLY TRAINED MODEL ON DIFFERENT DEPTHS AND COMPARING WITH RB AND WITH UNTRAINED MODEL
 
