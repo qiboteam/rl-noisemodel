@@ -63,13 +63,13 @@ verbose=0,
 )
 #                             #STANDARD TRAINING
 
-callback=CustomCallback(check_freq=1000,
+callback=CustomCallback(check_freq=250,
                         evaluation_set=tmp,
                         train_environment=circuit_env_training,
                         trainset_depth=circuits_depth, verbose=True,
                         result_filename=results_filename)                                          
 
-model.learn(150000,progress_bar=True, callback=callback)
+model.learn(total_timesteps=150000, progress_bar=True, callback=callback)
 
 # TESTING A PREVIOUSLY TRAINED MODEL ON DIFFERENT DEPTHS AND COMPARING WITH RB AND WITH UNTRAINED MODEL
 
