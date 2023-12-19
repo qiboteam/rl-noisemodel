@@ -11,6 +11,7 @@ from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards.rewards import DensityMatrixReward
 from rlnoise.gym_env import QuantumCircuit
+from qibo.transpiler.unroller import Unroller, NativeGates
 from rlnoise.metrics import trace_distance,bures_distance,compute_fidelity
 
 config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
@@ -376,3 +377,39 @@ def test_avg_fidelity(rho1,rho2):
         fidelity.append(compute_fidelity(rho1[i],rho2[i]))
     avg_fidelity = np.array(fidelity).mean()
     return avg_fidelity
+
+def u3_dec(gate):
+    # t, p, l = gate.parameters
+    params = gate.parameters
+    t = params[0]
+    p = params[1]
+    l = params[2]
+    #print("parameters", params)
+    decomposition = []
+    if l != 0.0:
+        decomposition.append(gates.RZ(gate.qubits[0], l))
+    decomposition.append(gates.RX(gate.qubits[0], np.pi/2, 0))
+    if t != -np.pi:
+        decomposition.append(gates.RZ(gate.qubits[0], t + np.pi))
+    decomposition.append(gates.RX(gate.qubits[0], np.pi/2, 0))
+    if p != -np.pi:
+        decomposition.append(gates.RZ(gate.qubits[0], p + np.pi))
+    return decomposition
+
+def unroll_circuit(circuit):
+    natives = NativeGates.U3 | NativeGates.CZ
+    unroller = Unroller(native_gates = natives)
+
+    unrolled_circuit = unroller(circuit)
+    queue = unrolled_circuit.queue
+    final_circuit = Circuit(circuit.nqubits)
+    for gate in queue:
+        if isinstance(gate, gates.CZ):
+            final_circuit.add(gate)
+        elif isinstance(gate, gates.RZ):
+            final_circuit.add(gate)
+        elif isinstance(gate, gates.U3):
+            decomposed = u3_dec(gate)
+            for decomposed_gate in decomposed:
+                final_circuit.add(decomposed_gate)
+    return final_circuit
