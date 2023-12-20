@@ -35,6 +35,7 @@ def main(**args):
     qft_circuit = unroll_circuit(QFT(nqubits, with_swaps=False))
     #ADD NOISE TO QFT &/or gaussian_circuit (to add also on gaussian we need to unroll it!)
     wiener_circuit = gaussian_circuit + qft_circuit
+    print(wiener_circuit.draw())
     check_single_cz(wiener_circuit)
     # plot gaussian
     # plot_gaussian_hist(nqubits)
