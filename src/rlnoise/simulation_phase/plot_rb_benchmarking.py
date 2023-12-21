@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-qubits = 1
+qubits = 3
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -21,7 +21,7 @@ depths=np.arange(3,31,3)
 if qubits == 1:
     filepath = 'src/rlnoise/simulation_phase/RB/1Q/results/comparison2_results_1Q.npz'
 else:
-    filepath = 'src/rlnoise/simulation_phase/RB/3Q/results/comparison_results_3Q.npz'
+    filepath = 'src/rlnoise/simulation_phase/RB/3Q/results/3q.npz'
 
 with open(filepath,"rb") as f:
     tmp=np.load(f,allow_pickle=True)
