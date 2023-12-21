@@ -56,10 +56,9 @@ policy_kwargs = dict(
 model= PPO(
 policy,
 circuit_env_training,
-policy_kwargs=policy_kwargs, 
+policy_kwargs=policy_kwargs,
 verbose=0,
-# clip_range=0.08,
-# n_epochs=2
+n_steps=256,
 )
 #                             #STANDARD TRAINING
 
@@ -69,7 +68,7 @@ callback=CustomCallback(check_freq=250,
                         trainset_depth=circuits_depth, verbose=True,
                         result_filename=results_filename)                                          
 
-model.learn(total_timesteps=150000, progress_bar=True, callback=callback)
+model.learn(total_timesteps=100000, progress_bar=True, callback=callback)
 
 # TESTING A PREVIOUSLY TRAINED MODEL ON DIFFERENT DEPTHS AND COMPARING WITH RB AND WITH UNTRAINED MODEL
 

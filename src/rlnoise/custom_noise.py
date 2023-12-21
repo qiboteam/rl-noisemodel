@@ -6,12 +6,6 @@ from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,Res
 from qibo import gates
 from qibo.models import Circuit
 
-# config_path = 'src/rlnoise/config.json' 
-# with open(config_path) as f:
-#     config = json.load(f)
-
-# self.noise_params = config['noise']
-
 def string_to_gate(gate_string):   
     gate_str_low=gate_string.lower()
     if gate_str_low == 'none':

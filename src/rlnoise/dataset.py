@@ -8,9 +8,6 @@ from rlnoise.hardware_test.classical_shadows import ClassicalShadows
 from rlnoise.hardware_test.state_tomography import StateTomography
 from rlnoise.custom_noise import string_to_gate
 
-config_path = 'src/rlnoise/config.json'
-with open(config_path) as f:
-    config = json.load(f)
 
 def check_nmoments(circuit: Circuit, lenght,fill=False):
     '''
@@ -229,7 +226,9 @@ class CircuitRepresentation(object):
     """
     Object for mapping qibo circuits to numpy array representation and vice versa.
     """  
-    def __init__(self):
+    def __init__(self, config_file: str = None):
+        with open(config_file) as f:
+            config = json.load(f)
         self.encoding_dim = 8
         self.primitive_gates = config['noise']['primitive_gates']
 

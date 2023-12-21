@@ -8,8 +8,8 @@ benchmark_circ_path = 'src/rlnoise/simulation_phase/RB/3Q/dataset/'
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
 
-noise_model = CustomNoiseModel()
-rep = CircuitRepresentation()
+noise_model = CustomNoiseModel(config_file="src/rlnoise/simulation_phase/3Q_training_new/config.json")
+rep = CircuitRepresentation(config_file="src/rlnoise/simulation_phase/3Q_training_new/config.json")
 
 
 number_of_gates_per_qubit=np.arange(3,31,3)
