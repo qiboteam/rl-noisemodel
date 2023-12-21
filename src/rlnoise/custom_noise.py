@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import List
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,ResetError
 from qibo import gates
 from qibo.models import Circuit

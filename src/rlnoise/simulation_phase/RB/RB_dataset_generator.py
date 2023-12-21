@@ -1,15 +1,21 @@
 import os
 import numpy as np
+import argparse
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.custom_noise import CustomNoiseModel
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--out', type=str)
+parser.add_argument('--nqubits', type=int, default=3)
+args = parser.parse_args()
 
 benchmark_circ_path = 'src/rlnoise/simulation_phase/RB/3Q/dataset/'
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
 
-noise_model = CustomNoiseModel(config_file="src/rlnoise/simulation_phase/3Q_training_new/config.json")
-rep = CircuitRepresentation(config_file="src/rlnoise/simulation_phase/3Q_training_new/config.json")
+noise_model = CustomNoiseModel()
+rep = CircuitRepresentation()
 
 
 number_of_gates_per_qubit=np.arange(3,31,3)

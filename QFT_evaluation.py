@@ -7,7 +7,7 @@ from rlnoise.policy import CNNFeaturesExtractor
 from rlnoise.rewards.rewards import DensityMatrixReward
 from rlnoise.hardware_test import classical_shadows
 from rlnoise.metrics import compute_fidelity
-from rlnoise.utils import RL_NoiseModel
+from rlnoise.utils import RL_NoiseModel, unroll_circuit
 from stable_baselines3 import PPO
 from rlnoise.gym_env import QuantumCircuit
 import matplotlib.pyplot as plt
@@ -21,41 +21,11 @@ parser.add_argument('--model', type=str)
 parser.add_argument('--dataset', type=str)  
 args = parser.parse_args()
 
-def u3_dec(gate):
-    # t, p, l = gate.parameters
-    params = gate.parameters
-    t = params[0]
-    p = params[1]
-    l = params[2]
-    #print("parameters", params)
-    decomposition = []
-    if l != 0.0:
-        decomposition.append(gates.RZ(gate.qubits[0], l))
-    decomposition.append(gates.RX(gate.qubits[0], np.pi/2, 0))
-    if t != -np.pi:
-        decomposition.append(gates.RZ(gate.qubits[0], t + np.pi))
-    decomposition.append(gates.RX(gate.qubits[0], np.pi/2, 0))
-    if p != -np.pi:
-        decomposition.append(gates.RZ(gate.qubits[0], p + np.pi))
-    return decomposition
+
 
 
 circuit = QFT(3, with_swaps=False)
-natives = NativeGates.U3 | NativeGates.CZ
-unroller = Unroller(native_gates = natives)
-
-unrolled_circuit = unroller(circuit)
-queue = unrolled_circuit.queue
-final_circuit = Circuit(3)
-for gate in queue:
-    if isinstance(gate, gates.CZ):
-        final_circuit.add(gate)
-    elif isinstance(gate, gates.RZ):
-        final_circuit.add(gate)
-    elif isinstance(gate, gates.U3):
-        decomposed = u3_dec(gate)
-        for decomposed_gate in decomposed:
-            final_circuit.add(decomposed_gate)
+final_circuit = unroll_circuit(circuit)
 
 print("TRANSPILED CIRCUIT")
 print(final_circuit.draw())
