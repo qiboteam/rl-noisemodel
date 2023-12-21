@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-qubits = 1
+qubits = 3
 steps = 150
 
 SMALL_SIZE = 22
@@ -46,7 +46,7 @@ ax.fill_between(time_steps, train_fidelity - train_fidelity_std,
 ax.fill_between(time_steps, eval_fidelity - eval_fidelity_std, 
                    eval_fidelity + eval_fidelity_std, alpha=0.2, color='#0bb4ff')
 ax.set(xlabel='Episodes/1000', ylabel='Fidelity')
-ax.legend(['train_set', 'test_set'],loc='lower right')
+ax.legend(['Train Set', 'Test Set'],loc='lower right')
 
 # fig, ax = plt.subplots(1, 2, figsize=(15, 8))
 # fig.suptitle('1 qubit', fontsize=15)

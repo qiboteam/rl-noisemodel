@@ -1,6 +1,8 @@
 import argparse, os, json
 import numpy as np
-from rlnoise.utils import randomized_benchmarking
+from stable_baselines3 import PPO
+from rlnoise.simulation_phase.RB.Utils_RB import randomized_benchmarking
+from rlnoise.utils import RL_NoiseModel
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.custom_noise import CustomNoiseModel
 from qibo.noise import NoiseModel, DepolarizingError
@@ -12,21 +14,16 @@ parser.add_argument('--agent')
 parser.add_argument('--backend', default=None)
 parser.add_argument('--platform', default=None)
 parser.add_argument('--nqubits')
+parser.add_argument('--config')
 
 args = parser.parse_args()
 
 if args.backend is not None:
     from qibo import set_backend
-
     set_backend(args.backend, platform=args.platform)
 
 nqubits = args.nqubits
-args.dataset = f'src/rlnoise/simulation_phase/RB/{nqubits}Q/dataset/'
-#args.agent = f'src/rlnoise/simulation_phase/{nqubits}Q_training/3Q_D7_AllNoises_LogReward_798000.zip'
-
-assert args.dataset is not None, "Specify the path to the dataset dir."
-
-rep = CircuitRepresentation()
+rep = CircuitRepresentation(args.config)
 
 circuits = []
 for file in os.listdir(args.dataset):
@@ -34,10 +31,8 @@ for file in os.listdir(args.dataset):
         with open(f"{args.dataset}/{file}", 'rb') as f:
             for c in np.load(f, allow_pickle=True)['clean_rep']:
                 circuits.append(rep.rep_to_circuit(c))
-                
 
-
-noise_model = None if args.backend == 'qibolab' else CustomNoiseModel()
+noise_model = None if args.backend == 'qibolab' else CustomNoiseModel(args.config)
 
 depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=noise_model)
 
@@ -62,10 +57,6 @@ plt.plot(depths, model(depths), c='blue')
 patches.append(mpatches.Patch(color='blue', label=f"Depolarizing toy model, Decay: {optimal_params[1]:.2f}"))
 
 if args.agent is not None:
-    from rlnoise.utils import RL_NoiseModel
-    from stable_baselines3 import PPO
-    
-    # load trained agent
     agent = PPO.load(args.agent)
     agent_noise_model = RL_NoiseModel(agent, rep)
     _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model, backend=NumpyBackend())

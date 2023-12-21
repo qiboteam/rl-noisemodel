@@ -2,7 +2,7 @@ import sys
 sys.path.append('../rewards/')
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]=""
-from rlnoise.rewards.rewards import FrequencyReward,DensityMatrixReward
+from rlnoise.rewards import FrequencyReward,DensityMatrixReward
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.policy import CNNFeaturesExtractor
 import numpy as np

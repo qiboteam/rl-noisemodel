@@ -10,8 +10,7 @@ from rlnoise.utils import model_evaluation
 
 SAVE_TRAIN_DATA = True
 
-config_path = f'{str(Path().parent.absolute())}/src/rlnoise/config.json'
-with open(config_path) as f:
+with open("config.json") as f:
     config = json.load(f)
 
 class CNNFeaturesExtractor(BaseFeaturesExtractor):

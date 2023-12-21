@@ -2,7 +2,7 @@ import copy
 import numpy as np
 import argparse
 from rlnoise.dataset import CircuitRepresentation
-from rlnoise.rewards.rewards import DensityMatrixReward
+from rlnoise.rewards import DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
@@ -18,8 +18,6 @@ args = parser.parse_args()
 #IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
 model_path = 'src/rlnoise/saved_models/'
 results_filename = f'{args.output}/train_results'
-
-
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 tmp = np.load(args.dataset, allow_pickle=True)

@@ -1,12 +1,12 @@
 import json
+import os
 import numpy as np
 from pathlib import Path
 from abc import ABC, abstractmethod
 from qibo import gates
 from rlnoise.metrics import trace_distance,compute_fidelity
 
-config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
-with open(config_path) as f:
+with open("config.json") as f:
     config = json.load(f)
 
 class Reward(ABC):

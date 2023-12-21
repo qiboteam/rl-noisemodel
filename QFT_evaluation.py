@@ -4,7 +4,7 @@ from copy import deepcopy
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.policy import CNNFeaturesExtractor
-from rlnoise.rewards.rewards import DensityMatrixReward
+from rlnoise.rewards import DensityMatrixReward
 from rlnoise.hardware_test import classical_shadows
 from rlnoise.metrics import compute_fidelity
 from rlnoise.utils import RL_NoiseModel, unroll_circuit

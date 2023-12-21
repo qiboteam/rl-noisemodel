@@ -226,7 +226,7 @@ class CircuitRepresentation(object):
     """
     Object for mapping qibo circuits to numpy array representation and vice versa.
     """  
-    def __init__(self, config_file: str = None):
+    def __init__(self, config_file = "config.json"):
         with open(config_file) as f:
             config = json.load(f)
         self.encoding_dim = 8

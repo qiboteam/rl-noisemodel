@@ -2,15 +2,12 @@ import numpy as np
 import copy
 import json
 from dataclasses import dataclass
-from pathlib import Path
 import gym, random
 from gym import spaces
 from qibo import gates
 from qibo.quantum_info import trace_distance
 
-
-config_path=str(Path().parent.absolute())+'/src/rlnoise/config.json'
-with open(config_path) as f:
+with open("config.json") as f:
     config = json.load(f)
 
 gym_env_params = config['gym_env']
@@ -53,15 +50,12 @@ class QuantumCircuit(gym.Env):
         super().__init__()
         assert self.kernel_size % 2 == 1, "Kernel_size must be odd"
         self.position = None
-        #self.circuits = circuits
         self.n_circ = len(self.circuits)
         self.n_qubits = self.circuits[0].shape[1]
         self.circuit_lenght = None
         self.rep = self.representation
         self.actual_mse = None
         self.previous_mse = None
-        #self.labels = self.labels
-        #self.reward = reward
         self.encoding_dim = 8
         self.action = None
         self.state_after_act = None
