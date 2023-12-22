@@ -286,6 +286,7 @@ def u3_dec(gate):
     return decomposition
 
 def unroll_circuit(circuit):
+    from qibo.transpiler.unitary_decompositions import u3_decomposition
     natives = NativeGates.U3 | NativeGates.CZ
     unroller = Unroller(native_gates = natives)
     optimizer = Rearrange()
@@ -300,6 +301,12 @@ def unroll_circuit(circuit):
             final_circuit.add(gate)
         elif isinstance(gate, gates.RZ):
             final_circuit.add(gate)
+        elif isinstance(gate, gates.Unitary):
+            matrix = gate.matrix()
+            u3_gate = gates.U3(gate.qubits[0], *u3_decomposition(matrix))
+            decomposed = u3_dec(u3_gate)
+            for decomposed_gate in decomposed:
+                final_circuit.add(decomposed_gate)
         elif isinstance(gate, gates.U3):
             decomposed = u3_dec(gate)
             for decomposed_gate in decomposed:
