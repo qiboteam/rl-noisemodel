@@ -292,8 +292,10 @@ def unroll_circuit(circuit):
     optimizer = Rearrange()
 
     unrolled_circuit = unroller(circuit)
-    #opt_circuit = optimizer(unrolled_circuit)
-    opt_circuit = unrolled_circuit
+    print(unrolled_circuit.draw())
+    opt_circuit = optimizer(unrolled_circuit)
+    print(opt_circuit.draw())
+    #opt_circuit = unrolled_circuit
     queue = opt_circuit.queue
     final_circuit = Circuit(circuit.nqubits, density_matrix=True)
     for gate in queue:
