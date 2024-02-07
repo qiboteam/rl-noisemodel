@@ -244,20 +244,28 @@ class RL_NoiseModel(object):
     def apply(self, circuit):
         if isinstance(circuit, Circuit):
             circuit = self.rep.circuit_to_array(circuit)
-        observation = np.transpose(circuit, axes=[2,1,0])
-        left_idx = lambda idx: max(0, idx)
-        right_idx = lambda idx: min(idx, circuit.shape[0])
-        padding = lambda idx: np.zeros((*observation.shape[:2], np.abs(idx)))
-        padder = lambda array, idx: np.concatenate((padding(idx), array), axis=-1) if idx < 0 else np.concatenate((array, padding(idx)), axis=-1) 
-        for i in range(circuit.shape[0]):
-            window = observation[:,:, left_idx(i-1):right_idx(i+2)]
-            if i - self.ker_radius < 0:
-                window = padder(window, i - self.ker_radius)
-            elif i + self.ker_radius > circuit.shape[0] - 1:
-                window = padder(window, i + self.ker_radius - circuit.shape[0] + 1)
-            action, _ = self.agent.predict(window, deterministic=True)
-            observation = self.rep.make_action(action=action, circuit=observation, position=i)
-        return self.rep.rep_to_circuit(np.transpose(observation, axes=[2,1,0]))
+        circuit = np.transpose(circuit, axes=[2,1,0])
+
+        for pos in range(circuit.shape[-1]):
+            l_flag = pos - self.ker_radius < 0
+            r_flag = pos + self.ker_radius > circuit.shape[2] - 1
+            if l_flag and not r_flag:
+                pad_cel = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos - self.ker_radius)))
+                observation = np.concatenate((pad_cel, circuit[:, :, :pos + self.ker_radius + 1]), axis=2)
+            elif not l_flag and r_flag:
+                pad_cel = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos + self.ker_radius - circuit.shape[-1] + 1)))
+                observation = np.concatenate((circuit[:, :, pos - self.ker_radius:], pad_cel), axis=2)
+            elif l_flag and r_flag:
+                l_pad = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos - self.ker_radius)))
+                l_obs = np.concatenate((l_pad, circuit[:, :, :pos + self.ker_radius + 1]), axis=2)
+                r_pad = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos + self.ker_radius - circuit.shape[-1] + 1)))
+                r_obs = np.concatenate((circuit[:, :, pos - self.ker_radius:], r_pad), axis=2)
+                observation = np.concatenate((l_obs, r_obs), axis=2)
+            else:
+                observation = circuit[:, :, pos - self.ker_radius: pos + self.ker_radius + 1]   
+            action, _ = self.agent.predict(observation, deterministic=True)
+            circuit = self.rep.make_action(action=action, circuit=circuit, position=pos)
+        return self.rep.rep_to_circuit(np.transpose(circuit, axes=[2,1,0]))
 
 def test_avg_fidelity(rho1,rho2):
     fidelity = []
