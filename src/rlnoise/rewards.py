@@ -65,8 +65,9 @@ class DensityMatrixReward(Reward):
                 reward=compute_fidelity(circuit_dm, target)*(1-5*self.metric(circuit_dm, target))*(1-trace_distance(circuit_dm, target))
 
             elif reward_type.lower()=="fidelity":
-                if -np.log(compute_fidelity(circuit_dm, target)) < 1000:
-                    reward=-np.log(compute_fidelity(circuit_dm, target)) 
+                fidelity = compute_fidelity(circuit_dm, target)
+                if -np.log(1-fidelity) < 1000:
+                    reward=-np.log(1-fidelity) 
                 else:
                     reward=1000.
 

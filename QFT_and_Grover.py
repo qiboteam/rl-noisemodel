@@ -12,8 +12,7 @@ from qibo.noise import NoiseModel, DepolarizingError
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='config.json')
-parser.add_argument('--model', type=str, default="simulation_phase/3Q_training_new/3Q_D7_Simulation1.zip")
-parser.add_argument('--dataset', type=str, default="simulation_phase/3Q_training_new/train_set_D7_3Q_len500.npz")  
+parser.add_argument('--model', type=str, default="src/rlnoise/saved_models/3Q_D7_Simulation5000.zip")
 args = parser.parse_args()
 
 def grover():
@@ -92,7 +91,7 @@ def qft():
     
     return circuit
 
-circuit_type = "QFT"
+circuit_type = "Grover"
 
 if circuit_type == "QFT":
     circuit = qft()
@@ -114,7 +113,7 @@ rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitR
 rl_noisy_circuit = rl_noise_model.apply(deepcopy(final_circuit))
 
 noise = NoiseModel()
-noise.add(DepolarizingError(0.10))
+noise.add(DepolarizingError(0.1))
 RB_noisy_circuit = noise.apply(final_circuit)
 
 print("Circuit type: ", circuit_type)
@@ -195,7 +194,7 @@ ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 plt.xlabel('Result')
 plt.ylabel('Counts')
 if circuit_type == "Grover":
-    plt.ylim(0, 2400)
+    plt.ylim(0, 2900)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper right", ncol=3)
 plt.savefig(f"{circuit_type}_shots.png", )

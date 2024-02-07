@@ -218,7 +218,7 @@ class CustomCallback(BaseCallback):
         fig.suptitle(self.plot_1_title, fontsize=15)
 
         plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
-        errorevery=20
+        errorevery=5
         ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4, marker='.') #use list comprehension
         ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
         ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4, marker='.')
