@@ -44,5 +44,5 @@ setup(
         "shimmy==0.2.1"
         
     ],
-    python_requires=">3.10.9"
+    python_requires="==3.10.10"
 )

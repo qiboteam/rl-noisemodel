@@ -11,6 +11,7 @@ from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards import DensityMatrixReward
 from rlnoise.gym_env import QuantumCircuit
 from qibo.transpiler.unroller import Unroller, NativeGates
+from qibo.transpiler.optimizer import Rearrange
 from rlnoise.metrics import trace_distance,bures_distance,compute_fidelity
 
 with open("config.json") as f:
@@ -238,79 +239,25 @@ class RL_NoiseModel(object):
         self.agent = agent
         self.rep = circuit_representation
         self.ker_size = self.agent.policy.features_extractor._observation_space.shape[-1]
+        self.ker_radius = int(self.ker_size/2)
 
-    def _get_obs(self, pos):
-        kernel=[]
-        r=int(self.ker_size/2)
-        self.padded_circuit[:,:,r:-r]=self.observation
-        kernel.append(self.padded_circuit[:,:,pos:pos+self.ker_size])
-        return np.asarray(kernel,dtype=np.float32)
-    
     def apply(self, circuit):
-        print("initial circuit: \n", circuit.draw())
         if isinstance(circuit, Circuit):
             circuit = self.rep.circuit_to_array(circuit)
-        self.nqubits = circuit.shape[1]
-        self.encoding_dim = circuit.shape[2]
-        self.observation = np.transpose(circuit, axes=[2,1,0])
-        padding = np.zeros(( self.encoding_dim, self.nqubits, int(self.ker_size/2)), dtype=np.float32)
-        self.padded_circuit=np.concatenate((padding,self.observation,padding), axis=2)
-        print("circuit: \n", self.observation)
+        observation = np.transpose(circuit, axes=[2,1,0])
+        left_idx = lambda idx: max(0, idx)
+        right_idx = lambda idx: min(idx, circuit.shape[0])
+        padding = lambda idx: np.zeros((*observation.shape[:2], np.abs(idx)))
+        padder = lambda array, idx: np.concatenate((padding(idx), array), axis=-1) if idx < 0 else np.concatenate((array, padding(idx)), axis=-1) 
         for i in range(circuit.shape[0]):
-            window = self._get_obs(i)
-            print("obs: \n", window)
+            window = observation[:,:, left_idx(i-1):right_idx(i+2)]
+            if i - self.ker_radius < 0:
+                window = padder(window, i - self.ker_radius)
+            elif i + self.ker_radius > circuit.shape[0] - 1:
+                window = padder(window, i + self.ker_radius - circuit.shape[0] + 1)
             action, _ = self.agent.predict(window, deterministic=True)
-            print("action: ", action)
-            self.observation = self.rep.make_action(action=action, circuit=self.observation, position=i)
-        return self.rep.rep_to_circuit(np.transpose(self.observation, axes=[2,1,0]))
-
-    # def apply(self, circuit):
-    #     if isinstance(circuit, Circuit):
-    #         circuit = self.rep.circuit_to_array(circuit)
-    #     observation = np.transpose(circuit, axes=[2,1,0])
-    #     left_idx = lambda idx: max(0, idx)
-    #     right_idx = lambda idx: min(idx, circuit.shape[0])
-    #     padding = lambda idx: np.zeros((*observation.shape[:2], np.abs(idx)))
-    #     padder = lambda array, idx: np.concatenate((padding(idx), array), axis=-1) if idx < 0 else np.concatenate((array, padding(idx)), axis=-1) 
-    #     for i in range(circuit.shape[0]):
-    #         window = observation[:,:, left_idx(i-1):right_idx(i+2)]
-    #         if i - self.ker_radius < 0:
-    #             window = padder(window, i - self.ker_radius)
-    #         elif i + self.ker_radius > circuit.shape[0] - 1:
-    #             window = padder(window, i + self.ker_radius - circuit.shape[0] + 1)
-    #         print(window.shape)
-    #         action, _ = self.agent.predict(window, deterministic=True)
-    #         observation = self.rep.make_action(action=action, circuit=observation, position=i)
-    #     return self.rep.rep_to_circuit(np.transpose(observation, axes=[2,1,0]))
-            
-            
-if __name__ == "__main__":
-
-    from rlnoise.dataset import Dataset, CircuitRepresentation
-    from rlnoise.custom_noise import CustomNoiseModel
-    import matplotlib.pyplot as plt
-    from rlnoise.simulation_phase.RB.Utils_RB import randomized_benchmarking
-    nqubits = 3
-    noise_model = CustomNoiseModel()
-
-    rep = CircuitRepresentation(
-        primitive_gates = noise_model.primitive_gates,
-        noise_channels = noise_model.channels,
-        shape = '3d',
-    )
-
-    circs = []
-    for depth in (2, 5, 10, 20, 30, 50):
-        d = Dataset(20, depth, 3, rep, noise_model=noise_model)
-        circs += d.circuits
-
-    depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circs, noise_model=noise_model)
-    print(f"> Decay: {optimal_params[1]}")
-    print(optimal_params)
-    plt.scatter(depths, survival_probs)
-    plt.plot(depths, model(depths))
-    plt.show()
-    
+            observation = self.rep.make_action(action=action, circuit=observation, position=i)
+        return self.rep.rep_to_circuit(np.transpose(observation, axes=[2,1,0]))
 
 def test_avg_fidelity(rho1,rho2):
     fidelity = []
@@ -339,17 +286,29 @@ def u3_dec(gate):
     return decomposition
 
 def unroll_circuit(circuit):
+    from qibo.transpiler.unitary_decompositions import u3_decomposition
     natives = NativeGates.U3 | NativeGates.CZ
     unroller = Unroller(native_gates = natives)
+    optimizer = Rearrange()
 
     unrolled_circuit = unroller(circuit)
-    queue = unrolled_circuit.queue
-    final_circuit = Circuit(circuit.nqubits)
+    print(unrolled_circuit.draw())
+    opt_circuit = optimizer(unrolled_circuit)
+    print(opt_circuit.draw())
+    #opt_circuit = unrolled_circuit
+    queue = opt_circuit.queue
+    final_circuit = Circuit(circuit.nqubits, density_matrix=True)
     for gate in queue:
         if isinstance(gate, gates.CZ):
             final_circuit.add(gate)
         elif isinstance(gate, gates.RZ):
             final_circuit.add(gate)
+        elif isinstance(gate, gates.Unitary):
+            matrix = gate.matrix()
+            u3_gate = gates.U3(gate.qubits[0], *u3_decomposition(matrix))
+            decomposed = u3_dec(u3_gate)
+            for decomposed_gate in decomposed:
+                final_circuit.add(decomposed_gate)
         elif isinstance(gate, gates.U3):
             decomposed = u3_dec(gate)
             for decomposed_gate in decomposed:
