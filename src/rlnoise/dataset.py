@@ -90,19 +90,17 @@ class Dataset(object):
         circuit = random_clifford(self.n_qubits, return_circuit=True, density_matrix=True)
         new_circuit = Circuit(self.n_qubits, density_matrix=True)
         for gate in circuit.queue:
-            if gate.name == "cx":
-                circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
-                circuit.add(gates.RX(gate.qubits[1], np.pi/2))
+            if gate.name.upper() in self.primitive_gates:
+                new_circuit.add(gate)
+            elif gate.name == "cx":
+                new_circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
+                new_circuit.add(gates.RX(gate.qubits[1], np.pi/2))
                 new_circuit.add(gates.CZ(gate.qubits[0], gate.qubits[1]))
-                circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
-                circuit.add(gates.RX(gate.qubits[1], np.pi/2))
+                new_circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
+                new_circuit.add(gates.RX(gate.qubits[1], np.pi/2))
             elif gate.name == "h":
-                circuit.add(gates.RZ(gate.qubits[0], np.pi/2))
-                circuit.add(gates.RX(gate.qubits[0], np.pi/2))
-            elif gate.name == "rx":
-                new_circuit.add(gate)
-            elif gate.name == "rz":
-                new_circuit.add(gate)
+                new_circuit.add(gates.RZ(gate.qubits[0], np.pi/2))
+                new_circuit.add(gates.RX(gate.qubits[0], np.pi/2))
             elif gate.name == "z":
                 new_circuit.add(gates.RZ(gate.qubits[0], np.pi))
             elif gate.name == "y":
@@ -110,8 +108,6 @@ class Dataset(object):
                 new_circuit.add(gates.RX(gate.qubits[0], np.pi))
             elif gate.name == "x":
                 new_circuit.add(gates.RX(gate.qubits[0], np.pi))
-            elif gate.name == "cz":
-                new_circuit.add(gate)
             elif gate.name == "s":
                 new_circuit.add(gates.RZ(gate.qubits[0], np.pi/2))
             else:
