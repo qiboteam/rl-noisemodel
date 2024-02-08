@@ -45,7 +45,7 @@ def check_nmoments(circuit: Circuit, lenght,fill=False):
 
 
 class Dataset(object):
-    def __init__(self, n_circuits, n_gates, n_qubits, representation, enhanced_dataset=False, clifford=True, shadows=False, readout_mit=False, noise_model=None, mode='rep', backend=None):
+    def __init__(self,config_file, n_circuits, n_gates, n_qubits, representation, enhanced_dataset=False, clifford=True, shadows=False, readout_mit=False, noise_model=None, mode='rep', backend=None):
         '''Generate dataset for the training of RL-algorithm
         Args:
             n_circuits (int): number of random circuits generated
@@ -54,7 +54,8 @@ class Dataset(object):
             representation: object of class CircuitRepresentation()
         '''
         super(Dataset, self).__init__()
-        self.primitive_gates = config['noise']['primitive_gates']
+        with open(config_file) as f:
+            self.primitive_gates = json.load(f)['noise']['primitive_gates']
         self.n_gates = n_gates
         self.n_qubits = n_qubits
         self.rep = representation
@@ -262,9 +263,9 @@ class CircuitRepresentation(object):
     """  
     def __init__(self, config_file = "config.json"):
         with open(config_file) as f:
-            config = json.load(f)
+            self.config = json.load(f)
         self.encoding_dim = 8
-        self.primitive_gates = config['noise']['primitive_gates']
+        self.primitive_gates = self.config['noise']['primitive_gates']
 
     def gate_to_array(self, gate, qubit):
         """Provide the one-hot encoding of a gate."""
@@ -393,6 +394,7 @@ class CircuitRepresentation(object):
         nqubits = circuit.shape[1]
         for q in range(nqubits):          
             for idx, a in enumerate(action[q]):
+                a *= self.config["gym_env"]["action_space_max_value"]
                 if idx == gate_action_index("epsilon_x"):
                     circuit[gate_to_idx("epsilon_x"), q, position] = a
                 if idx == gate_action_index("epsilon_z"):

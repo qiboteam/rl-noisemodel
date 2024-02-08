@@ -66,7 +66,7 @@ class QuantumCircuit(gym.Env):
             dtype = np.float32
         )
         if self.action_space_type == "Continuous":
-            self.action_space = spaces.Box( low=0, high=self.action_space_max_value, 
+            self.action_space = spaces.Box( low=0, high=1, 
                                            shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
 
         elif self.action_space_type == "Discrete":
