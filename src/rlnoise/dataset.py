@@ -2,6 +2,7 @@ import random
 import json
 import numpy as np
 from qibo import gates
+from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.hardware_test.classical_shadows import ClassicalShadows
@@ -44,7 +45,7 @@ def check_nmoments(circuit: Circuit, lenght,fill=False):
 
 
 class Dataset(object):
-    def __init__(self,config_file, n_circuits, n_gates, n_qubits, representation, clifford=True, shadows=False, readout_mit=False, noise_model=None, mode='rep', backend=None):
+    def __init__(self,config_file, n_circuits, n_gates, n_qubits, representation, enhanced_dataset=False, clifford=True, shadows=False, readout_mit=False, noise_model=None, mode='rep', backend=None):
         '''Generate dataset for the training of RL-algorithm
         Args:
             n_circuits (int): number of random circuits generated
@@ -66,7 +67,10 @@ class Dataset(object):
         self.readout_mit = readout_mit
         self.backend = backend
         self.tomography=False
-        self.circuits = [self.generate_random_circuit() for _ in range(n_circuits)]
+        if enhanced_dataset:
+            self.circuits = [self.generate_clifford_circuit() for _ in range(n_circuits)]
+        else:
+            self.circuits = [self.generate_random_circuit() for _ in range(n_circuits)]
         if self.noise_model is not None:
             self.noisy_circuits = [
                 self.noise_model.apply(c)
@@ -80,7 +84,36 @@ class Dataset(object):
             for c in self.circuits
         ],dtype=object)
         self.train_circuits, self.val_circuits ,self.train_noisy_label, self.val_noisy_label= self.train_val_split()
-        
+
+    def generate_clifford_circuit(self):
+        '''Generate a random Clifford circuit'''
+        circuit = random_clifford(self.n_qubits, return_circuit=True, density_matrix=True)
+        new_circuit = Circuit(self.n_qubits, density_matrix=True)
+        for gate in circuit.queue:
+            if gate.name.upper() in self.primitive_gates:
+                new_circuit.add(gate)
+            elif gate.name == "cx":
+                new_circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
+                new_circuit.add(gates.RX(gate.qubits[1], np.pi/2))
+                new_circuit.add(gates.CZ(gate.qubits[0], gate.qubits[1]))
+                new_circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
+                new_circuit.add(gates.RX(gate.qubits[1], np.pi/2))
+            elif gate.name == "h":
+                new_circuit.add(gates.RZ(gate.qubits[0], np.pi/2))
+                new_circuit.add(gates.RX(gate.qubits[0], np.pi/2))
+            elif gate.name == "z":
+                new_circuit.add(gates.RZ(gate.qubits[0], np.pi))
+            elif gate.name == "y":
+                new_circuit.add(gates.RZ(gate.qubits[0], np.pi))
+                new_circuit.add(gates.RX(gate.qubits[0], np.pi))
+            elif gate.name == "x":
+                new_circuit.add(gates.RX(gate.qubits[0], np.pi))
+            elif gate.name == "s":
+                new_circuit.add(gates.RZ(gate.qubits[0], np.pi/2))
+            else:
+                raise ValueError(f"Unknown gate {gate.name}")
+        return new_circuit
+            
     def get_dm_labels(self, num_snapshots=10000):
         if self.shadows:
             states = []
@@ -354,7 +387,6 @@ class CircuitRepresentation(object):
     def make_action(self, action, circuit, position):
         if isinstance(circuit, Circuit):
             assert False, "Works only with circuits as numpy arrays at the moment."
-            #circuit = self.circuit_to_array(circuit)
         nqubits = circuit.shape[1]
         for q in range(nqubits):          
             for idx, a in enumerate(action[q]):

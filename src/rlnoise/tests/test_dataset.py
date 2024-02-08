@@ -7,20 +7,22 @@ from rlnoise.custom_noise import CustomNoiseModel
 
 nqubits = 3
 depth = 10
-ncirc = 100
+ncirc = 10
 val_split = 0.2
 
-noise_model = CustomNoiseModel()
+noise_model = CustomNoiseModel("config.json")
 
 
-rep = CircuitRepresentation()
+rep = CircuitRepresentation("config.json")
 
 # create dataset
 dataset = Dataset(
+    config_file="config.json",
     n_circuits = ncirc,
     n_gates = depth,
     n_qubits = nqubits,
     representation = rep,
+    enhanced_dataset=True,
     clifford = True,
     shadows = False,
     readout_mit = False,

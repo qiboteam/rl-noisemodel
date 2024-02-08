@@ -19,8 +19,8 @@ rep = CircuitRepresentation(config_file)
 number_of_gates_per_qubit=[20]
 qubits=3
 number_of_circuits=50
-dataset_name='test_set'
-
+dataset_name='test_set_enhanced'
+enhanced_dataset = True
 
 for i in number_of_gates_per_qubit:
     f = open(benchmark_circ_path+dataset_name+"_D%d_%dQ_len%d.npz"%(i,qubits,number_of_circuits),"wb")
@@ -33,6 +33,7 @@ for i in number_of_gates_per_qubit:
         n_gates = depth,
         n_qubits = nqubits,
         representation = rep,
+        enhanced_dataset = enhanced_dataset,
         clifford = True,
         shadows = False,
         noise_model = noise_model,
