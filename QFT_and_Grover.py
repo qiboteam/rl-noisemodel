@@ -12,7 +12,7 @@ from qibo.noise import NoiseModel, DepolarizingError
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='config.json')
-parser.add_argument('--model', type=str, default="src/rlnoise/saved_models/3Q_D7_Simulation5000.zip")
+parser.add_argument('--model', type=str, default="src/rlnoise/saved_models/3Q_D7_Simulation80000.zip")
 args = parser.parse_args()
 
 def grover():
@@ -120,8 +120,12 @@ print("Circuit type: ", circuit_type)
 print("Length: ", len(final_circuit.queue))
 print("Moments: ", len(final_circuit.queue.moments))
 print("No noise", compute_fidelity(noisy_circuit().state(), final_circuit().state()))
+print(f"density noise: {noisy_circuit().state()}")
 print("RL agent", compute_fidelity(noisy_circuit().state(), rl_noisy_circuit().state()))
+print(f"RL density: {rl_noisy_circuit().state()}")
 print("RB noise", compute_fidelity(noisy_circuit().state(), RB_noisy_circuit().state()))
+print(f"RB density: {RB_noisy_circuit().state()}")
+
 
 def copy_circ(circ):
     new_circ = Circuit(3, density_matrix=True)

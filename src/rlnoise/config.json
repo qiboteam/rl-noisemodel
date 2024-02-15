@@ -11,15 +11,15 @@
     "pos_reward": 0.2,
     "action_penalty": 0.0,
     "action_space": "Continuous",
-    "action_space_max_value": 0.03
+    "action_space_max_value": 0.1
   },
   "noise": {
     "primitive_gates": ["RZ", "RX", "CZ"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
-    "dep_lambda": 0.02,
-    "p0": 0.0, 
-    "epsilon_x": 0.0,
-    "epsilon_z": 0.0,
+    "dep_lambda": 0.05,
+    "p0": 0.005, 
+    "epsilon_x": 0.04,
+    "epsilon_z": 0.03,
     "x_coherent_on_gate": ["rx"],
     "z_coherent_on_gate": ["rz"],
     "damping_on_gate": ["rx", "cz"],
@@ -32,7 +32,7 @@
     "plot_name": "Simulation"
   },
   "reward": {
-    "reward_type": "fidelity"
+    "reward_type": "trace_distance"
   }
 }
 

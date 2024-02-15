@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 qubits = 3
-steps = 150
+steps = 40
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -20,11 +20,11 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 if qubits == 1:
     results_path = 'src/rlnoise/simulation_phase/1Q_training_new/train_results.npz'
 else:
-    results_path = 'src/rlnoise/simulation_phase/3Q_training_new/train_results.npz'
+    results_path = 'simulation_phase/3Q_random_Clifford/train_results.npz'
 
 with open(results_path,"rb") as f:
     tmp = np.load(f,allow_pickle=True)
-    time_steps = tmp['timesteps'].reshape(-1)[0:steps]
+    time_steps = tmp['timesteps'][0:steps].reshape(-1)
     train_results = tmp['train_results'][0:steps]
     eval_results = tmp['val_results'][0:steps]
     train_fidelity = train_results['fidelity'].reshape(-1)

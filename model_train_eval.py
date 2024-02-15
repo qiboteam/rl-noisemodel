@@ -13,12 +13,11 @@ import torch
 from rlnoise.metrics import compute_fidelity
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default="config.json")
-parser.add_argument('--dataset', type=str, default="simulation_phase/Grover/grover_set_D7_3Q_len500.npz")
-parser.add_argument('--output', type=str, default="simulation_phase/Grover")
+parser.add_argument('--dataset', type=str, default="simulation_phase/3Q_random_Clifford/test_set_enhanced_3Q_len500.npz")
+parser.add_argument('--output', type=str, default="simulation_phase/3Q_random_Clifford")
 args = parser.parse_args()
 
 #IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
-model_path = 'saved_models/'
 results_filename = f'{args.output}/train_results'
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
@@ -29,13 +28,13 @@ train_label = copy.deepcopy(tmp['train_label'])
 # val_label = copy.deepcopy(tmp['val_label'])
 
 #Custom val set
-val_set_tmp = np.load("non_clifford_set.npz", allow_pickle=True)
+val_set_tmp = np.load("simulation_phase/3Q_non_clifford/non_clifford_set.npz", allow_pickle=True)
 val_set = copy.deepcopy(val_set_tmp['val_circ'])
 val_label = copy.deepcopy(val_set_tmp['val_label'])
 
 n_circuit_in_dataset = train_set.shape[0] + val_set.shape[0]
-nqubits = train_set.shape[2]
-circuits_depth = train_set.shape[1]
+nqubits = train_set[0].shape[1]
+print(f"nqubits: {nqubits}")
 #Setting up training env and policy model
 
 noise_model = CustomNoiseModel(args.config)
@@ -48,6 +47,7 @@ circuit_env_training = QuantumCircuit(
     labels = train_label,
     reward = reward,
 )
+
 policy = "MlpPolicy"
 policy_kwargs = dict(
     #activation_fn = torch.nn.Sigmoid,
@@ -68,22 +68,24 @@ n_steps=256,
 )
 #                             #STANDARD TRAINING
 
-callback=CustomCallback(check_freq=500,
-                        evaluation_set=tmp,
+callback=CustomCallback(check_freq=10000,
+                        dataset=tmp,
                         train_environment=circuit_env_training,
-                        trainset_depth=circuits_depth, verbose=True,
-                        result_filename=results_filename)                                          
+                        verbose=True,
+                        result_filename=results_filename,
+                        evaluation_set = val_set_tmp)                                          
 
-model.learn(total_timesteps=5000, progress_bar=True, callback=callback)
+model.learn(total_timesteps=1000000, progress_bar=True, callback=callback)
 
-agent = RL_NoiseModel(model, rep)
+# agent = RL_NoiseModel(model, rep)
 
-for i in [0,20,7,9]:
-    print(val_set.shape)
-    test_circ = rep.rep_to_circuit(val_set[i])
-    test_label = val_label[i]
-    rl_noisy_circ = agent.apply(test_circ)
-    print(compute_fidelity(rl_noisy_circ().state(), test_label))
+# for i in [0,20,7,9]:
+#     print(val_set.shape)
+#     test_circ = rep.rep_to_circuit(val_set[i])
+#     test_label = val_label[i]
+#     rl_noisy_circ = agent.apply(test_circ)
+#     print(compute_fidelity(rl_noisy_circ().state(), test_label))
+
 # TESTING A PREVIOUSLY TRAINED MODEL ON DIFFERENT DEPTHS AND COMPARING WITH RB AND WITH UNTRAINED MODEL
 
 # results_list_untrained=[]

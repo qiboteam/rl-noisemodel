@@ -68,9 +68,9 @@ class Dataset(object):
         self.backend = backend
         self.tomography=False
         if enhanced_dataset:
-            self.circuits = [self.generate_clifford_circuit() for _ in range(n_circuits)]
+            self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
         else:
-            self.circuits = [self.generate_random_circuit() for _ in range(n_circuits)]
+            self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
         if self.noise_model is not None:
             self.noisy_circuits = [
                 self.noise_model.apply(c)
@@ -382,7 +382,6 @@ class CircuitRepresentation(object):
                     for channel in channels:
                         c.add(channel)
         return c
-
 
     def make_action(self, action, circuit, position):
         if isinstance(circuit, Circuit):
