@@ -28,11 +28,11 @@
   "policy": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "3Q_logmse_tanh",
+    "model_name": "3Q_Rand_clif_mse_tanh",
     "plot_name": "Simulation"
   },
   "reward": {
-    "reward_type": "log"
+    "reward_type": "mse"
   }
 }
 

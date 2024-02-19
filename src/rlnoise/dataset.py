@@ -1,6 +1,7 @@
 import random
 import json
 import numpy as np
+from pathlib import Path
 from qibo import gates
 from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
@@ -257,7 +258,7 @@ class CircuitRepresentation(object):
     """
     Object for mapping qibo circuits to numpy array representation and vice versa.
     """  
-    def __init__(self, config_file = "config.json"):
+    def __init__(self, config_file = f"{Path(__file__).parent}/config.json"):
         with open(config_file) as f:
             self.config = json.load(f)
         self.encoding_dim = 8

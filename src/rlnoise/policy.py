@@ -10,7 +10,7 @@ from rlnoise.utils import model_evaluation
 
 SAVE_TRAIN_DATA = True
 
-with open("config.json") as f:
+with open(f"{Path(__file__).parent}/config.json") as f:
     config = json.load(f)
 
 class CNNFeaturesExtractor(BaseFeaturesExtractor):
@@ -71,9 +71,9 @@ class CustomCallback(BaseCallback):
         self.plot = policy_params['plot_results']
         self.best_model_name = policy_params['model_name']
         self.plot_name = policy_params['plot_name']
-        self.log_dir = f'{str(Path().parent.absolute())}/src/rlnoise/saved_models/'
+        self.log_dir = f'{str(Path(__file__).parent)}/model_folder/'
         self.plot_dir = (
-            f'{str(Path().parent.absolute())}/src/'
+            f'{str(Path(__file__).parent)}/model_folder/'
         )
         self.results_path = result_filename
         self.check_freq = check_freq
@@ -131,7 +131,7 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        if  self.n_calls % self.check_freq == 0:
+        if self.n_calls==1 or self.n_calls % self.check_freq == 0:
           # Retrieve training reward
             training_results = model_evaluation(self.train_circ,self.train_label,model=self.model)
             evaluation_results = model_evaluation(self.val_circ,self.val_label,model=self.model)
@@ -214,7 +214,7 @@ class CustomCallback(BaseCallback):
         fig.suptitle(self.plot_1_title, fontsize=15)
 
         plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
-        errorevery=5
+        errorevery=1
         ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4, marker='.') #use list comprehension
         ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
         ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4, marker='.')

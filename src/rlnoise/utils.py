@@ -14,7 +14,7 @@ from qibo.transpiler.unroller import Unroller, NativeGates
 from qibo.transpiler.optimizer import Rearrange
 from rlnoise.metrics import trace_distance,bures_distance,compute_fidelity
 
-with open("config.json") as f:
+with open(f"{Path(__file__).parent}/config.json") as f:
     config = json.load(f)
 
 DEBUG=False

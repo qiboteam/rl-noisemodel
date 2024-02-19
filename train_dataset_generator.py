@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import numpy as np
 from rlnoise.dataset import Dataset, CircuitRepresentation
 from rlnoise.custom_noise import CustomNoiseModel
@@ -7,7 +8,7 @@ from rlnoise.custom_noise import CustomNoiseModel
 #benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 
 benchmark_circ_path = 'enanched/'
-config_file = "config.json"
+config_file = f"{Path(__file__).parent}/src/rlnoise/config.json"
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
@@ -20,13 +21,13 @@ number_of_gates_per_qubit=[20]
 qubits=3
 number_of_circuits=500
 dataset_name='test_set_enhanced'
-enhanced_dataset = True
+enhanced_dataset = False
 
-for i in range(9):
+for i in range(1):
     dataset_name= f'test_set_enhanced{i}'
     with open(benchmark_circ_path+dataset_name+"_D%d_%dQ_len%d.npz"%(i,qubits,number_of_circuits),"wb") as f:
         nqubits = qubits
-        depth = i
+        depth = 11
         ncirc = number_of_circuits
         dataset = Dataset(
             config_file,

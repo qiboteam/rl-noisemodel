@@ -6,7 +6,8 @@ from abc import ABC, abstractmethod
 from qibo import gates
 from rlnoise.metrics import trace_distance,compute_fidelity
 
-with open("config.json") as f:
+current_path = Path(__file__).parent
+with open(f"{current_path}/config.json") as f:
     config = json.load(f)
 
 class Reward(ABC):
