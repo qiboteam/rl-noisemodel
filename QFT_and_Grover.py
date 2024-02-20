@@ -1,95 +1,21 @@
 import numpy as np
+from pathlib import Path
 import argparse
-from copy import deepcopy
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.metrics import compute_fidelity
-from rlnoise.utils import RL_NoiseModel, unroll_circuit
+from rlnoise.utils import RL_NoiseModel, unroll_circuit, grover, qft
 from stable_baselines3 import PPO
 from qibo.models import QFT, Circuit
 from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default='config.json')
-parser.add_argument('--model', type=str, default="src/rlnoise/saved_models/3Q_D7_Simulation80000.zip")
+parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/config.json')
+parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/model_folder/logmse/3Q_logmse92000.zip')
 args = parser.parse_args()
 
-def grover():
-    """Creates a Grover circuit with 3 qubits.
-    The circuit searches for the 11 state, the last qubit is ancillary"""
-    circuit = Circuit(3, density_matrix=True)
-    circuit.add(gates.RZ(0, np.pi/2))
-    circuit.add(gates.RX(0, np.pi/2))
-    circuit.add(gates.RZ(0, np.pi/2))
-    circuit.add(gates.RZ(1, np.pi/2))
-    circuit.add(gates.RX(1, np.pi/2))
-    circuit.add(gates.RZ(1, np.pi/2))
-    circuit.add(gates.RX(2, np.pi))
-    circuit.add(gates.RZ(2, np.pi/2))
-    circuit.add(gates.RX(2, np.pi/2))
-    circuit.add(gates.RZ(2, np.pi/2))
-    #Toffoli
-    circuit.add(gates.CZ(1, 2))
-    circuit.add(gates.RX(2, -np.pi / 4))
-    circuit.add(gates.CZ(0, 2))
-    circuit.add(gates.RX(2, np.pi / 4))
-    circuit.add(gates.CZ(1, 2))
-    circuit.add(gates.RX(2, -np.pi / 4))
-    circuit.add(gates.CZ(0, 2))
-    circuit.add(gates.RX(2, np.pi / 4))
-    circuit.add(gates.RZ(1, np.pi / 4))
-    circuit.add(gates.RZ(1, np.pi/2))
-    circuit.add(gates.RX(1, np.pi/2))
-    circuit.add(gates.RZ(1, np.pi/2))
-    circuit.add(gates.CZ(0, 1))
-    circuit.add(gates.RZ(0, np.pi / 4))
-    circuit.add(gates.RX(1, -np.pi / 4))
-    circuit.add(gates.CZ(0, 1))
-    ###
-    circuit.add(gates.RZ(0, np.pi/2))
-    circuit.add(gates.RX(0, np.pi/2))
-    circuit.add(gates.RZ(0, np.pi/2))
-    circuit.add(gates.RX(0, np.pi))
-    circuit.add(gates.RX(1, np.pi))
-    circuit.add(gates.CZ(0, 1))
-    circuit.add(gates.RX(0, np.pi))
-    circuit.add(gates.RX(1, np.pi))
-    circuit.add(gates.RZ(0, np.pi/2))
-    circuit.add(gates.RX(0, np.pi/2))
-    circuit.add(gates.RZ(0, np.pi/2))
-    circuit.add(gates.RZ(1, np.pi/2))
-    circuit.add(gates.RX(1, np.pi/2))
-    circuit.add(gates.RZ(1, np.pi/2))
-    return circuit
-
-def qft():
-    circuit = Circuit(3, density_matrix=True)
-    circuit.add(gates.H(0))
-    #Gate S
-    circuit.add(gates.U3(1, 0, 0, np.pi / 4))
-    circuit.add(gates.CNOT(0, 1))
-    circuit.add(gates.U3(1, 0, 0, -np.pi / 4))
-    circuit.add(gates.CNOT(0, 1))
-    circuit.add(gates.RZ(0, np.pi / 4))
-    #Gate T
-    circuit.add(gates.U3(2, 0, 0, np.pi / 8))
-    circuit.add(gates.CNOT(0, 2))
-    circuit.add(gates.U3(2, 0, 0, -np.pi / 8))
-    circuit.add(gates.CNOT(0, 2))
-    circuit.add(gates.RZ(0, np.pi / 8))
-
-    circuit.add(gates.H(1))
-    #Gate S
-    circuit.add(gates.U3(2, 0, 0, np.pi / 4))
-    circuit.add(gates.CNOT(1, 2))
-    circuit.add(gates.U3(2, 0, 0, -np.pi / 4))
-    circuit.add(gates.CNOT(1, 2))
-    circuit.add(gates.RZ(1, np.pi / 4))
-
-    circuit.add(gates.H(2))
-    
-    return circuit
+agent = PPO.load(args.model)
 
 circuit_type = "Grover"
 
@@ -102,15 +28,11 @@ if circuit_type == "Grover":
     final_circuit = circuit
 
 
-print("TRANSPILED CIRCUIT")
-print(final_circuit.draw())
-
 noise_model = CustomNoiseModel(config_file=args.config)
-noisy_circuit = noise_model.apply(deepcopy(final_circuit))
-agent = PPO.load(args.model)
-rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitRepresentation())
+noisy_circuit = noise_model.apply(final_circuit)
 
-rl_noisy_circuit = rl_noise_model.apply(deepcopy(final_circuit))
+rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitRepresentation())
+rl_noisy_circuit = rl_noise_model.apply(final_circuit)
 
 noise = NoiseModel()
 noise.add(DepolarizingError(0.1))
@@ -120,12 +42,8 @@ print("Circuit type: ", circuit_type)
 print("Length: ", len(final_circuit.queue))
 print("Moments: ", len(final_circuit.queue.moments))
 print("No noise", compute_fidelity(noisy_circuit().state(), final_circuit().state()))
-print(f"density noise: {noisy_circuit().state()}")
 print("RL agent", compute_fidelity(noisy_circuit().state(), rl_noisy_circuit().state()))
-print(f"RL density: {rl_noisy_circuit().state()}")
 print("RB noise", compute_fidelity(noisy_circuit().state(), RB_noisy_circuit().state()))
-print(f"RB density: {RB_noisy_circuit().state()}")
-
 
 def copy_circ(circ):
     new_circ = Circuit(3, density_matrix=True)

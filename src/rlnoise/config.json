@@ -28,7 +28,7 @@
   "policy": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "3Q_logmse_tanh",
+    "model_name": "3Q_Rand_clif_logmse_tanh",
     "plot_name": "Simulation"
   },
   "reward": {

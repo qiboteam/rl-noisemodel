@@ -322,3 +322,80 @@ def unroll_circuit(circuit):
             for decomposed_gate in decomposed:
                 final_circuit.add(decomposed_gate)
     return final_circuit
+
+
+def grover():
+    """Creates a Grover circuit with 3 qubits.
+    The circuit searches for the 11 state, the last qubit is ancillary"""
+    circuit = Circuit(3, density_matrix=True)
+    circuit.add(gates.RZ(0, np.pi/2))
+    circuit.add(gates.RX(0, np.pi/2))
+    circuit.add(gates.RZ(0, np.pi/2))
+    circuit.add(gates.RZ(1, np.pi/2))
+    circuit.add(gates.RX(1, np.pi/2))
+    circuit.add(gates.RZ(1, np.pi/2))
+    circuit.add(gates.RX(2, np.pi))
+    circuit.add(gates.RZ(2, np.pi/2))
+    circuit.add(gates.RX(2, np.pi/2))
+    circuit.add(gates.RZ(2, np.pi/2))
+    #Toffoli
+    circuit.add(gates.CZ(1, 2))
+    circuit.add(gates.RX(2, -np.pi / 4))
+    circuit.add(gates.CZ(0, 2))
+    circuit.add(gates.RX(2, np.pi / 4))
+    circuit.add(gates.CZ(1, 2))
+    circuit.add(gates.RX(2, -np.pi / 4))
+    circuit.add(gates.CZ(0, 2))
+    circuit.add(gates.RX(2, np.pi / 4))
+    circuit.add(gates.RZ(1, np.pi / 4))
+    circuit.add(gates.RZ(1, np.pi/2))
+    circuit.add(gates.RX(1, np.pi/2))
+    circuit.add(gates.RZ(1, np.pi/2))
+    circuit.add(gates.CZ(0, 1))
+    circuit.add(gates.RZ(0, np.pi / 4))
+    circuit.add(gates.RX(1, -np.pi / 4))
+    circuit.add(gates.CZ(0, 1))
+    ###
+    circuit.add(gates.RZ(0, np.pi/2))
+    circuit.add(gates.RX(0, np.pi/2))
+    circuit.add(gates.RZ(0, np.pi/2))
+    circuit.add(gates.RX(0, np.pi))
+    circuit.add(gates.RX(1, np.pi))
+    circuit.add(gates.CZ(0, 1))
+    circuit.add(gates.RX(0, np.pi))
+    circuit.add(gates.RX(1, np.pi))
+    circuit.add(gates.RZ(0, np.pi/2))
+    circuit.add(gates.RX(0, np.pi/2))
+    circuit.add(gates.RZ(0, np.pi/2))
+    circuit.add(gates.RZ(1, np.pi/2))
+    circuit.add(gates.RX(1, np.pi/2))
+    circuit.add(gates.RZ(1, np.pi/2))
+    return circuit
+
+def qft():
+    circuit = Circuit(3, density_matrix=True)
+    circuit.add(gates.H(0))
+    #Gate S
+    circuit.add(gates.U3(1, 0, 0, np.pi / 4))
+    circuit.add(gates.CNOT(0, 1))
+    circuit.add(gates.U3(1, 0, 0, -np.pi / 4))
+    circuit.add(gates.CNOT(0, 1))
+    circuit.add(gates.RZ(0, np.pi / 4))
+    #Gate T
+    circuit.add(gates.U3(2, 0, 0, np.pi / 8))
+    circuit.add(gates.CNOT(0, 2))
+    circuit.add(gates.U3(2, 0, 0, -np.pi / 8))
+    circuit.add(gates.CNOT(0, 2))
+    circuit.add(gates.RZ(0, np.pi / 8))
+
+    circuit.add(gates.H(1))
+    #Gate S
+    circuit.add(gates.U3(2, 0, 0, np.pi / 4))
+    circuit.add(gates.CNOT(1, 2))
+    circuit.add(gates.U3(2, 0, 0, -np.pi / 4))
+    circuit.add(gates.CNOT(1, 2))
+    circuit.add(gates.RZ(1, np.pi / 4))
+
+    circuit.add(gates.H(2))
+    
+    return circuit
