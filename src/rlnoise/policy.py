@@ -10,7 +10,7 @@ from rlnoise.utils import model_evaluation
 
 SAVE_TRAIN_DATA = True
 
-with open("config.json") as f:
+with open(f"{Path(__file__).parent}/config.json") as f:
     config = json.load(f)
 
 class CNNFeaturesExtractor(BaseFeaturesExtractor):
@@ -63,7 +63,7 @@ class CustomCallback(BaseCallback):
         trainset_depth: number of gates per qubit used in the bench dataset
 
     """
-    def __init__(self, check_freq, evaluation_set, train_environment, trainset_depth, verbose=False ,test_on_data_size = None, result_filename=None):
+    def __init__(self, check_freq, dataset, train_environment, verbose=False ,test_on_data_size = None, result_filename=None, evaluation_set = None):
         super(CustomCallback, self).__init__(verbose)
 
         policy_params  =  config['policy']
@@ -71,9 +71,9 @@ class CustomCallback(BaseCallback):
         self.plot = policy_params['plot_results']
         self.best_model_name = policy_params['model_name']
         self.plot_name = policy_params['plot_name']
-        self.log_dir = f'{str(Path().parent.absolute())}/src/rlnoise/saved_models/'
+        self.log_dir = f'{str(Path(__file__).parent)}/model_folder/'
         self.plot_dir = (
-            f'{str(Path().parent.absolute())}/src/'
+            f'{str(Path(__file__).parent)}/model_folder/'
         )
         self.results_path = result_filename
         self.check_freq = check_freq
@@ -83,23 +83,19 @@ class CustomCallback(BaseCallback):
         self.best_mean_fidelity = -np.inf
         self.best_mean_trace_dist = np.inf
         self.best_mean_bures_dist = np.inf
-        if self.test_on_data_size is not None:
-            self.train_circ = evaluation_set['train_set'][:self.test_on_data_size]
-            self.train_label = evaluation_set['train_label'][:self.test_on_data_size]
-        else:
-            self.train_circ = evaluation_set['train_set']
-            self.train_label = evaluation_set['train_label']
 
-        self.val_circ = evaluation_set['val_set']
-        self.val_label = evaluation_set['val_label']
+        self.train_circ = dataset['train_set'] if test_on_data_size is None else dataset['train_set'][:test_on_data_size]
+        self.train_label = dataset['train_label'] if test_on_data_size is None else dataset['train_label'][:test_on_data_size]
+        self.val_circ = dataset['val_set'] if evaluation_set is None else evaluation_set['val_circ']
+        self.val_label = dataset['val_label'] if evaluation_set is None else evaluation_set['val_label']
+        
         self.dataset_size = len(self.train_circ)
-        self.trainset_depth = trainset_depth
         self.n_qubits = self.train_circ[0].shape[1]
         self.eval_results = []
         self.train_results = []
         self.timestep_list = []
         self.save_path = os.path.join(self.log_dir, self.best_model_name)
-        self.plot_1_title = '%dQ D%d K3 logReward,Penal=0, Trainset_size=%d Valset_size=%d, p0=0.05 lam=0.05 e_z=0.1 e_x=0.05'%(self.n_qubits,self.trainset_depth,self.dataset_size,len(self.val_circ))
+        self.plot_1_title = "Training and evaluation results"
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -135,7 +131,7 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        if self.n_calls == 1 or self.n_calls % self.check_freq == 0:
+        if self.n_calls==1 or self.n_calls % self.check_freq == 0:
           # Retrieve training reward
             training_results = model_evaluation(self.train_circ,self.train_label,model=self.model)
             evaluation_results = model_evaluation(self.val_circ,self.val_label,model=self.model)
@@ -187,7 +183,7 @@ class CustomCallback(BaseCallback):
             self.plot_results()
         '''
         if self.test_on_data_size is not None:
-            f = open(self.results_path+"test_size%d_D_%d_Dep-Term_CZ_3Q.npz"%(self.dataset_size,self.trainset_depth),"wb")
+            f = open(self.results_path+"test_size%d_Dep-Term_CZ_3Q.npz"%(self.dataset_size),"wb")
             np.savez(f,train_results=self.train_results, val_results=self.eval_results, timesteps=self.timestep_list)
             f.close()
         ''' 
@@ -210,7 +206,7 @@ class CustomCallback(BaseCallback):
         ax.plot(time_steps,eval_results[:,0],label='evaluation_set',marker='x')
         ax.plot(time_steps,train_results[:,0],color='orange',label='train_set',marker='x')
         ax.legend()
-        fig.savefig(self.plot_dir+'test_size%d_D_%d_Dep-Term_CZ_%dQ.png'%(self.dataset_size,self.trainset_depth,self.n_qubits),dpi=300)
+        fig.savefig(self.plot_dir+'test_size%d_Dep-Term_CZ_%dQ.png'%(self.dataset_size,self.n_qubits),dpi=300)
 
     # TODO Rename this here and in `plot_results`
     def _extracted_from_plot_results_7(self, time_steps, eval_results, train_results):
@@ -218,7 +214,7 @@ class CustomCallback(BaseCallback):
         fig.suptitle(self.plot_1_title, fontsize=15)
 
         plt.subplots_adjust(left=0.168, bottom=0.06, right=0.865, top=0.92, wspace=0.207, hspace=0.21)
-        errorevery=5
+        errorevery=1
         ax[0,0].errorbar(time_steps,eval_results["reward"],yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4, marker='.') #use list comprehension
         ax[0,0].set(xlabel='timesteps/1000', ylabel='Reward',title='Average final reward')
         ax[0,1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4, marker='.')
@@ -233,7 +229,7 @@ class CustomCallback(BaseCallback):
         ax[1,0].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[1,1].errorbar(time_steps,train_results["bures_distance"],yerr=train_results["bures_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[0,0].legend()
-        fig.savefig(self.plot_dir+self.plot_name+'_Q%d_D%d_steps%d.png'%(self.n_qubits,self.trainset_depth,self.timestep_list[-1]),dpi=300)
+        fig.savefig(self.plot_dir+self.plot_name+'_Q%d_steps%d.png'%(self.n_qubits,self.timestep_list[-1]),dpi=300)
         plt.show()
             #plt.show()
         

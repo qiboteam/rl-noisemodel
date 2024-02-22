@@ -1,0 +1,11 @@
+turn off everithyng except depol
+turn on encoding but activate only depol
+
+dataset 100 circ depth 5 replacing rx w rx(pi/2)
+RB: sama dataset from 3 to 30 (50 circ each)
+
+Old_random_generator: Fid:[0.969], Fid_std:[0.014], TD:[0.148], TD_std:[0.032]
+Rand_cliff_generator: Fid:[0.973], Fid_std:[0.017], TD:[0.136], TD_std:[0.04]
+
+Old_random_generator + Tanh: Fid:[0.972], Fid_std:[0.012], TD:[0.14], TD_std:[0.032]
+Rand_cliff_generator + Tanh: Fid:[0.973], Fid_std:[0.012], TD:[0.137], TD_std:[0.031]

@@ -6,7 +6,8 @@ from abc import ABC, abstractmethod
 from qibo import gates
 from rlnoise.metrics import trace_distance,compute_fidelity
 
-with open("config.json") as f:
+current_path = Path(__file__).parent
+with open(f"{current_path}/config.json") as f:
     config = json.load(f)
 
 class Reward(ABC):
@@ -59,7 +60,7 @@ class DensityMatrixReward(Reward):
                 reward=1-alpha*self.metric(circuit_dm, target)
 
             elif reward_type in ["trace_distance", "trace distance"]:
-                reward=1-trace_distance(circuit_dm,target)
+                reward=-np.log(trace_distance(circuit_dm,target))
 
             elif reward_type.lower()=="mixed":
                 reward=compute_fidelity(circuit_dm, target)*(1-5*self.metric(circuit_dm, target))*(1-trace_distance(circuit_dm, target))

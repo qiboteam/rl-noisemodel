@@ -1,6 +1,7 @@
 import random
 import json
 import numpy as np
+from pathlib import Path
 from qibo import gates
 from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
@@ -68,9 +69,9 @@ class Dataset(object):
         self.backend = backend
         self.tomography=False
         if enhanced_dataset:
-            self.circuits = [self.generate_clifford_circuit() for _ in range(n_circuits)]
+            self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
         else:
-            self.circuits = [self.generate_random_circuit() for _ in range(n_circuits)]
+            self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
         if self.noise_model is not None:
             self.noisy_circuits = [
                 self.noise_model.apply(c)
@@ -257,7 +258,7 @@ class CircuitRepresentation(object):
     """
     Object for mapping qibo circuits to numpy array representation and vice versa.
     """  
-    def __init__(self, config_file = "config.json"):
+    def __init__(self, config_file = f"{Path(__file__).parent}/config.json"):
         with open(config_file) as f:
             self.config = json.load(f)
         self.encoding_dim = 8
@@ -382,7 +383,6 @@ class CircuitRepresentation(object):
                     for channel in channels:
                         c.add(channel)
         return c
-
 
     def make_action(self, action, circuit, position):
         if isinstance(circuit, Circuit):

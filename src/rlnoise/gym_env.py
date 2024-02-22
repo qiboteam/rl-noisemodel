@@ -1,13 +1,14 @@
 import numpy as np
 import copy
 import json
+from pathlib import Path
 from dataclasses import dataclass
 import gym, random
 from gym import spaces
 from qibo import gates
 from qibo.quantum_info import trace_distance
 
-with open("config.json") as f:
+with open(f"{Path(__file__).parent}/config.json") as f:
     config = json.load(f)
 
 gym_env_params = config['gym_env']
