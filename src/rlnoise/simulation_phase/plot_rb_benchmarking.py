@@ -1,8 +1,11 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scienceplots
 
-qubits = 3
+plt.style.use('science')
+
+qubits = 1
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -43,18 +46,18 @@ trace_distance = {'model': np.array([results_train[i][4] for i in range(len(resu
                   'no_noise_std': np.array([results_rb[i][9] for i in range(len(results_rb))])
                   }
 
-fig=plt.figure(figsize=(16, 9))
+fig=plt.figure(figsize=(12, 9))
 ax=fig.add_subplot(111)
 ax.plot(depths,fidelity['model'],label='RL-Model', linewidth=4, color='#e60049')
 ax.fill_between(depths,fidelity['model']-fidelity['std_model'],fidelity['model']+fidelity['std_model'],alpha=0.2, color='#e60049')
 ax.plot(depths,fidelity['RB'],label='RB', linewidth=4, color='#0bb4ff')
 ax.fill_between(depths,fidelity['RB']-fidelity['std_RB'],fidelity['RB']+fidelity['std_RB'],alpha=0.2, color='#0bb4ff')
-ax.plot(depths,fidelity['no_noise'], label='No noise added',linewidth=4, color='green')
+ax.plot(depths,fidelity['no_noise'], label='Noiseless',linewidth=4, color='green')
 ax.fill_between(depths,fidelity['no_noise']-fidelity['no_noise_std'],fidelity['no_noise']+fidelity['no_noise_std'],alpha=0.2,color='green')
 ax.legend()
 ax.set(xlabel='Circuit Depth', ylabel='Fidelity', xticks=depths)
 
-plt.savefig(f"{qubits}Q_rb.png", )
+plt.savefig(f"{qubits}Q_rb.pdf", )
 plt.show()
 
 # ax1.plot(depths,bures_distance['model'],marker='.',label='RL-Model',color='orange')
