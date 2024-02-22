@@ -1,9 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import scienceplots
+
+plt.style.use('science')
 
 qubits = 3
-steps = 40
+steps = 150
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -20,11 +23,11 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 if qubits == 1:
     results_path = 'src/rlnoise/simulation_phase/1Q_training_new/train_results.npz'
 else:
-    results_path = 'simulation_phase/3Q_random_Clifford/train_results.npz'
+    results_path = 'src/rlnoise/simulation_phase/3Q_training_new/train_results.npz'
 
 with open(results_path,"rb") as f:
     tmp = np.load(f,allow_pickle=True)
-    time_steps = tmp['timesteps'][0:steps].reshape(-1)
+    time_steps = tmp['timesteps'].reshape(-1)[0:steps]
     train_results = tmp['train_results'][0:steps]
     eval_results = tmp['val_results'][0:steps]
     train_fidelity = train_results['fidelity'].reshape(-1)
@@ -36,7 +39,7 @@ with open(results_path,"rb") as f:
     # eval_trace_distance = eval_results['trace_distance'].reshape(-1)
     # eval_trace_distance_std = eval_results['trace_distance_std'].reshape(-1)
 
-fig=plt.figure(figsize=(16, 9))
+fig=plt.figure(figsize=(12, 9))
 ax=fig.add_subplot(111)
 
 ax.plot(time_steps, train_fidelity, linewidth=4, color='#e60049')
@@ -69,5 +72,5 @@ ax.legend(['Train Set', 'Test Set'],loc='lower right')
 # ax[1].set(xlabel='Timesteps/1000', ylabel='Trace Distance',title='Trace distance')
 # ax[1].legend(['train_set', 'test_set'], loc='lower right')
 
-plt.savefig(f"{qubits}Q_train_results.png", )
+plt.savefig(f"{qubits}Q_train_results.pdf") #, bbox_inches='tight')
 plt.show()
