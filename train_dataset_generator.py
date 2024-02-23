@@ -7,7 +7,7 @@ from rlnoise.custom_noise import CustomNoiseModel
 
 #benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
 
-benchmark_circ_path = 'enanched/'
+benchmark_circ_path = '/home/studio/Scrivania/Tesi/rl-noisemodel/src/rlnoise/simulation_phase/3Q_random_Clifford'
 config_file = f"{Path(__file__).parent}/src/rlnoise/config.json"
 
 if not os.path.exists(benchmark_circ_path):
@@ -24,7 +24,7 @@ dataset_name='test_set_enhanced'
 enhanced_dataset = False
 
 for i in range(1):
-    dataset_name= f'test_set_enhanced{i}'
+    dataset_name= f'non_Clifford{i}'
     with open(benchmark_circ_path+dataset_name+"_D%d_%dQ_len%d.npz"%(i,qubits,number_of_circuits),"wb") as f:
         nqubits = qubits
         depth = 11
@@ -36,7 +36,7 @@ for i in range(1):
             n_qubits = nqubits,
             representation = rep,
             enhanced_dataset = enhanced_dataset,
-            clifford = True,
+            clifford = False,
             shadows = False,
             noise_model = noise_model,
             mode = 'rep',
