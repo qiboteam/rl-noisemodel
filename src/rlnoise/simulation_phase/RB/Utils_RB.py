@@ -10,7 +10,7 @@ from qibo.models.error_mitigation import calibration_matrix as cm
 def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=None):
     nqubits = circuits[0].nqubits
     calibration_matrix = cm(nqubits, backend=backend, noise_model=noise_model, nshots=nshots)
-    circuits = [ deepcopy(c) for c in circuits ] 
+    circuits = [ c.copy(True) for c in circuits ] 
     if backend is None:
         from qibo.backends import GlobalBackend
         backend = GlobalBackend()
@@ -32,7 +32,10 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
         for c in circs:
             for i in range(nqubits):
                 c.add(gates.M(i))
-            result = apply_readout_mitigation(backend.execute_circuit(c, nshots=nshots), calibration_matrix)
+            
+            result = backend.execute_circuit(c, nshots=nshots)
+            if backend.name == "qibolab":
+                result = apply_readout_mitigation(result, calibration_matrix)
             freq = result.frequencies()
             
             if init_state not in freq:
