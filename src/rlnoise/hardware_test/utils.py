@@ -56,7 +56,7 @@ def run_qibo(circuits, backend, nshots=10000):
     return freqs
 
 def run_quantum_spain(circuits, backend, nshots=10000, layout=None):
-    configuration = ConnectionConfiguration(username = "alejandro.sopena",api_key = "23287d7c-cd0c-4dfd-90d3-9fb506c11dee")
+    configuration = ConnectionConfiguration(username = "user",api_key = "key")
     api = API(configuration = configuration)
     api.select_device_id(device_id=backend)
     # result_id = api.execute(circuits, nshots=nshots)
