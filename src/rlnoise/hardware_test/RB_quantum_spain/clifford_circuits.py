@@ -35,7 +35,7 @@ def clifford_circuits(
         # add inverse to sequence
         circuit = circuit + unitary.inverse.circuit(qubit_idx=qubit_idx)
         # add measurement gates
-        circuit.add(gates.M(qubit_idx))
+        # circuit.add(gates.M(qubit_idx))
 
         # append to lists
         circuits.append(circuit)
