@@ -5,10 +5,27 @@ from qibo import gates
 from qibo.backends import construct_backend
 from qibo.config import log
 from qibo.models import Circuit
-from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_experiments.library import MitigatedStateTomography
-from qiskit_experiments.library import StateTomography as StateTomography_qiskit
+# from qiskit import QuantumCircuit
+# from qiskit.compiler import transpile
+# from qiskit_experiments.library import MitigatedStateTomography
+# from qiskit_experiments.library import StateTomography as StateTomography_qiskit
+from qiboconnection import API
+from qiboconnection.connection import ConnectionConfiguration
+
+def expectation_from_samples(obs, freq, qubit_map=None):
+    obs = obs.matrix
+    keys = list(freq.keys())
+    if qubit_map is None:
+        qubit_map = list(range(int(np.log2(len(obs)))))
+    counts = np.array(list(freq.values())) / sum(freq.values())
+    expval = 0
+    size = len(qubit_map)
+    for j, k in enumerate(keys):
+        index = 0
+        for i in qubit_map:
+            index += int(k[qubit_map.index(i)]) * 2 ** (size - 1 - i)
+        expval += obs[index, index] * counts[j]
+    return np.real(expval)
 
 
 def run_qiskit(circuits, backend, nshots=10000, layout=None):
@@ -38,9 +55,23 @@ def run_qibo(circuits, backend, nshots=10000):
         freqs.append(result.frequencies())
     return freqs
 
+def run_quantum_spain(circuits, backend, nshots=10000, layout=None):
+    configuration = ConnectionConfiguration(username = "alejandro.sopena",api_key = "23287d7c-cd0c-4dfd-90d3-9fb506c11dee")
+    api = API(configuration = configuration)
+    api.select_device_id(device_id=backend)
+    # result_id = api.execute(circuits, nshots=nshots)
+    # results = api.get_result(job_id=result_id[0])
+    results = api.execute_and_return_results(circuits, nshots=nshots,timeout=36000)[0]
+    freqs = []
+    for result in results:
+        probs = result['probabilities']
+        counts = {}
+        for key in probs:
+            counts[key] = probs[key]*nshots
+        freqs.append(counts)
+    return freqs
 
-
-def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None, backend_qiskit=None, layout=None):
+def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None, backend_qiskit=None, backend_qs=None, layout=None):
     """Computes the calibration matrix for readout mitigation.
 
     Args:
@@ -78,6 +109,8 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
 
     if backend_qiskit is not None:
         freqs = run_qiskit(cal_circs, backend_qiskit, nshots=nshots, layout=layout)
+    elif backend_qs is not None:
+        freqs = run_quantum_spain(cal_circs, backend_qs, nshots=nshots, layout=layout)
     else:
         freqs = run_qibo(cal_circs, backend, nshots=nshots)
 
@@ -152,16 +185,16 @@ def x_rule(gate, platform):
     return sequence, {}
 
 
-def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, layout):
+def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend_qs, layout):
     from rlnoise.hardware_test.state_tomography import StateTomography
     
-    st = StateTomography(nshots=nshots,backend=backend, backend_qiskit=backend_qiskit, layout=layout)
+    st = StateTomography(nshots=nshots,backend=backend, backend_qiskit=backend_qiskit, backend_qs = backend_qs, layout=layout)
 
     tomo_circs = []
     for circ in circs:
         tomo_circs.append(st.get_circuits(circ))
     st.tomo_circuits = tomo_circs
-
+    
     st._get_cal_mat()
     freqs = st.run_circuits()
     mit_freqs = st.redadout_mit(freqs)
@@ -178,11 +211,15 @@ def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, layout)
         st.meas_obs(noise=None,readout_mit=True)
         rho_mit = st.get_rho(likelihood=likelihood)
 
-        circ.density_matrix = True
+        circ1 = Circuit(circ.nqubits)
+        for gate in circ.queue:
+            circ1.add(gate)
+        circ1.density_matrix = True
         backend_exact = construct_backend('numpy')
-        rho_exact = backend_exact.execute_circuit(circ).state()
+        rho_exact = backend_exact.execute_circuit(circ1).state()
     
-        log.info(circ.draw())
+        #log.info(circ.draw())
+        print(k)
         results.append([circ, rho_exact, rho, rho_mit, st.cal_mat])
 
     return results

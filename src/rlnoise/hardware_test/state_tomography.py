@@ -4,11 +4,11 @@ from qibo.hamiltonians import Hamiltonian
 from itertools import product
 from functools import reduce
 import numpy as np
-from rlnoise.hardware_test.utils import run_qiskit, run_qibo, calibration_matrix, apply_readout_mitigation
+from rlnoise.hardware_test.utils import run_qiskit, run_qibo, run_quantum_spain, calibration_matrix, apply_readout_mitigation, expectation_from_samples
 from itertools import chain
 
 class StateTomography:
-    def __init__(self, nshots = 10000, backend = None, backend_qiskit = None, layout=None):
+    def __init__(self, nshots = 10000, backend = None, backend_qiskit = None, backend_qs = None, layout=None):
         self.circuit = None
         self.nqubits = None
         self.backend = backend
@@ -17,6 +17,7 @@ class StateTomography:
         self.exps_vals = None
         self.nshots = nshots
         self.backend_qiskit = backend_qiskit
+        self.backend_qs = backend_qs
         self.layout = layout
         self.freqs = None
         self.mit_freqs = None
@@ -33,9 +34,12 @@ class StateTomography:
             circuit = self.circuit.copy(deep=True)
             for q in range(self.nqubits):
                 if obs[q] == 'X':
-                    circuit.add([gates.RZ(q,np.pi/2),gates.SX(q),gates.RZ(q,np.pi/2)]) #H
+                    circuit.add([gates.H(0)])#[gates.RZ(q,np.pi/2),gates.SX(q),gates.RZ(q,np.pi/2)]) #H
                 elif obs[q] == 'Y':
-                    circuit.add([gates.SX(q),gates.RZ(q,np.pi/2)]) #S^tH
+                    # basis_y = 1/np.sqrt(2)*np.ones((2,2),complex)
+                    # basis_y[0,1] = -basis_y[0,1]*1j
+                    # basis_y[1,1] = basis_y[1,1]*1j
+                    circuit.add([gates.S(q).dagger(),gates.H(q)])#[gates.Unitary(basis_y,q)])#[gates.SX(q),gates.RZ(q,np.pi/2)]) #S^tH
             circuit.add(gates.M(*range(self.nqubits)))
             circuits.append(circuit)
         self.tomo_circuits = circuits
@@ -48,6 +52,8 @@ class StateTomography:
 
         if self.backend_qiskit is not None:
             freqs_list = run_qiskit(circs, self.backend_qiskit, self.nshots, self.layout)
+        if self.backend_qs is not None:
+            freqs_list = run_quantum_spain(circs, self.backend_qs, self.nshots)
         else:
             freqs_list = run_qibo(circs, self.backend, self.nshots)
 
@@ -57,7 +63,7 @@ class StateTomography:
         return freqs_list
     
     def _get_cal_mat(self, noise=None):
-        self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend,backend_qiskit=self.backend_qiskit,layout=self.layout)
+        self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend,backend_qiskit=self.backend_qiskit,backend_qs=self.backend_qs,layout=self.layout)
     
     def redadout_mit(self, freqs, noise = None):
         dims = np.shape(freqs)
@@ -88,7 +94,7 @@ class StateTomography:
             freqs = self.freqs[k]
             if readout_mit:
                 freqs = self.mit_freqs[k]
-            exp = obs.expectation_from_samples(freqs)
+            exp =  expectation_from_samples(obs, freqs)#obs.expectation_from_samples(freqs)
             exps.append([self.obs[k],exp])
         self.exps_vals = exps
 
