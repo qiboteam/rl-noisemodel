@@ -235,11 +235,12 @@ def RB_evaluation(lambda_RB,circ_representation,target_label):
 
 class RL_NoiseModel(object):
 
-    def __init__(self, agent, circuit_representation):
+    def __init__(self, agent, circuit_representation, only_depol):
         self.agent = agent
         self.rep = circuit_representation
         self.ker_size = self.agent.policy.features_extractor._observation_space.shape[-1]
         self.ker_radius = int(self.ker_size/2)
+        self.only_depolarizing = only_depol
 
     def apply(self, circuit):
         if isinstance(circuit, Circuit):
@@ -264,7 +265,7 @@ class RL_NoiseModel(object):
             else:
                 observation = circuit[:, :, pos - self.ker_radius: pos + self.ker_radius + 1]   
             action, _ = self.agent.predict(observation, deterministic=True)
-            circuit = self.rep.make_action(action=action, circuit=circuit, position=pos)
+            circuit = self.rep.make_action(action=action, circuit=circuit, position=pos, only_depol = self.only_depolarizing)
         return self.rep.rep_to_circuit(np.transpose(circuit, axes=[2,1,0]))
 
 def test_avg_fidelity(rho1,rho2):

@@ -9,12 +9,12 @@ from qibo.noise import NoiseModel, DepolarizingError
 
 
 parser = argparse.ArgumentParser(description='Runs randomized benchmarking.')
-parser.add_argument('--dataset')
+parser.add_argument('--dataset', default="src/rlnoise/simulation_phase/RB/RB vs RL(only depol) in Grover/Rb_set_rand_cliff_grover")
 parser.add_argument('--agent')
 parser.add_argument('--backend', default=None)
 parser.add_argument('--platform', default=None)
-parser.add_argument('--nqubits')
-parser.add_argument('--config')
+parser.add_argument('--nqubits', default=3)
+parser.add_argument('--config', default="src/rlnoise/simulation_phase/RB/RB vs RL(only depol) in Grover/config.json")
 
 args = parser.parse_args()
 
@@ -58,7 +58,7 @@ patches.append(mpatches.Patch(color='blue', label=f"Depolarizing toy model, Deca
 
 if args.agent is not None:
     agent = PPO.load(args.agent)
-    agent_noise_model = RL_NoiseModel(agent, rep)
+    agent_noise_model = RL_NoiseModel(agent, rep, only_depol=True)
     _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model, backend=NumpyBackend())
     plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='green')
     plt.plot(depths, model(depths), c='green')

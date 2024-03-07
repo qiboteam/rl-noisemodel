@@ -6,8 +6,8 @@ from qibo import gates
 from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
 from inspect import signature
-from rlnoise.hardware_test.classical_shadows import ClassicalShadows
-from rlnoise.hardware_test.state_tomography import StateTomography
+# from rlnoise.hardware_test.classical_shadows import ClassicalShadows
+# from rlnoise.hardware_test.state_tomography import StateTomography
 from rlnoise.custom_noise import string_to_gate
 
 
@@ -384,21 +384,22 @@ class CircuitRepresentation(object):
                         c.add(channel)
         return c
 
-    def make_action(self, action, circuit, position):
+    def make_action(self, action, circuit, position, only_depol = False):
         if isinstance(circuit, Circuit):
             assert False, "Works only with circuits as numpy arrays at the moment."
         nqubits = circuit.shape[1]
         for q in range(nqubits):          
             for idx, a in enumerate(action[q]):
                 a *= self.config["gym_env"]["action_space_max_value"]
-                if idx == gate_action_index("epsilon_x"):
-                    circuit[gate_to_idx("epsilon_x"), q, position] = a
-                if idx == gate_action_index("epsilon_z"):
-                    circuit[gate_to_idx("epsilon_z"), q, position] = a
-                if idx == gate_action_index(gates.ResetChannel):
-                    circuit[gate_to_idx(gates.ResetChannel), q, position] = a
                 if idx == gate_action_index(gates.DepolarizingChannel):
-                    circuit[gate_to_idx(gates.DepolarizingChannel), q, position] = a                
+                    circuit[gate_to_idx(gates.DepolarizingChannel), q, position] = a  
+                if only_depol is False:
+                    if idx == gate_action_index("epsilon_x"):
+                        circuit[gate_to_idx("epsilon_x"), q, position] = a
+                    if idx == gate_action_index("epsilon_z"):
+                        circuit[gate_to_idx("epsilon_z"), q, position] = a
+                    if idx == gate_action_index(gates.ResetChannel):
+                        circuit[gate_to_idx(gates.ResetChannel), q, position] = a              
         return circuit
 
 

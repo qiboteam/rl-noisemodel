@@ -12,7 +12,7 @@ from qibo.noise import NoiseModel, DepolarizingError
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/config.json')
-parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/model_folder/logmse/3Q_logmse92000.zip')
+parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/RB/RB vs RL(only depol) in Grover/3Q_Rand_clif_logmse_onlydepol(grover)380000.zip')
 args = parser.parse_args()
 
 agent = PPO.load(args.model)
@@ -31,11 +31,11 @@ if circuit_type == "Grover":
 noise_model = CustomNoiseModel(config_file=args.config)
 noisy_circuit = noise_model.apply(final_circuit)
 
-rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitRepresentation())
+rl_noise_model = RL_NoiseModel(agent=agent, circuit_representation=CircuitRepresentation(), only_depol=True)
 rl_noisy_circuit = rl_noise_model.apply(final_circuit)
 
 noise = NoiseModel()
-noise.add(DepolarizingError(0.1))
+noise.add(DepolarizingError(0.081))
 RB_noisy_circuit = noise.apply(final_circuit)
 
 print("Circuit type: ", circuit_type)
