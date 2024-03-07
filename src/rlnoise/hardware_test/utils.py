@@ -56,7 +56,7 @@ def run_qibo(circuits, backend, nshots=10000):
     return freqs
 
 def run_quantum_spain(circuits, backend, nshots=10000, layout=None):
-    configuration = ConnectionConfiguration(username = "api",api_key = "key")
+    configuration = ConnectionConfiguration(username = "alejandro.sopena",api_key = "23287d7c-cd0c-4dfd-90d3-9fb506c11dee")
     api = API(configuration = configuration)
     api.select_device_id(device_id=backend)
     # result_id = api.execute(circuits, nshots=nshots)
@@ -194,7 +194,7 @@ def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend
     for circ in circs:
         tomo_circs.append(st.get_circuits(circ))
     st.tomo_circuits = tomo_circs
-
+    
     st._get_cal_mat()
     freqs = st.run_circuits()
     mit_freqs = st.redadout_mit(freqs)
