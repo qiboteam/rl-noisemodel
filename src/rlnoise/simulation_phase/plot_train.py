@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import scienceplots
-
+import matplotlib as mpl
+#mpl.rcParams.update(mpl.rcParamsDefault)
 plt.style.use('science')
 
 qubits = 3
