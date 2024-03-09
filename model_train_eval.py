@@ -15,8 +15,8 @@ from rlnoise.metrics import compute_fidelity
 
 current_path = Path(__file__).parent
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/config.json")
-parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/3Q_random_Clifford/3Q_random_Clifford_len500.npz")
+parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/config_all_noise.json")
+parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/test_set_enhanced_3Q_len500.npz")
 parser.add_argument('--output', type=str, default=f"{current_path}/src/rlnoise/model_folder")
 args = parser.parse_args()
 
@@ -71,7 +71,7 @@ n_steps=256,
 )
 #                             #STANDARD TRAINING
 
-callback=CustomCallback(check_freq=10000,
+callback=CustomCallback(check_freq=5000,
                         dataset=tmp,
                         train_environment=circuit_env_training,
                         verbose=True,
@@ -79,7 +79,7 @@ callback=CustomCallback(check_freq=10000,
                         )                                          
 
 # print((model.policy.action_net))
-model.learn(total_timesteps=400000, progress_bar=True, callback=callback)
+model.learn(total_timesteps=350000, progress_bar=True, callback=callback)
 
 # agent = RL_NoiseModel(model, rep)
 

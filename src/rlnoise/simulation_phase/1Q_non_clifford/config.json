@@ -15,7 +15,7 @@
     "enable_only_depolarizing": false
   },
   "noise": {
-    "primitive_gates": ["RZ", "RX", "CZ"],
+    "primitive_gates": ["RZ", "RX"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
     "dep_lambda": 0.02,
     "p0": 0.08, 
@@ -23,8 +23,8 @@
     "epsilon_z": 0.07,
     "x_coherent_on_gate": ["rx"],
     "z_coherent_on_gate": ["rz"],
-    "damping_on_gate": ["rx", "cz"],
-    "depol_on_gate": ["rz", "cz"]
+    "damping_on_gate": ["rx"],
+    "depol_on_gate": ["rz"]
   },
   "policy": {
     "save_best_model": true,

@@ -23,7 +23,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 if qubits == 1:
     results_path = 'src/rlnoise/simulation_phase/1Q_training_new/train_results.npz'
 else:
-    results_path = 'src/rlnoise/simulation_phase/3Q_training_new/train_results.npz'
+    results_path = 'src/rlnoise/simulation_phase/3Q_random_Clifford/train_results_mse400.npz'
 
 with open(results_path,"rb") as f:
     tmp = np.load(f,allow_pickle=True)
