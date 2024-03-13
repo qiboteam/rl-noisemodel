@@ -6,9 +6,12 @@ from rlnoise.custom_noise import CustomNoiseModel
 
 
 #benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
+qubits=1
+number_of_circuits=200
 
-benchmark_circ_path = 'src/rlnoise/simulation_phase/1Q_non_clifford'
-config_file = f"{Path(__file__).parent}/src/rlnoise/simulation_phase/1Q_non_clifford/config.json"
+# benchmark_circ_path = f'src/rlnoise/simulation_phase/3Q_random_Clifford(heavy_noise)/{number_of_circuits}_circ/'
+benchmark_circ_path = "src/rlnoise/"
+config_file = f"{Path(__file__).parent}/src/rlnoise/simulation_phase/1Q_training_new/config.json"
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
@@ -17,10 +20,9 @@ noise_model = CustomNoiseModel(config_file)
 rep = CircuitRepresentation(config_file)
 
 
-number_of_gates_per_qubit=[11]
-qubits=1
-number_of_circuits=200
-dataset_name='non_clifford'
+number_of_gates_per_qubit=[7]
+
+dataset_name='Rand_cliff'
 enhanced_dataset = False
 
 for i in number_of_gates_per_qubit:

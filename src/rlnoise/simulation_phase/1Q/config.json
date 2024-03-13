@@ -11,7 +11,8 @@
     "pos_reward": 0.2,
     "action_penalty": 0.0,
     "action_space": "Continuous",
-    "action_space_max_value": 0.15
+    "action_space_max_value": 0.3,
+    "enable_only_depolarizing": false
   },
   "noise": {
     "primitive_gates": ["RZ", "RX"],
