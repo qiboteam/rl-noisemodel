@@ -6,7 +6,7 @@ import scienceplots
 plt.style.use('science')
 
 qubits = 3
-steps = 150
+steps = 35
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26

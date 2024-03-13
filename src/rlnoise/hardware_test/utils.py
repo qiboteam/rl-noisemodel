@@ -1,16 +1,16 @@
 from collections import Counter
 
-import numpy as np
-from qibo import gates
-from qibo.backends import construct_backend
-from qibo.config import log
-from qibo.models import Circuit
+# import numpy as np
+# from qibo import gates
+# from qibo.backends import construct_backend
+# from qibo.config import log
+# from qibo.models import Circuit
 # from qiskit import QuantumCircuit
 # from qiskit.compiler import transpile
 # from qiskit_experiments.library import MitigatedStateTomography
 # from qiskit_experiments.library import StateTomography as StateTomography_qiskit
-from qiboconnection import API
-from qiboconnection.connection import ConnectionConfiguration
+# from qiboconnection import API
+# from qiboconnection.connection import ConnectionConfiguration
 
 def expectation_from_samples(obs, freq, qubit_map=None):
     obs = obs.matrix
