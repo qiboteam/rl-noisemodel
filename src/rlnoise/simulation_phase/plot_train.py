@@ -5,8 +5,8 @@ import scienceplots
 
 plt.style.use('science')
 
-qubits = 3
-steps = 35
+qubits = 1
+steps = 250
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -21,7 +21,7 @@ plt.rc('legend', fontsize=BIGGER_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 if qubits == 1:
-    results_path = 'src/rlnoise/simulation_phase/1Q_training_new/train_results.npz'
+    results_path = 'src/rlnoise/simulation_phase/1Q/train_results_new.npz'
 else:
     results_path = 'src/rlnoise/simulation_phase/3Q_random_Clifford/train_results_mse400.npz'
 
