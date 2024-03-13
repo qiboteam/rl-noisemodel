@@ -10,19 +10,18 @@ from qibo.models import QFT, Circuit
 from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
 
-
-circuit_type = "QFT"
 parser = argparse.ArgumentParser()
-
-if circuit_type == "QFT":
-    parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(heavy_noise)/500_circ/3Q_Rand_clif_logmse340000.zip')
-    parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/config.json')
-else:
-    parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse175000_allNoise.zip')
-    parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/config_low.json')
+parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/config_all_noise.json')
+parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse175000_allNoise.zip')
 args = parser.parse_args()
 
+circuit_type = "Grover"
+test_only_depol_model = True
+
 agent = PPO.load(args.model)
+agent_depol = PPO.load("src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse_onlydepol340000.zip")
+config_depol_agent = "src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/config_only_dep.json"
+
 
 if circuit_type == "QFT":
     circuit = qft()
@@ -36,7 +35,7 @@ if circuit_type == "Grover":
 noise_model = CustomNoiseModel(config_file=args.config)
 noisy_circuit = noise_model.apply(final_circuit)
 
-rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitRepresentation())
+rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitRepresentation(args.config))
 rl_noisy_circuit = rl_noise_model.apply(final_circuit)
 
 noise = NoiseModel()
@@ -86,14 +85,13 @@ print("Noise", noise_shots)
 print("RL", rl_shots)
 print("RB", RB_shots)
 
+SMALL_SIZE = 22
+MEDIUM_SIZE = 26
+BIGGER_SIZE = 28
 
 import matplotlib.pyplot as plt
 import scienceplots
 plt.style.use('science')
-
-SMALL_SIZE = 22
-MEDIUM_SIZE = 26
-BIGGER_SIZE = 28
 
 plt.rc('font', size=BIGGER_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
@@ -102,7 +100,6 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=BIGGER_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-
 # Extract keys and values from dictionaries
 keys = list(no_noise_shots.keys())
 values1 = list(noise_shots.values())
@@ -115,21 +112,36 @@ r1 = range(len(keys))
 r2 = [x + bar_width for x in r1]
 r3 = [x + bar_width for x in r2]
 
-fig=plt.figure(figsize=(12, 9))
+if test_only_depol_model is True:
+    rl_noise_only_dep = RL_NoiseModel(agent = agent_depol, circuit_representation =  CircuitRepresentation(config_depol_agent))
+    rl_dep_noisy_circuit = rl_noise_only_dep.apply(final_circuit)
+    print("RL depol agent", compute_fidelity(noisy_circuit().state(), rl_dep_noisy_circuit().state()))
+    rl_dep_noisy_circuit2 = copy_circ(rl_dep_noisy_circuit)
+    rl_dep_noisy_circuit2.add(gates.M(0,1,2))
+    rl_dep_shots = rl_dep_noisy_circuit2.execute(nshots=10000)
+    rl_dep_shots = dict(sorted(dict(rl_dep_shots.frequencies()).items()))
+    values4 = list(rl_dep_shots.values())
+    r4 = [x + bar_width for x in r3]
+
+
+
+
+fig=plt.figure(figsize=(16, 9))
 ax=fig.add_subplot(111)
 # Create the bar plot
 ax.bar(r1, values1, width=bar_width, label='Ground truth noise', color='#e60049')
-ax.bar(r2, values2, width=bar_width, label='RL', color='#0bb4ff')
+ax.bar(r2, values2, width=bar_width, label='RL (standard)', color='#0bb4ff')
 ax.bar(r3, values3, width=bar_width, label='RB', color='green')
+if test_only_depol_model:
+    ax.bar(r4, values4, width=bar_width, label='RL (only dep)', color='orange')
+
 
 # Customize the plot
 plt.xlabel('Result')
 plt.ylabel('Counts')
 if circuit_type == "Grover":
-    plt.ylim(0, 3200)
-else:
-    plt.ylim(0, 2500)
+    plt.ylim(0, 3500)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
-plt.legend(loc = "upper right", ncol=1)
+plt.legend(loc = "upper left", ncol=2)
 plt.savefig(f"{circuit_type}_shots.pdf", )
 plt.show()

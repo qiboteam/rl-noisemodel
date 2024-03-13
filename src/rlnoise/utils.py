@@ -11,8 +11,8 @@ from rlnoise.custom_noise import CustomNoiseModel
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards import DensityMatrixReward
 from rlnoise.gym_env import QuantumCircuit
-# from qibo.transpiler.unroller import Unroller, NativeGates
-# from qibo.transpiler.optimizer import Rearrange
+from qibo.transpiler.unroller import Unroller, NativeGates
+from qibo.transpiler.optimizer import Rearrange
 from rlnoise.metrics import trace_distance,bures_distance,compute_fidelity
 
 with open(f"{Path(__file__).parent}/config.json") as f:
@@ -299,7 +299,7 @@ def unroll_circuit(circuit):
     optimizer = Rearrange()
 
     unrolled_circuit = unroller(circuit)
-    print(unrolled_circuit.draw())
+    #print(unrolled_circuit.draw())
     opt_circuit = optimizer(unrolled_circuit)
     print(opt_circuit.draw())
     #opt_circuit = unrolled_circuit
