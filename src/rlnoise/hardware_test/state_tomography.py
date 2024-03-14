@@ -53,7 +53,7 @@ class StateTomography:
         if self.backend_qiskit is not None:
             freqs_list = run_qiskit(circs, self.backend_qiskit, self.nshots, self.layout)
         if self.backend_qs is not None:
-            freqs_list = run_quantum_spain(circs, self.backend_qs, self.nshots)
+            freqs_list = run_quantum_spain(circs, self.backend_qs, self.nshots, self.layout)
         else:
             freqs_list = run_qibo(circs, self.backend, self.nshots)
 

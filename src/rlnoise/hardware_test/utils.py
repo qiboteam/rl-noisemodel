@@ -55,12 +55,20 @@ def run_qibo(circuits, backend, nshots=10000):
         freqs.append(result.frequencies())
     return freqs
 
+def transpiler(circuit,qubit_map):
+    c = Circuit(5)
+    c.add(circuit.on_qubits(*qubit_map))
+    return c
+
+
+
 def run_quantum_spain(circuits, backend, nshots=10000, layout=None):
     configuration = ConnectionConfiguration(username = "alejandro.sopena",api_key = "23287d7c-cd0c-4dfd-90d3-9fb506c11dee")
     api = API(configuration = configuration)
     api.select_device_id(device_id=backend)
     # result_id = api.execute(circuits, nshots=nshots)
     # results = api.get_result(job_id=result_id[0])
+    circuits = [transpiler(circuit,layout) for circuit in circuits]
     results = api.execute_and_return_results(circuits, nshots=nshots,timeout=36000)[0]
     freqs = []
     for result in results:
