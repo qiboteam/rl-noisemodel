@@ -129,7 +129,7 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
             f = freq[key] / nshots
             column[int(key, 2)] = f
         matrix[:, i] = column
-
+    print(matrix)
     return np.linalg.inv(matrix)
 
 
@@ -151,6 +151,7 @@ def apply_readout_mitigation(freqs, calibration_matrix):
         freq[int(k, 2)] = v
 
     freq = freq.reshape(-1, 1)
+    
     freqs_mit = Counter()
     for i, val in enumerate(calibration_matrix @ freq):
         freqs_mit[format(i, f"0{nqubits}b")] = float(val)
@@ -204,6 +205,7 @@ def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend
     st.tomo_circuits = tomo_circs
     
     st._get_cal_mat()
+    print(st.cal_mat)
     freqs = st.run_circuits()
     mit_freqs = st.redadout_mit(freqs)
 
