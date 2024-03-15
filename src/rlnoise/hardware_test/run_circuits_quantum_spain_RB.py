@@ -13,11 +13,11 @@ from qibo.models import Circuit
 
 benchmark_circ_path= "src/rlnoise/hardware_test/RB/" #"src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
 
-
+QUBIT = 0
 #benchmark_circ_path= "src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
 numbers = np.arange(1, 200, 20)
 for number in numbers:
-    bench_name='D'+str(number)+'_len20_qubit1.npy'#'100_circ_set.npy'
+    bench_name='D'+str(number)+f'_len20_qubit{QUBIT}.npy'#'100_circ_set.npy'
 
     bench_results_path = "src/rlnoise/hardware_test/RB/"#"src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
 
@@ -45,7 +45,7 @@ for number in numbers:
     backend_qiskit = None
     backend_qs = 9
 
-    layout = [1]
+    layout = [QUBIT]
 
     if qiskit or method=='ST_qiskit':
         from qiskit_ibm_provider import IBMProvider
