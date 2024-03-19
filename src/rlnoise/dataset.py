@@ -7,7 +7,7 @@ from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
 from inspect import signature
 from rlnoise.hardware_test.classical_shadows import ClassicalShadows
-from rlnoise.hardware_test.state_tomography import StateTomography
+# from rlnoise.hardware_test.state_tomography import StateTomography
 from rlnoise.custom_noise import string_to_gate
 
 

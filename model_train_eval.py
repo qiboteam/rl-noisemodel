@@ -8,20 +8,16 @@ from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
-from rlnoise.utils import RL_NoiseModel
-from rlnoise.utils import model_evaluation, RB_evaluation
-import torch
-from rlnoise.metrics import compute_fidelity
 
 current_path = Path(__file__).parent
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/config.json")
-parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/model_folder/test_set_enhanced_3Q_len500.npz")
+parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/config_hardware.json")
+parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/hardware_test/dm_1Q/100_circ_set_result_qubit0.npy")
 parser.add_argument('--output', type=str, default=f"{current_path}/src/rlnoise/model_folder")
 args = parser.parse_args()
 
 #IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
-results_filename = f'{args.output}/train_results_mse_tanh'
+results_filename = f'{args.output}/result_hardware_q0'
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 tmp = np.load(args.dataset, allow_pickle=True)
