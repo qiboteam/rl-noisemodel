@@ -16,7 +16,7 @@ benchmark_circ_path= "src/rlnoise/hardware_test/dm_1Q/"
 
 #benchmark_circ_path= "src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
 
-bench_name='200_circ_set.npy'
+bench_name='100_circ_set.npy'
 
 bench_results_path = "src/rlnoise/hardware_test/dm_1Q/"
 
@@ -24,7 +24,7 @@ f = open(benchmark_circ_path+bench_name,"rb")
 
 
 #Those lists contain 400 and 100 qibo circuits respectively 
-qibo_circuits=np.load(f,allow_pickle=True)[100::]
+qibo_circuits=np.load(f,allow_pickle=True) #[100::]
 print(len(qibo_circuits))
 
 # qibo_circuits = qibo_circuits[0:100]
@@ -44,7 +44,7 @@ backend_qiskit = "ibm_hanoi"
 backend_qiskit = None
 backend_qs = 9
 
-layout = [0]
+layout = [2]
 
 if qiskit or method=='ST_qiskit':
     from qiskit_ibm_provider import IBMProvider
@@ -70,4 +70,4 @@ else:
 if method == 'ST':
     results = state_tomography(qibo_circuits, nshots, likelihood, backend, backend_qiskit, backend_qs, layout)
 
-np.save(bench_results_path+bench_name[0:-4]+f'_result_qubit{layout[0]}_2.npy',np.array(results, dtype=object))
+np.save(bench_results_path+bench_name[0:-4]+f'_result_qubit{layout[0]}_NEW.npy',np.array(results, dtype=object))
