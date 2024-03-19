@@ -1,9 +1,0 @@
-Modello di rumore del training:
-
--circuit with all noise but agent only depol
-
--vedere come scala il modedllo con le dimensioni del dataset (rifare non clifford set)
-
-
-
-

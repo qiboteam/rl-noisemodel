@@ -142,8 +142,8 @@ class CustomCallback(BaseCallback):
             if self.verbose:
                 print(f"Num timesteps: {self.num_timesteps}")
                 print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, evaluation_results['reward'].item()))
-                print('Standard deviations: Reward_std={:.2f}, Fidelity_std={:.2f}, Trace distance_std={:.2f}'.format(
-                    evaluation_results["reward_std"].item(),evaluation_results["fidelity_std"].item(),evaluation_results["trace_distance_std"].item()))
+                print('Fidelity={:.2f}, Fidelity_std={:.2f}'.format(
+                    evaluation_results["fidelity"].item(),evaluation_results["fidelity_std"].item()))
                         #print('Average correction applied: \n',evaluation_results["avg_correction"])
             if self.save_best is True:
                 self.save_best_model(evaluation_results["reward"])

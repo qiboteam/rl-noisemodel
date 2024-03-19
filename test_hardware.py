@@ -14,7 +14,7 @@ nqubits=1
 n_circuit_in_dataset=200
 train_size = 160
 
-hardware_results_set = 'src/rlnoise/hardware_test/dm_1Q/200_circ_set_result (2).npy'
+hardware_results_set = 'src/rlnoise/hardware_test/dm_1Q/200_circ_set_result_qubit2.npy'
 
 f = open(hardware_results_set,"rb")
 data = np.load(f,allow_pickle=True)
@@ -67,5 +67,5 @@ verbose=0,
 # n_steps=64
 )
 
-model.learn(100000,progress_bar=True,callback=callback)
+model.learn(200000,progress_bar=True,callback=callback)
 
