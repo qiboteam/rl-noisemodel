@@ -6,24 +6,25 @@ from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 
 config = "src/rlnoise/hardware_test/dm_1Q/config.json"
+output_folder = "src/rlnoise/hardware_test/trained_models"
+
 rep = CircuitRepresentation(config)
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 circuits_depth=11
 nqubits=1
-n_circuit_in_dataset=200
 train_size = 160
 
 hardware_results_set = 'src/rlnoise/hardware_test/dm_1Q/200_circ_set_result_qubit2.npy'
 
-f = open(hardware_results_set,"rb")
-data = np.load(f,allow_pickle=True)
-f.close()
-training_dm_mit = data[:train_size,2]
+with open(hardware_results_set,"rb") as f:
+    data = np.load(f,allow_pickle=True)
+
+training_dm_mit = data[:train_size,3]
 training_circ_rep = np.array([CircuitRepresentation(config).circuit_to_array(circ) for circ in data[:train_size,0]], dtype=object)
 training_dm_true = data[:train_size,1]
 
-evaluation_dm_mit = data[train_size:,2]
+evaluation_dm_mit = data[train_size:,3]
 evaluation_circ_rep = np.array([CircuitRepresentation(config).circuit_to_array(circ) for circ in data[train_size:,0]], dtype=object)
 evaluation_dm_true = data[train_size:,1]
 #Setting up training env and policy model
@@ -50,22 +51,20 @@ policy_kwargs = dict(
     ),
         net_arch=dict(pi=[32, 32], vf=[32, 32])
 )
-#model=PPO.load(model_path+"rew_each_step_D7_box")
-
-#SINGLE TRAIN AND VALID
 
 callback=CustomCallback(check_freq=2500,dataset=dataset,
                         train_environment=circuit_env_training,
-                        verbose=True, result_filename="test")                                          
+                        verbose=True, result_filename="1Q_hardw_qubit2_clip0.12_MIT",
+                        config_path=config, out_folder=output_folder)                                          
 model = PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
-# clip_range=0.15,
-#n_epochs=5,
+clip_range=0.12,
+# n_epochs=5,
 # n_steps=64
 )
 
-model.learn(200000,progress_bar=True,callback=callback)
+model.learn(300000,progress_bar=True,callback=callback)
 

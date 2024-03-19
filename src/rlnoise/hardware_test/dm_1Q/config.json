@@ -29,8 +29,8 @@
   "policy": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "1Q_D10_AllNoises_LogReward_",
-    "plot_name": "Simulation"
+    "model_name": "1Q_D11_hardware_clip0.12_MIT",
+    "plot_name": "1Q_D11_hardware_clip0.12_MIT"
   },
   "reward": {
     "reward_type": "log"
