@@ -130,12 +130,29 @@ if test_only_depol_model is True:
 
 
 
+if test_only_depol_model is True:
+    rl_noise_only_dep = RL_NoiseModel(agent = agent_depol, circuit_representation =  CircuitRepresentation(config_depol_agent))
+    rl_dep_noisy_circuit = rl_noise_only_dep.apply(final_circuit)
+    print("RL depol agent", compute_fidelity(noisy_circuit().state(), rl_dep_noisy_circuit().state()))
+    rl_dep_noisy_circuit2 = copy_circ(rl_dep_noisy_circuit)
+    rl_dep_noisy_circuit2.add(gates.M(0,1,2))
+    rl_dep_shots = rl_dep_noisy_circuit2.execute(nshots=10000)
+    rl_dep_shots = dict(sorted(dict(rl_dep_shots.frequencies()).items()))
+    values4 = list(rl_dep_shots.values())
+    r4 = [x + bar_width for x in r3]
+
+
+
+
 fig=plt.figure(figsize=(12, 9))
 ax=fig.add_subplot(111)
 # Create the bar plot
 ax.bar(r1, values1, width=bar_width, label='Ground truth noise', color='#e60049')
 ax.bar(r2, values2, width=bar_width, label='RL', color='#0bb4ff')
 ax.bar(r3, values3, width=bar_width, label='RB', color='green')
+if test_only_depol_model:
+    ax.bar(r4, values4, width=bar_width, label='RL agent Only depol', color='orange')
+
 if test_only_depol_model:
     ax.bar(r4, values4, width=bar_width, label='RL agent Only depol', color='orange')
 
@@ -148,6 +165,6 @@ if circuit_type == "Grover":
 else:
     plt.ylim(0, 2500)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
-plt.legend(loc = "upper right", ncol=1)
-plt.savefig(f"{circuit_type}_shots.pdf", )
+plt.legend(loc = "upper right", ncol=4)
+plt.savefig(f"{circuit_type}_shots.png", )
 plt.show()
