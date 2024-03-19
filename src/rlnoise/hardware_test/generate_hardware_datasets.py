@@ -18,19 +18,19 @@ def generate_random_circuit(depth):
 
     return circuit
 
-# circ_list = []
-# for i in range(100):
-#     circ_list.append(generate_random_circuit(depth=11))
+circ_list = []
+for i in range(200):
+    circ_list.append(generate_random_circuit(depth=15))
 
-# dataset_name = f"{Path(__file__).parent}/100_circ_set.npy"
-# np.save(dataset_name, arr=np.array(circ_list))
+dataset_name = f"{Path(__file__).parent}/200_circ_set.npy"
+np.save(dataset_name, arr=np.array(circ_list))
 
 ## Save RB set
 
 
-for i in range(3,33,3):
-    data_name = f"{Path(__file__).parent}/new_datasets/RB_set/D{i}_len50"
-    circ_list = []
-    for i in range(50): 
-        circ_list.append(generate_random_circuit(depth=i))
-    np.save(data_name, arr=np.array(circ_list))
+# for i in range(3,33,3):
+#     data_name = f"{Path(__file__).parent}/new_datasets/RB_set/D{i}_len50"
+#     circ_list = []
+#     for i in range(50): 
+#         circ_list.append(generate_random_circuit(depth=i))
+#     np.save(data_name, arr=np.array(circ_list))

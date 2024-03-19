@@ -5,25 +5,26 @@ from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 
-rep = CircuitRepresentation()
+config = "src/rlnoise/hardware_test/dm_1Q/config.json"
+rep = CircuitRepresentation(config)
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
-circuits_depth=15
-nqubits=3
-n_circuit_in_dataset=500
-train_size = 300
+circuits_depth=11
+nqubits=1
+n_circuit_in_dataset=200
+train_size = 160
 
-hardware_results_set = 'src/rlnoise/hardware_test/dm_3Q_IBM/Hanoi_optimized_and_fixed/train_set_Hanoi_3Q.npy'
+hardware_results_set = 'src/rlnoise/hardware_test/dm_1Q/200_circ_set_result (2).npy'
 
 f = open(hardware_results_set,"rb")
 data = np.load(f,allow_pickle=True)
 f.close()
-training_dm_mit = data[:train_size,3]
-training_circ_rep = np.array([CircuitRepresentation().circuit_to_array(circ) for circ in data[:train_size,0]], dtype=object)
+training_dm_mit = data[:train_size,2]
+training_circ_rep = np.array([CircuitRepresentation(config).circuit_to_array(circ) for circ in data[:train_size,0]], dtype=object)
 training_dm_true = data[:train_size,1]
 
-evaluation_dm_mit = data[train_size:,3]
-evaluation_circ_rep = np.array([CircuitRepresentation().circuit_to_array(circ) for circ in data[train_size:,0]], dtype=object)
+evaluation_dm_mit = data[train_size:,2]
+evaluation_circ_rep = np.array([CircuitRepresentation(config).circuit_to_array(circ) for circ in data[train_size:,0]], dtype=object)
 evaluation_dm_true = data[train_size:,1]
 #Setting up training env and policy model
 
@@ -53,17 +54,18 @@ policy_kwargs = dict(
 
 #SINGLE TRAIN AND VALID
 
-callback=CustomCallback(check_freq=5000,evaluation_set=dataset,
+callback=CustomCallback(check_freq=2500,dataset=dataset,
                         train_environment=circuit_env_training,
-                        trainset_depth=circuits_depth,verbose=True)                                          
+                        verbose=True, result_filename="test")                                          
 model = PPO(
 policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs, 
 verbose=0,
-clip_range=0.3,
+# clip_range=0.15,
 #n_epochs=5,
+# n_steps=64
 )
 
-model.learn(300000,progress_bar=True,callback=callback)
+model.learn(100000,progress_bar=True,callback=callback)
 

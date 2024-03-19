@@ -13,16 +13,17 @@ from qibo.noise import NoiseModel, DepolarizingError
 
 circuit_type = "QFT"
 parser = argparse.ArgumentParser()
-
-if circuit_type == "QFT":
-    parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(heavy_noise)/500_circ/3Q_Rand_clif_logmse340000.zip')
-    parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/config.json')
-else:
-    parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse175000_allNoise.zip')
-    parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/config_low.json')
+parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/config_all_noise.json')
+parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse175000_allNoise.zip')
 args = parser.parse_args()
 
+circuit_type = "Grover"
+test_only_depol_model = True
+
 agent = PPO.load(args.model)
+agent_depol = PPO.load("src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse_onlydepol340000.zip")
+config_depol_agent = "src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/config_only_dep.json"
+
 
 if circuit_type == "QFT":
     circuit = qft()
@@ -36,7 +37,7 @@ if circuit_type == "Grover":
 noise_model = CustomNoiseModel(config_file=args.config)
 noisy_circuit = noise_model.apply(final_circuit)
 
-rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitRepresentation())
+rl_noise_model = RL_NoiseModel(agent = agent, circuit_representation =  CircuitRepresentation(args.config))
 rl_noisy_circuit = rl_noise_model.apply(final_circuit)
 
 noise = NoiseModel()
@@ -115,12 +116,29 @@ r1 = range(len(keys))
 r2 = [x + bar_width for x in r1]
 r3 = [x + bar_width for x in r2]
 
+if test_only_depol_model is True:
+    rl_noise_only_dep = RL_NoiseModel(agent = agent_depol, circuit_representation =  CircuitRepresentation(config_depol_agent))
+    rl_dep_noisy_circuit = rl_noise_only_dep.apply(final_circuit)
+    print("RL depol agent", compute_fidelity(noisy_circuit().state(), rl_dep_noisy_circuit().state()))
+    rl_dep_noisy_circuit2 = copy_circ(rl_dep_noisy_circuit)
+    rl_dep_noisy_circuit2.add(gates.M(0,1,2))
+    rl_dep_shots = rl_dep_noisy_circuit2.execute(nshots=10000)
+    rl_dep_shots = dict(sorted(dict(rl_dep_shots.frequencies()).items()))
+    values4 = list(rl_dep_shots.values())
+    r4 = [x + bar_width for x in r3]
+
+
+
+
 fig=plt.figure(figsize=(12, 9))
 ax=fig.add_subplot(111)
 # Create the bar plot
 ax.bar(r1, values1, width=bar_width, label='Ground truth noise', color='#e60049')
 ax.bar(r2, values2, width=bar_width, label='RL', color='#0bb4ff')
 ax.bar(r3, values3, width=bar_width, label='RB', color='green')
+if test_only_depol_model:
+    ax.bar(r4, values4, width=bar_width, label='RL agent Only depol', color='orange')
+
 
 # Customize the plot
 plt.xlabel('Result')
