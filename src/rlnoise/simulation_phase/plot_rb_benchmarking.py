@@ -4,8 +4,11 @@ import numpy as np
 import scienceplots
 
 plt.style.use('science')
+import scienceplots
 
-qubits = 3
+plt.style.use('science')
+
+qubits = 1
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26

@@ -8,10 +8,6 @@ from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
-from rlnoise.utils import RL_NoiseModel
-from rlnoise.utils import model_evaluation, RB_evaluation
-import torch
-from rlnoise.metrics import compute_fidelity
 
 ncirc = 500
 current_path = Path(__file__).parent
