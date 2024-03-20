@@ -6,7 +6,7 @@ from qibo import gates
 from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
 from inspect import signature
-from rlnoise.hardware_test.classical_shadows import ClassicalShadows
+# from rlnoise.hardware_test.classical_shadows import ClassicalShadows
 # from rlnoise.hardware_test.state_tomography import StateTomography
 from rlnoise.custom_noise import string_to_gate
 
@@ -144,6 +144,8 @@ class Dataset(object):
 
     def generate_random_circuit(self):
         """Generate a random circuit."""
+        if self.n_qubits < 2 and "CZ" in self.primitive_gates:
+            raise ValueError("Impossible to use CZ on 1 qubit  circuits, modify the configuration file!")
         circuit = Circuit(self.n_qubits, density_matrix=True)
         for _ in range(self.n_gates):
             for q0 in range(self.n_qubits):
@@ -263,6 +265,8 @@ class CircuitRepresentation(object):
             self.config = json.load(f)
         self.encoding_dim = 8
         self.primitive_gates = self.config['noise']['primitive_gates']
+        self.only_depolarizing_enabled = self.config["gym_env"]["enable_only_depolarizing"]
+        self.max_action = self.config["gym_env"]["action_space_max_value"]
 
     def gate_to_array(self, gate, qubit):
         """Provide the one-hot encoding of a gate."""
@@ -390,15 +394,16 @@ class CircuitRepresentation(object):
         nqubits = circuit.shape[1]
         for q in range(nqubits):          
             for idx, a in enumerate(action[q]):
-                a *= self.config["gym_env"]["action_space_max_value"]
-                if idx == gate_action_index("epsilon_x"):
-                    circuit[gate_to_idx("epsilon_x"), q, position] = a
-                if idx == gate_action_index("epsilon_z"):
-                    circuit[gate_to_idx("epsilon_z"), q, position] = a
-                if idx == gate_action_index(gates.ResetChannel):
-                    circuit[gate_to_idx(gates.ResetChannel), q, position] = a
+                a *= self.max_action
                 if idx == gate_action_index(gates.DepolarizingChannel):
-                    circuit[gate_to_idx(gates.DepolarizingChannel), q, position] = a                
+                    circuit[gate_to_idx(gates.DepolarizingChannel), q, position] = a        
+                if self.only_depolarizing_enabled is False:
+                    if idx == gate_action_index("epsilon_x"):
+                        circuit[gate_to_idx("epsilon_x"), q, position] = a
+                    if idx == gate_action_index("epsilon_z"):
+                        circuit[gate_to_idx("epsilon_z"), q, position] = a
+                    if idx == gate_action_index(gates.ResetChannel):
+                        circuit[gate_to_idx(gates.ResetChannel), q, position] = a        
         return circuit
 
 

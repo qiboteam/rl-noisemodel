@@ -62,12 +62,7 @@ else:
     backend.compiler.__setitem__(gates.X, x_rule)
     backend.transpiler = None
     backend_qiskit = None
-
-
-
-
-
 if method == 'ST':
     results = state_tomography(qibo_circuits, nshots, likelihood, backend, backend_qiskit, backend_qs, layout)
-
+    
 np.save(bench_results_path+bench_name[0:-4]+f'_result_qubit{layout[0]}_NEW.npy',np.array(results, dtype=object))

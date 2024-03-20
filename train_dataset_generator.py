@@ -6,9 +6,12 @@ from rlnoise.custom_noise import CustomNoiseModel
 
 
 #benchmark_circ_path=os.getcwd()+'/src/rlnoise/bench_dataset/'
+qubits=1
+number_of_circuits=200
 
-benchmark_circ_path = 'enanched/'
-config_file = f"{Path(__file__).parent}/src/rlnoise/config.json"
+# benchmark_circ_path = f'src/rlnoise/simulation_phase/3Q_random_Clifford(heavy_noise)/{number_of_circuits}_circ/'
+benchmark_circ_path = "src/rlnoise/"
+config_file = f"{Path(__file__).parent}/src/rlnoise/simulation_phase/1Q_training_new/config.json"
 
 if not os.path.exists(benchmark_circ_path):
     os.makedirs(benchmark_circ_path)
@@ -17,26 +20,23 @@ noise_model = CustomNoiseModel(config_file)
 rep = CircuitRepresentation(config_file)
 
 
-number_of_gates_per_qubit=[20]
-qubits=3
-number_of_circuits=500
-dataset_name='test_set_enhanced'
+number_of_gates_per_qubit=[7]
+
+dataset_name='Rand_cliff'
 enhanced_dataset = False
 
-for i in range(1):
-    dataset_name= f'test_set_enhanced{i}'
+for i in number_of_gates_per_qubit:
     with open(benchmark_circ_path+dataset_name+"_D%d_%dQ_len%d.npz"%(i,qubits,number_of_circuits),"wb") as f:
         nqubits = qubits
-        depth = 11
         ncirc = number_of_circuits
         dataset = Dataset(
             config_file,
             n_circuits = ncirc,
-            n_gates = depth,
+            n_gates = i,
             n_qubits = nqubits,
             representation = rep,
             enhanced_dataset = enhanced_dataset,
-            clifford = True,
+            clifford = False,
             shadows = False,
             noise_model = noise_model,
             mode = 'rep',

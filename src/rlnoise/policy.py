@@ -10,9 +10,6 @@ from rlnoise.utils import model_evaluation
 
 SAVE_TRAIN_DATA = True
 
-with open(f"{Path(__file__).parent}/config.json") as f:
-    config = json.load(f)
-
 class CNNFeaturesExtractor(BaseFeaturesExtractor):
 
     def __init__(
@@ -63,19 +60,21 @@ class CustomCallback(BaseCallback):
         trainset_depth: number of gates per qubit used in the bench dataset
 
     """
-    def __init__(self, check_freq, dataset, train_environment, verbose=False ,test_on_data_size = None, result_filename=None, evaluation_set = None):
+    def __init__(self, check_freq, dataset, train_environment, verbose=False ,
+                 test_on_data_size = None,result_filename=None, evaluation_set = None, 
+                 config_path: str = None, out_folder = str(Path(__file__).parent)):
         super(CustomCallback, self).__init__(verbose)
+        
+        with open(config_path, 'r') as f:
+            config = json.load(f)
 
         policy_params  =  config['policy']
         self.save_best = policy_params['save_best_model']
         self.plot = policy_params['plot_results']
         self.best_model_name = policy_params['model_name']
         self.plot_name = policy_params['plot_name']
-        self.log_dir = f'{str(Path(__file__).parent)}/model_folder/'
-        self.plot_dir = (
-            f'{str(Path(__file__).parent)}/model_folder/'
-        )
-        self.results_path = result_filename
+        self.save_path = out_folder
+        self.results_name = f"{out_folder}/{result_filename}"
         self.check_freq = check_freq
         self.test_on_data_size = test_on_data_size
         self.environment = train_environment
@@ -94,25 +93,8 @@ class CustomCallback(BaseCallback):
         self.eval_results = []
         self.train_results = []
         self.timestep_list = []
-        self.save_path = os.path.join(self.log_dir, self.best_model_name)
         self.plot_1_title = "Training and evaluation results"
-        # Those variables will be accessible in the callback
-        # (they are defined in the base class)
-        # The RL model
-        # self.model = None  # type: BaseRLModel
-        # An alias for self.model.get_env(), the environment used for training
-        # self.training_env = None  # type: Union[gym.Env, VecEnv, None]
-        # Number of time the callback was called
-        # self.n_calls = 0  # type: int
-        # self.num_timesteps = 0  # type: int
-        # local and global variables
-        # self.locals = None  # type: Dict[str, Any]
-        # self.globals = None  # type: Dict[str, Any]
-        # The logger object, used to report things in the terminal
-        # self.logger = None  # type: logger.Logger
-        # # Sometimes, for event callback, it is useful
-        # # to have access to the parent object
-        # self.parent = None  # type: Optional[BaseCallback]
+
 
     def _on_rollout_start(self) -> None:
         """
@@ -142,11 +124,11 @@ class CustomCallback(BaseCallback):
             if self.verbose:
                 print(f"Num timesteps: {self.num_timesteps}")
                 print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f}".format(self.best_mean_reward, evaluation_results['reward'].item()))
-                print('Standard deviations: Reward_std={:.2f}, Fidelity_std={:.2f}, Trace distance_std={:.2f}'.format(
-                    evaluation_results["reward_std"].item(),evaluation_results["fidelity_std"].item(),evaluation_results["trace_distance_std"].item()))
+                print('Fidelity={:.2f}, Fidelity_std={:.2f}'.format(
+                    evaluation_results["fidelity"].item(),evaluation_results["fidelity_std"].item()))
                         #print('Average correction applied: \n',evaluation_results["avg_correction"])
             if self.save_best is True:
-                self.save_best_model(evaluation_results["reward"])
+                self.save_best_model(evaluation_results["fidelity"])
             self.save_best_results(evaluation_results["reward"],evaluation_results["fidelity"],evaluation_results["trace_distance"],evaluation_results["bures_distance"])
 
             debug = True
@@ -173,7 +155,7 @@ class CustomCallback(BaseCallback):
         
         if SAVE_TRAIN_DATA:
             np.savez(
-                self.results_path, 
+                self.results_name, 
                 timesteps=self.timestep_list, 
                 train_results=self.train_results, 
                 val_results=self.eval_results,
@@ -193,12 +175,12 @@ class CustomCallback(BaseCallback):
         eval_results = self.eval_results.reshape(-1)
         time_steps = self.timestep_list
         if self.test_on_data_size is None:
-            self._extracted_from_plot_results_7(time_steps, eval_results, train_results)
+            self.standard_plot(time_steps, eval_results, train_results)
         else:
-            self._extracted_from_plot_results_28(time_steps, eval_results, train_results)
+            self.plot_specific_datasize(time_steps, eval_results, train_results)
 
     # TODO Rename this here and in `plot_results`
-    def _extracted_from_plot_results_28(self, time_steps, eval_results, train_results):
+    def plot_specific_datasize(self, time_steps, eval_results, train_results):
         fig=plt.figure(figsize=(5,5))
         fig.suptitle('1Q w CZ D5 K3 SR-off train dataset size=%d, val dataset size=%d'%(self.dataset_size,len(self.val_circ)) , fontsize=15)
         ax=fig.add_subplot(111)
@@ -206,10 +188,10 @@ class CustomCallback(BaseCallback):
         ax.plot(time_steps,eval_results[:,0],label='evaluation_set',marker='x')
         ax.plot(time_steps,train_results[:,0],color='orange',label='train_set',marker='x')
         ax.legend()
-        fig.savefig(self.plot_dir+'test_size%d_Dep-Term_CZ_%dQ.png'%(self.dataset_size,self.n_qubits),dpi=300)
+        fig.savefig(f"{self.save_path}/test_size{self.dataset_size}_Dep-Term_CZ_{self.n_qubits}Q.png",dpi=300)
 
     # TODO Rename this here and in `plot_results`
-    def _extracted_from_plot_results_7(self, time_steps, eval_results, train_results):
+    def standard_plot(self, time_steps, eval_results, train_results):
         fig, ax = plt.subplots(2, 2, figsize=(15, 8))
         fig.suptitle(self.plot_1_title, fontsize=15)
 
@@ -229,7 +211,7 @@ class CustomCallback(BaseCallback):
         ax[1,0].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[1,1].errorbar(time_steps,train_results["bures_distance"],yerr=train_results["bures_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[0,0].legend()
-        fig.savefig(self.plot_dir+self.plot_name+'_Q%d_steps%d.png'%(self.n_qubits,self.timestep_list[-1]),dpi=300)
+        fig.savefig(f"{self.save_path}/{self.plot_name}_steps{self.timestep_list[-1]}.png",dpi=300)
         plt.show()
             #plt.show()
         
@@ -248,10 +230,10 @@ class CustomCallback(BaseCallback):
             self.best_mean_fidelity = fidelity
             self.best_mean_trace_dist = trace_dist           
             self.best_mean_bures_dist = bures_dist
-    def save_best_model(self,reward):
-        if reward.item() > self.best_mean_reward:
+    def save_best_model(self,fidelity):
+        if fidelity.item() >= self.best_mean_fidelity:
             if self.verbose:
                 print(f"Saving new best model at {self.num_timesteps} timesteps")
-                print(f"Saving new best model to {self.save_path}.zip")
-            self.model.save(self.save_path+str(self.num_timesteps))
+                print(f"Saving new best model in {self.save_path}")
+            self.model.save(f"{self.save_path}/{self.best_model_name}_{str(self.num_timesteps)}.zip")
         

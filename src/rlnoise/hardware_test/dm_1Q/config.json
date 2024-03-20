@@ -1,0 +1,41 @@
+{
+  "general": {
+    "dataset_length": 100,
+    "dataset_depth": 11
+  },
+  "gym_env": {
+    "kernel_size": 3,
+    "step_reward": false,
+    "step_r_metric": "mse",
+    "neg_reward": 0.0,
+    "pos_reward": 0.2,
+    "action_penalty": 0.0,
+    "action_space": "Continuous",
+    "action_space_max_value": 0.1,
+    "enable_only_depolarizing": false
+  },
+  "noise": {
+    "primitive_gates": ["RZ", "RX"],
+    "channels": ["DepolarizingChannel", "ResetChannel"],
+    "dep_lambda": 0.01,
+    "p0": 0.05,
+    "epsilon_x": 0.15,
+    "epsilon_z": 0.1,
+    "x_coherent_on_gate": ["rx"],
+    "z_coherent_on_gate": ["rz"],
+    "damping_on_gate": ["rx"],
+    "depol_on_gate": ["rz"]
+  },
+  "policy": {
+    "save_best_model": true,
+    "plot_results": true,
+    "model_name": "1Q_D11_hardware_clip0.12_MIT",
+    "plot_name": "1Q_D11_hardware_clip0.12_MIT"
+  },
+  "reward": {
+    "reward_type": "log"
+  }
+}
+
+
+

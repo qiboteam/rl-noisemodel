@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+The results are saved as a list [circ, rho_exact, rho, rho_mit, cal_mat]
+=======
 The results are saved as a list [circ, rho_exact, rho, rho_mit, cal_mat]
 
 100_circ_set_result_qubit1.npy depth 11 (qubit 1)
@@ -11,3 +14,4 @@ The results are saved as a list [circ, rho_exact, rho, rho_mit, cal_mat]
 
 100_circ_set_result_old.npy depth 11 (qubit 0)
 
+>>>>>>> main

@@ -9,22 +9,24 @@ from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 from rlnoise.custom_noise import CustomNoiseModel
 
+ncirc = 500
 current_path = Path(__file__).parent
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/config_hardware.json")
-parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/hardware_test/dm_1Q/100_circ_set_result_qubit0.npy")
-parser.add_argument('--output', type=str, default=f"{current_path}/src/rlnoise/model_folder")
+parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/1Q_training_new/config.json")
+parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/1Q_training_new/train_set_D7_1Q_len500.npz")
+parser.add_argument('--output', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/1Q/{ncirc}_circ")
 args = parser.parse_args()
 
 #IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
-results_filename = f'{args.output}/result_hardware_q0'
+results_filename = f'{args.output}/train_results_mse_len{ncirc}'
+
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
 tmp = np.load(args.dataset, allow_pickle=True)
-train_set = copy.deepcopy(tmp['train_set'])
-train_label = copy.deepcopy(tmp['train_label'])
-val_set = copy.deepcopy(tmp['val_set'])
-val_label = copy.deepcopy(tmp['val_label'])
+train_set = copy.deepcopy(tmp['train_set'][:ncirc])
+train_label = copy.deepcopy(tmp['train_label'][:ncirc])
+val_set = copy.deepcopy(tmp['val_set'][:ncirc])
+val_label = copy.deepcopy(tmp['val_label'][:ncirc])
 
 #Custom val set
 # val_set_tmp = np.load("simulation_phase/3Q_non_clifford/non_clifford_set.npz", allow_pickle=True)
@@ -63,12 +65,11 @@ policy,
 circuit_env_training,
 policy_kwargs=policy_kwargs,
 verbose=0,
-n_steps=512,
-device="cuda"
+n_steps=256,
 )
 #                             #STANDARD TRAINING
 
-callback=CustomCallback(check_freq=15000,
+callback=CustomCallback(check_freq=2500,
                         dataset=tmp,
                         train_environment=circuit_env_training,
                         verbose=True,
@@ -76,7 +77,7 @@ callback=CustomCallback(check_freq=15000,
                         )                                          
 
 # print((model.policy.action_net))
-model.learn(total_timesteps=500000, progress_bar=True, callback=callback)
+model.learn(total_timesteps=200000, progress_bar=True, callback=callback)
 
 # agent = RL_NoiseModel(model, rep)
 

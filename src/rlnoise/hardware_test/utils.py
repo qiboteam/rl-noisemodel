@@ -1,16 +1,29 @@
 from collections import Counter
 
+<<<<<<< HEAD
+# import numpy as np
+# from qibo import gates
+# from qibo.backends import construct_backend
+# from qibo.config import log
+# from qibo.models import Circuit
+=======
 import numpy as np
 from qibo import gates
 from qibo.backends import construct_backend
 from qibo.config import log
 from qibo.models import Circuit
+>>>>>>> main
 # from qiskit import QuantumCircuit
 # from qiskit.compiler import transpile
 # from qiskit_experiments.library import MitigatedStateTomography
 # from qiskit_experiments.library import StateTomography as StateTomography_qiskit
+<<<<<<< HEAD
+# from qiboconnection import API
+# from qiboconnection.connection import ConnectionConfiguration
+=======
 from qiboconnection import API
 from qiboconnection.connection import ConnectionConfiguration
+>>>>>>> main
 
 def expectation_from_samples(obs, freq, qubit_map=None):
     obs = obs.matrix
@@ -55,6 +68,24 @@ def run_qibo(circuits, backend, nshots=10000):
         freqs.append(result.frequencies())
     return freqs
 
+<<<<<<< HEAD
+def run_quantum_spain(circuits, backend, nshots=10000, layout=None):
+    configuration = ConnectionConfiguration(username = "alejandro.sopena",api_key = "23287d7c-cd0c-4dfd-90d3-9fb506c11dee")
+    api = API(configuration = configuration)
+    api.select_device_id(device_id=backend)
+    # result_id = api.execute(circuits, nshots=nshots)
+    # results = api.get_result(job_id=result_id[0])
+    results = api.execute_and_return_results(circuits, nshots=nshots,timeout=36000)[0]
+    freqs = []
+    for result in results:
+        probs = result['probabilities']
+        counts = {}
+        for key in probs:
+            counts[key] = probs[key]*nshots
+        freqs.append(counts)
+    return freqs
+
+=======
 def transpiler(circuit,qubit_map):
     c = Circuit(5)
     c.add(circuit.on_qubits(*qubit_map))
@@ -79,6 +110,7 @@ def run_quantum_spain(circuits, backend, nshots=10000, layout=None):
         freqs.append(counts)
     return freqs
 
+>>>>>>> main
 def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None, backend_qiskit=None, backend_qs=None, layout=None):
     """Computes the calibration matrix for readout mitigation.
 

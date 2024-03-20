@@ -3,6 +3,7 @@ import json
 import copy
 import numpy as np
 from pathlib import Path
+import qibo
 from qibo import gates
 from qibo.models.circuit import Circuit
 import matplotlib.pyplot as plt
@@ -195,9 +196,7 @@ def RB_evaluation(lambda_RB,circ_representation,target_label):
     trace_distance_no_noise_list = []
     bures_distance_no_noise_list = []
     fidelity_no_noise_list = []
-    rb_noise_model=CustomNoiseModel(["RX","RZ"],lam=lambda_RB,p0=0,epsilon_x=0,epsilon_z=0,
-                               x_coherent_on_gate=["none"],z_coherent_on_gate=["none"],
-                               depol_on_gate=["rx","rz"],damping_on_gate=["none"])
+    rb_noise_model=CustomNoiseModel("src/rlnoise/config.json")
     RB_label = np.array([rb_noise_model.apply(CircuitRepresentation().rep_to_circuit(circ_representation[i]))().state() 
                          for i in range(dataset_size)])
     label_no_noise_added = np.array([CircuitRepresentation().rep_to_circuit(circ_representation[i])().state() 
@@ -300,7 +299,7 @@ def unroll_circuit(circuit):
     optimizer = Rearrange()
 
     unrolled_circuit = unroller(circuit)
-    print(unrolled_circuit.draw())
+    #print(unrolled_circuit.draw())
     opt_circuit = optimizer(unrolled_circuit)
     print(opt_circuit.draw())
     #opt_circuit = unrolled_circuit
