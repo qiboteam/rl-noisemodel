@@ -6,7 +6,7 @@ import matplotlib as mpl
 #mpl.rcParams.update(mpl.rcParamsDefault)
 plt.style.use('science')
 
-qubits = 3
+qubits = "hardware"
 steps = 150
 
 SMALL_SIZE = 22
@@ -23,8 +23,10 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 if qubits == 1:
     results_path = 'src/rlnoise/simulation_phase/1Q/train_results_new.npz'
-else:
+elif qubits == 3:
     results_path = 'src/rlnoise/simulation_phase/3Q_training_new/train_results.npz'
+else :
+    results_path = 'src/rlnoise/hardware_test/trained_models/1Q_D11_len100_qubit2(best_model)/1Q_hardw_qubit2_clip0.12.npz'
 
 with open(results_path,"rb") as f:
     tmp = np.load(f,allow_pickle=True)
