@@ -11,15 +11,15 @@ from rlnoise.dataset import CircuitRepresentation
 from rlnoise.hardware_test.utils import classical_shadows, qiskit_state_tomography, state_tomography
 from qibo.models import Circuit
 
-benchmark_circ_path= "src/rlnoise/hardware_test/RB/" #"src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
+benchmark_circ_path= "src/rlnoise/hardware_test/RB/dataset/" #"src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
 
 QUBIT = 0
 #benchmark_circ_path= "src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
 numbers = np.arange(1, 200, 20)
 for number in numbers:
-    bench_name='D'+str(number)+f'_len20_qubit{QUBIT}.npy'#'100_circ_set.npy'
+    bench_name=f"RB_set_D{number}_1Q_len20_circs.npy"#'D'+str(number)+f'_len20_qubit{QUBIT}.npy'#'100_circ_set.npy'
 
-    bench_results_path = "src/rlnoise/hardware_test/RB/"#"src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
+    bench_results_path = "src/rlnoise/hardware_test/RB/dataset/"#"src/rlnoise/hardware_test/dm_1Q_quantum_spain/"
 
     f = open(benchmark_circ_path+bench_name,"rb")
 
