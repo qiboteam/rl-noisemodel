@@ -11,14 +11,14 @@ from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
 
 
-circuit_type = "QFT"
+circuit_type = "Grover"
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/config_all_noise.json')
-parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse175000_allNoise.zip')
+parser.add_argument('--model', type=str, default=f'{Path(__file__).parent}/src/rlnoise/3Q_Rand_Cliff_soft_allNoise_97500.zip')
 args = parser.parse_args()
 
-circuit_type = "Grover"
-test_only_depol_model = True
+test_only_depol_model = False
 
 agent = PPO.load(args.model)
 agent_depol = PPO.load("src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/3Q_Rand_clif_logmse_onlydepol340000.zip")
@@ -89,8 +89,8 @@ print("RB", RB_shots)
 
 
 import matplotlib.pyplot as plt
-import scienceplots
-plt.style.use('science')
+# import scienceplots
+# plt.style.use('science')
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -126,21 +126,6 @@ if test_only_depol_model is True:
     rl_dep_shots = dict(sorted(dict(rl_dep_shots.frequencies()).items()))
     values4 = list(rl_dep_shots.values())
     r4 = [x + bar_width for x in r3]
-
-
-
-
-if test_only_depol_model is True:
-    rl_noise_only_dep = RL_NoiseModel(agent = agent_depol, circuit_representation =  CircuitRepresentation(config_depol_agent))
-    rl_dep_noisy_circuit = rl_noise_only_dep.apply(final_circuit)
-    print("RL depol agent", compute_fidelity(noisy_circuit().state(), rl_dep_noisy_circuit().state()))
-    rl_dep_noisy_circuit2 = copy_circ(rl_dep_noisy_circuit)
-    rl_dep_noisy_circuit2.add(gates.M(0,1,2))
-    rl_dep_shots = rl_dep_noisy_circuit2.execute(nshots=10000)
-    rl_dep_shots = dict(sorted(dict(rl_dep_shots.frequencies()).items()))
-    values4 = list(rl_dep_shots.values())
-    r4 = [x + bar_width for x in r3]
-
 
 
 

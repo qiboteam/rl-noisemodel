@@ -12,13 +12,13 @@ from rlnoise.custom_noise import CustomNoiseModel
 ncirc = 500
 current_path = Path(__file__).parent
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/1Q_training_new/config.json")
-parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/1Q_training_new/train_set_D7_1Q_len500.npz")
-parser.add_argument('--output', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/1Q/{ncirc}_circ")
+parser.add_argument('--config', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/config_all_noise.json")
+parser.add_argument('--dataset', type=str, default=f"{current_path}/src/rlnoise/simulation_phase/3Q_random_Clifford(soft_noise_grover)/test_set_enhanced_3Q_len500.npz")
+parser.add_argument('--output', type=str, default=f"{current_path}/src/rlnoise")
 args = parser.parse_args()
 
 #IMPLEMENTING A CUSTUM POLICY NETWORK (e.g. increasing dimension of value network) COULD BE AN IDEA
-results_filename = f'{args.output}/train_results_mse_len{ncirc}'
+results_filename = f'{args.output}/train_results_all_noise'
 
 
 #loading benchmark datasets (model can be trained with circuits of different lenghts if passed as list)
@@ -74,6 +74,7 @@ callback=CustomCallback(check_freq=2500,
                         train_environment=circuit_env_training,
                         verbose=True,
                         result_filename=results_filename,
+                        config_path=args.config
                         )                                          
 
 # print((model.policy.action_net))
