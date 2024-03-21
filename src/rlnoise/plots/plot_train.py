@@ -7,7 +7,7 @@ import matplotlib as mpl
 plt.style.use('science')
 
 qubits = "hardware"
-steps = 200
+steps = 80
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -26,7 +26,7 @@ if qubits == 1:
 elif qubits == 3:
     results_path = 'src/rlnoise/simulation_phase/3Q_training_new/train_results.npz'
 else:
-    results_path = 'src/rlnoise/hardware_test/trained_models/1Q_D11_len100_qubit2(best_model)/1Q_hardw_qubit2_clip0.12.npz'
+    results_path = 'src/rlnoise/hardware_test/trained_models/1Q_d11_best/1Q_hardw_qubit2_forRB.npz'
 
 with open(results_path,"rb") as f:
     tmp = np.load(f,allow_pickle=True)

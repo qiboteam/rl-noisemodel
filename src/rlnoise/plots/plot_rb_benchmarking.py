@@ -8,7 +8,7 @@ import scienceplots
 
 plt.style.use('science')
 
-qubits = 1
+qubits = "hardware"
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
@@ -22,12 +22,17 @@ plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=BIGGER_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-depths=np.arange(3,31,3)
+if qubits == 1 or qubits == 3:
+    depths=np.arange(3,31,3)
+else:
+    depths=np.arange(1,122,20)
 
 if qubits == 1:
     filepath = 'src/rlnoise/simulation_phase/RB/1Q/results/comparison2_results_1Q.npz'
-else:
+elif qubits == 3:
     filepath = 'src/rlnoise/simulation_phase/RB/3Q/results/3q.npz'
+else:
+    filepath = "src/rb_hardware_q2.npz"
 
 with open(filepath,"rb") as f:
     tmp=np.load(f,allow_pickle=True)
