@@ -1,4 +1,0 @@
-Here the results are of the form [circ, circ_qiskit, rho_exact, rho_mit, cal_mat] 
-Was performed the mitigated state tomography of qiskit.
-Probably the density matrix qibo and qiskit doesn't match it has to be done a qiskit.reverse() 
-to make them equal.
