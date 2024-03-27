@@ -7,7 +7,7 @@ import qibo
 from qibo import gates
 from qibo.models.circuit import Circuit
 import matplotlib.pyplot as plt
-from rlnoise.custom_noise import CustomNoiseModel
+from rlnoise.noise_model import CustomNoiseModel
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards import DensityMatrixReward
 from rlnoise.gym_env import QuantumCircuit

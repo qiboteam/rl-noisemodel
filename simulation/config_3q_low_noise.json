@@ -1,7 +1,10 @@
 {
   "general": {
-    "dataset_length": 500,
-    "dataset_depth": 7
+    "n_circuits": 500,
+    "moments": 7,
+    "qubits": 3,
+    "enhanced": true,
+    "clifford": true
   },
   "gym_env": {
     "kernel_size": 3,

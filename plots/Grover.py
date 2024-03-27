@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 import argparse
 from rlnoise.dataset import CircuitRepresentation
-from rlnoise.custom_noise import CustomNoiseModel
+from rlnoise.noise_model import CustomNoiseModel
 from rlnoise.metrics import compute_fidelity
 from rlnoise.utils import RL_NoiseModel, unroll_circuit, grover, qft
 from stable_baselines3 import PPO

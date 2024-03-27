@@ -4,7 +4,7 @@ from stable_baselines3 import PPO
 from rlnoise.utils_RB import randomized_benchmarking
 from rlnoise.utils import RL_NoiseModel
 from rlnoise.dataset import CircuitRepresentation
-from rlnoise.custom_noise import CustomNoiseModel
+from rlnoise.noise_model import CustomNoiseModel
 from qibo.noise import NoiseModel, DepolarizingError
 
 

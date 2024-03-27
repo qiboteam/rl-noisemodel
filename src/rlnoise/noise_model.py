@@ -1,8 +1,7 @@
 import json
-from pathlib import Path
 from typing import List
 from dataclasses import dataclass
-from qibo.noise import DepolarizingError, NoiseModel, ThermalRelaxationError,ResetError
+from qibo.noise import DepolarizingError, NoiseModel, ResetError
 from qibo import gates
 from qibo.models import Circuit
 
@@ -12,21 +11,19 @@ def string_to_gate(gate_string):
         return None
     elif gate_str_low == 'rx':
         gate=gates.RX
-    elif gate_str_low == 'x':
-        gate=gates.X
     elif gate_str_low == 'rz':
         gate=gates.RZ
     elif gate_str_low == 'cz':
         gate=gates.CZ
-    elif gate_str_low == 'cnot':
-        gate = gates.CNOT
     else:
-    
         raise ValueError(f'Unrecognised gate {gate_str_low} in string_to_gate()')
     return gate
 
 @dataclass
 class CustomNoiseModel(object):
+    """
+    Define a custom noise model for the generation of the datasets.
+    """
     config_file: str
     primitive_gates: List = None
     lam: float = None
@@ -77,14 +74,12 @@ class CustomNoiseModel(object):
                     if type(gate) == string_to_gate(x_coherent_on_gate):   
                         qubit=gate.qubits[0]                    
                         theta=self.epsilon_x*gate.init_kwargs['theta']
-                        #print('Real theta %f, epsilon_x %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.self.noise_params["x"],theta))
                         noisy_circuit.add(gates.RX(q=qubit, theta=theta))
             if self.z_coherent_on_gate is not None:
                 for z_coherent_on_gate in self.z_coherent_on_gate:
                     if type(gate) == string_to_gate(z_coherent_on_gate):
                         qubit=gate.qubits[0]
                         theta=self.epsilon_z*gate.init_kwargs['theta']
-                        #print('Real theta %f, epsilon_z %f, theta coherent %f'%(gate.init_kwargs['theta'] ,self.self.noise_params["z"],theta))
                         noisy_circuit.add(gates.RZ(q=qubit, theta=theta))
         return noisy_circuit
 

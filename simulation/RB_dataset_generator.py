@@ -2,7 +2,7 @@ import os
 import numpy as np
 import argparse
 from rlnoise.dataset import Dataset, CircuitRepresentation
-from rlnoise.custom_noise import CustomNoiseModel
+from rlnoise.noise_model import CustomNoiseModel
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--out', type=str)

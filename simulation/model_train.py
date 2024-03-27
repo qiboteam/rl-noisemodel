@@ -7,7 +7,7 @@ from rlnoise.rewards import DensityMatrixReward
 from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
-from rlnoise.custom_noise import CustomNoiseModel
+from rlnoise.noise_model import CustomNoiseModel
 
 ncirc = 500
 current_path = Path(__file__).parent
