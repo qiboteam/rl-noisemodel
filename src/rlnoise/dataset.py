@@ -1,11 +1,29 @@
 import random
 import json
+import os
+import copy
 import numpy as np
 from qibo import gates
 from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
 from rlnoise.noise_model import string_to_gate, CustomNoiseModel
 from rlnoise.circuit_representation import CircuitRepresentation
+
+def load_dataset(filename):
+    '''Load a dataset from a npz file.
+    Returns the training and validation sets and labels in the following order:
+    train_set, train_label, val_set, val_label.
+    '''
+
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"File {filename} not found.")
+    
+    tmp = np.load(filename, allow_pickle=True)
+    train_set = copy.deepcopy(tmp['train_set'])
+    train_label = copy.deepcopy(tmp['train_label'])
+    val_set = copy.deepcopy(tmp['val_set'])
+    val_label = copy.deepcopy(tmp['val_label'])
+    return train_set, train_label, val_set, val_label
 
 class Dataset(object):
     def __init__(self, config_file):
@@ -30,8 +48,8 @@ class Dataset(object):
         else:
             self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
         self.noisy_circuits = [noise_model.apply(c) for c in self.circuits]
-        self.dm_labels = np.asarray([self.noisy_circuits[i].state() for i in range(self.n_circuits)])
-        self.circ_rep = np.asarray([rep.circuit_to_array(c)for c in self.circuits])
+        self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
+        self.circ_rep = np.asarray([rep.circuit_to_array(c)for c in self.circuits], dtype=object)
 
     def generate_clifford_circuit(self):
         '''Generate a random Clifford circuit'''
@@ -87,12 +105,22 @@ class Dataset(object):
     
     def save(self, filename, val_split=0.2):
         '''Save the dataset to a npz file, dividing it into training and validation sets.'''
+
+        if os.path.exists(filename):
+            raise Warning(f"File {filename} already exists. The file will be overwrite.")
+        
+        directory = os.path.dirname(filename)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         len_test = int(self.n_circuits*(1.-val_split))
         train_set=self.circ_rep[:len_test]
         train_label=self.dm_labels[:len_test]
         val_set=self.circ_rep[len_test:]
         val_label=self.dm_labels[len_test:]
-        np.savez(filename,train_set=train_set, 
-                    train_label=train_label, 
-                    val_label=val_label, 
-                    val_set=val_set, allow_pickle=True)
+        np.savez(filename,
+                train_set=train_set, 
+                train_label=train_label,
+                val_set=val_set, 
+                val_label=val_label, 
+                allow_pickle=True)
