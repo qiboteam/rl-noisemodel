@@ -34,12 +34,9 @@ class StateTomography:
             circuit = self.circuit.copy(deep=True)
             for q in range(self.nqubits):
                 if obs[q] == 'X':
-                    circuit.add([gates.H(0)])#[gates.RZ(q,np.pi/2),gates.SX(q),gates.RZ(q,np.pi/2)]) #H
+                    circuit.add([gates.H(0)])
                 elif obs[q] == 'Y':
-                    # basis_y = 1/np.sqrt(2)*np.ones((2,2),complex)
-                    # basis_y[0,1] = -basis_y[0,1]*1j
-                    # basis_y[1,1] = basis_y[1,1]*1j
-                    circuit.add([gates.S(q).dagger(),gates.H(q)])#[gates.Unitary(basis_y,q)])#[gates.SX(q),gates.RZ(q,np.pi/2)]) #S^tH
+                    circuit.add([gates.S(q).dagger(),gates.H(q)])
             circuit.add(gates.M(*range(self.nqubits)))
             circuits.append(circuit)
         self.tomo_circuits = circuits

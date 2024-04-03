@@ -24,6 +24,12 @@
     "damping_on_gate": ["rx", "cz"],
     "depol_on_gate": ["rz", "cz"]
   },
+  "agent": {
+    "policy": "MlpPolicy",
+    "features_dim": 32,
+    "udate_steps": 1024,
+    "batch_size": 64
+  },
   "policy": {
     "save_best_model": true,
     "plot_results": true,

@@ -59,7 +59,6 @@ class QuantumCircuit(gym.Env):
     rep = None
     circuit_number = None
     circuit_lenght = None
-    state_after_act = None
     padded_circuit = None
 
     def __post_init__(self):

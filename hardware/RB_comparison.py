@@ -1,8 +1,6 @@
 import numpy as np
-import qibo
 from stable_baselines3 import PPO
 from rlnoise.utils import model_evaluation, RB_evaluation
-from rlnoise.rewards import DensityMatrixReward
 from rlnoise.dataset import CircuitRepresentation
 
 results_list_untrained=[]
@@ -19,7 +17,6 @@ result_filename='rb_hardware_q2.npz'
 n_circuit_in_dataset=20
 benchmark_circ_path = "src/rlnoise/hardware_test/RB/dataset/"
 
-# src/rlnoise/hardware_test/RB/dataset/RB_set_D1_1Q_len20_circs_result.npy
 depth_list=np.arange(1,142,20)
 for d in depth_list:
     print(d)
@@ -28,7 +25,6 @@ for d in depth_list:
         tmp=np.load(f,allow_pickle=True)
         circ=tmp[:,0]
         val_label=tmp[:,2]
-    # print([CircuitRepresentation().circuit_to_array(circ[0])])
     val_set = np.array([CircuitRepresentation().circuit_to_array(circuit) for circuit in circ])
 
     results_trained_model = model_evaluation(val_set,val_label,model_trained,reward=reward,representation=rep)
