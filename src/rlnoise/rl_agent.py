@@ -1,10 +1,13 @@
-from rlnoise.policy import CNNFeaturesExtractor, CustomCallback
+from rlnoise.neural_network import CNNFeaturesExtractor
+from rlnoise.callback import CustomCallback
 from stable_baselines3 import PPO
 import json
 
 class Agent(object):
 
     def __init__(self, config_file, env):
+
+        self.callback = CustomCallback(config_file = config_file)  
 
         with open(config_file) as f:
             config = json.load(f)
@@ -32,9 +35,5 @@ class Agent(object):
         batch_size = batch_size
         )
 
-        self.callback = CustomCallback(check_freq=2500,
-                        dataset=tmp,
-                        train_environment=circuit_env_training,
-                        verbose=True,
-                        result_filename=results_filename,
-                        )     
+    def train(self, n_steps, callback=True):
+        self.model.learn(total_timesteps=n_steps, progress_bar=True, callback=self.callback) 

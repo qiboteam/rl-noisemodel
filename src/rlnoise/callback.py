@@ -1,92 +1,35 @@
-import os
 import json
-import torch
 import numpy as np
-from pathlib import Path
-import matplotlib.pyplot as plt
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from stable_baselines3.common.callbacks import BaseCallback
 from rlnoise.utils import model_evaluation
-
-SAVE_TRAIN_DATA = True
-
-class CNNFeaturesExtractor(BaseFeaturesExtractor):
-
-    def __init__(
-            self,
-            observation_space,
-            features_dim,
-            filter_shape,
-            n_filters = 64                 
-    ):
-        super().__init__(observation_space, features_dim)
-        indim = observation_space.shape[0]
-        sample = torch.as_tensor(observation_space.sample()[None]).float()
-        conv1 = torch.nn.Conv2d( in_channels=indim,out_channels=n_filters, 
-                                kernel_size=filter_shape) #adding pooling layer?
-        
-        # Compute shape by doing one forward pass
-        # with torch.no_grad():
-        #     shape = conv1(sample).shape
-            
-        self.cnn = torch.nn.Sequential(
-            conv1,
-            torch.nn.ReLU(), # Relu might not be great if we have negative angles, ELU
-            torch.nn.Flatten(1,-1),
-        )
-        
-        # Compute shape by doing one forward pass
-        with torch.no_grad():
-            hdim = self.cnn(sample).shape[-1]
-
-        if hdim < features_dim:
-            print(f'Warning, using features_dim ({features_dim}) greater than hidden dim ({hdim}).')
-
-        self.linear = torch.nn.Sequential(torch.nn.Linear(hdim, features_dim), torch.nn.ELU())
-
-    def forward(self, x):
-        x = self.cnn(x)  
-        return self.linear(x)
-    
+from stable_baselines3.common.callbacks import BaseCallback
+from rlnoise.dataset import load_dataset
 
 class CustomCallback(BaseCallback):
     """
-    A custom callback that derives from ``BaseCallback``.
-
-    Args:
-        check_freq: number of steps after wich will be performed the callback
-        evaluation_set: np array loaded with np.load('bench_dataset') 
-        train_environment: object of class QuantumCircuit()
-        trainset_depth: number of gates per qubit used in the bench dataset
+    A custom callback that derives from ``BaseCallback``. This callback will be used observe the training and evaluation results.
 
     """
-    def __init__(self, check_freq, dataset, train_environment, verbose=False ,
-                 test_on_data_size = None,result_filename=None, evaluation_set = None, 
-                 config_path: str = None, out_folder = str(Path(__file__).parent)):
-        super(CustomCallback, self).__init__(verbose)
+    def __init__(self, config_path: str):
+        super(CustomCallback, self).__init__()
         
         with open(config_path, 'r') as f:
             config = json.load(f)
 
-        policy_params  =  config['policy']
-        self.save_best = policy_params['save_best_model']
-        self.plot = policy_params['plot_results']
-        self.best_model_name = policy_params['model_name']
-        self.plot_name = policy_params['plot_name']
-        self.save_path = out_folder
-        self.results_name = f"{out_folder}/{result_filename}"
-        self.check_freq = check_freq
-        self.test_on_data_size = test_on_data_size
-        self.environment = train_environment
+        callback_params  =  config['callback']
+        self.save_best = callback_params['save_best_model']
+        self.plot = callback_params['plot_results']
+        model_name = callback_params['model_name']
+        model_folder = callback_params['model_folder']
+        results_folder = callback_params['results_folder']
+        self.results_name = f"{results_folder}/{model_name}"
+        self.save_path = f"{model_folder}/{model_name}"
+        self.check_freq = callback_params['check_freq']
+        self.verbose = callback_params['verbose']
         self.best_mean_reward = -np.inf
         self.best_mean_fidelity = -np.inf
         self.best_mean_trace_dist = np.inf
-        self.best_mean_bures_dist = np.inf
 
-        self.train_circ = dataset['train_set'] if test_on_data_size is None else dataset['train_set'][:test_on_data_size]
-        self.train_label = dataset['train_label'] if test_on_data_size is None else dataset['train_label'][:test_on_data_size]
-        self.val_circ = dataset['val_set'] if evaluation_set is None else evaluation_set['val_circ']
-        self.val_label = dataset['val_label'] if evaluation_set is None else evaluation_set['val_label']
+        self.circuits, self.labels, self.val_circuits, self.val_labels = load_dataset(self.dataset_file)
         
         self.dataset_size = len(self.train_circ)
         self.n_qubits = self.train_circ[0].shape[1]
@@ -230,6 +173,7 @@ class CustomCallback(BaseCallback):
             self.best_mean_fidelity = fidelity
             self.best_mean_trace_dist = trace_dist           
             self.best_mean_bures_dist = bures_dist
+
     def save_best_model(self,fidelity):
         if fidelity.item() >= self.best_mean_fidelity:
             if self.verbose:

@@ -1,7 +1,7 @@
 import numpy as np
 from rlnoise.dataset import CircuitRepresentation
 from rlnoise.rewards import DensityMatrixReward
-from rlnoise.policy import CNNFeaturesExtractor,CustomCallback
+from rlnoise.neural_network import CNNFeaturesExtractor,CustomCallback
 from rlnoise.gym_env import QuantumCircuit
 from stable_baselines3 import PPO
 

@@ -45,8 +45,8 @@ class QuantumCircuit(gym.Env):
         config_file: path to the configuration file.
         reward: object, reward function, default is DensityMatrixReward().
     '''
-    dataset_file: Path
-    config_file: Path
+    dataset_file: Path 
+    config_file: Path 
     reward: object = DensityMatrixReward()
     kernel_size: int = None
     action_space_max_value: float = None

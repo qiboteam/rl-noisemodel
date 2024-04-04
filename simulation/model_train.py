@@ -8,6 +8,6 @@ env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 agent = Agent(config_file = config_file, env = env)
                                      
 
-model.learn(total_timesteps=200000, progress_bar=True, callback=callback)
+
 
 

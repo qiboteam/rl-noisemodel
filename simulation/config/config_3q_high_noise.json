@@ -30,11 +30,14 @@
     "udate_steps": 1024,
     "batch_size": 64
   },
-  "policy": {
+  "callback": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "3Q_Rand_clif_logmse",
-    "plot_name": "Simulation"
+    "model_name": "3q_hard_noise",
+    "result_folder": "results",
+    "model_folder": "models",
+    "check_freq": 500,
+    "verbose": true
   }
 }
 
