@@ -20,7 +20,6 @@ def gate_action_index(gate):
     if gate == gates.DepolarizingChannel:
         return 3
 
-# 
 class DensityMatrixReward(object):
     """
     This class is used to define the reward function for the quantum circuit environment.
@@ -45,17 +44,16 @@ class QuantumCircuit(gym.Env):
         config_file: path to the configuration file.
         reward: object, reward function, default is DensityMatrixReward().
     '''
-    dataset_file: Path 
     config_file: Path 
+    dataset_file: Path = None
+    circuits = None
+    labels = None
+    val_split = None
     reward: object = DensityMatrixReward()
     kernel_size: int = None
     action_space_max_value: float = None
     only_depol: bool = None
     encoding_dim: int = 8
-    circuits = None
-    labels = None
-    val_circuits = None
-    val_labels = None
     rep = None
     circuit_number = None
     circuit_lenght = None
@@ -69,16 +67,24 @@ class QuantumCircuit(gym.Env):
         self.kernel_size = gym_env_params['kernel_size']
         self.action_space_max_value = gym_env_params['action_space_max_value']
         self.only_depol = gym_env_params['enable_only_depolarizing']
+        if self.val_split is None:
+            self.val_split = gym_env_params['val_split']
 
         self.rep = CircuitRepresentation(self.config_file)
 
-        self.circuits, self.labels, self.val_circuits, self.val_labels = load_dataset(self.dataset_file)
+        if self.circuits is None:
+            self.circuits, self.labels = load_dataset(self.dataset_file)
+        else:
+            assert self.labels is not None, "Labels must be provided if circuits are provided."
+            assert len(self.circuits) == len(self.labels), "Circuits and labels must have the same length."
+        
 
         if not self.kernel_size % 2 == 1:
             raise ValueError("Kernel_size must be an odd number.")
         
         self.position = None
         self.n_circ = len(self.circuits)
+        self.n_circ_train = int((1 - self.val_split) * self.n_circ)
         self.n_qubits = self.circuits[0].shape[1]
         self.observation_space = spaces.Box(
             low = 0,
@@ -93,9 +99,12 @@ class QuantumCircuit(gym.Env):
             dtype=np.float32
             )
         
-    def init_state(self, i=None):
+    def init_state(self, i=None, train=True):
         if i is None:
-            i = random.randint(0, self.n_circ - 1)
+            if train:
+                i = random.randint(0, self.n_circ_train)
+            else:
+                i = random.randint(self.n_circ_train, self.n_circ)
         self.circuit_number = i
         self.circuit_lenght = self.circuits[i].shape[0]
         state = copy.deepcopy(self.circuits[i])
@@ -126,4 +135,4 @@ class QuantumCircuit(gym.Env):
         return self._get_obs(), self.reward(self.get_qibo_circuit(), self.current_target, terminated), terminated, None
 
     def get_qibo_circuit(self):
-        return self.rep.array_to_circuit(self.current_state.transpose(2,1,0))
+        return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0))

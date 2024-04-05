@@ -10,7 +10,8 @@
     "kernel_size": 3,
     "action_penalty": 0.0,
     "action_space_max_value": 0.2,
-    "enable_only_depolarizing": false
+    "enable_only_depolarizing": false,
+    "val_split": 0.2
   },
   "noise": {
     "primitive_gates": ["RZ", "RX", "CZ"],
@@ -27,7 +28,7 @@
   "agent": {
     "policy": "MlpPolicy",
     "features_dim": 32,
-    "udate_steps": 1024,
+    "nn_update_steps": 1024,
     "batch_size": 64
   },
   "callback": {

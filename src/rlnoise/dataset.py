@@ -19,11 +19,9 @@ def load_dataset(filename):
         raise FileNotFoundError(f"File {filename} not found.")
     
     tmp = np.load(filename, allow_pickle=True)
-    train_set = copy.deepcopy(tmp['train_set'])
-    train_label = copy.deepcopy(tmp['train_label'])
-    val_set = copy.deepcopy(tmp['val_set'])
-    val_label = copy.deepcopy(tmp['val_label'])
-    return train_set, train_label, val_set, val_label
+    circuits = copy.deepcopy(tmp['circuits'])
+    labels = copy.deepcopy(tmp['labels'])
+    return circuits, labels
 
 class Dataset(object):
     def __init__(self, config_file):
@@ -104,7 +102,7 @@ class Dataset(object):
         return circuit
     
     def save(self, filename, val_split=0.2):
-        '''Save the dataset to a npz file, dividing it into training and validation sets.'''
+        '''Save the dataset to a npz file'''
 
         if os.path.exists(filename):
             raise Warning(f"File {filename} already exists. The file will be overwrite.")
@@ -113,14 +111,7 @@ class Dataset(object):
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        len_test = int(self.n_circuits*(1.-val_split))
-        train_set=self.circ_rep[:len_test]
-        train_label=self.dm_labels[:len_test]
-        val_set=self.circ_rep[len_test:]
-        val_label=self.dm_labels[len_test:]
         np.savez(filename,
-                train_set=train_set, 
-                train_label=train_label,
-                val_set=val_set, 
-                val_label=val_label, 
+                circuits = self.circ_rep,
+                labels = self.dm_labels,
                 allow_pickle=True)
