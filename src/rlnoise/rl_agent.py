@@ -42,30 +42,18 @@ class Agent(object):
     def train(self, n_steps):
         self.model.learn(total_timesteps=n_steps, progress_bar=True, callback=self.callback) 
 
-    def apply(self, circuit):
+    def apply(self, circuit, return_qibo_circuit = True):
         if isinstance(circuit, Circuit):
-            circuit = self.rep.circuit_to_array(circuit)
-        circ_len = circuit.shape[0]
-        padding = np.zeros((8, self.env.nqubits, int(self.kernel_size/2)), dtype=np.float32)
-        self.padded_circuit = np.concatenate((padding, state, padding), axis=2)
+            circuit = self.env.rep.circuit_to_array(circuit)
 
-        for pos in range(circuit.shape[-1]):
-            l_flag = pos - self.ker_radius < 0
-            r_flag = pos + self.ker_radius > circuit.shape[2] - 1
-            if l_flag and not r_flag:
-                pad_cel = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos - self.ker_radius)))
-                observation = np.concatenate((pad_cel, circuit[:, :, :pos + self.ker_radius + 1]), axis=2)
-            elif not l_flag and r_flag:
-                pad_cel = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos + self.ker_radius - circuit.shape[-1] + 1)))
-                observation = np.concatenate((circuit[:, :, pos - self.ker_radius:], pad_cel), axis=2)
-            elif l_flag and r_flag:
-                l_pad = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos - self.ker_radius)))
-                l_obs = np.concatenate((l_pad, circuit[:, :, :pos + self.ker_radius + 1]), axis=2)
-                r_pad = np.zeros((circuit.shape[0], circuit.shape[1], np.abs(pos + self.ker_radius - circuit.shape[-1] + 1)))
-                r_obs = np.concatenate((circuit[:, :, pos - self.ker_radius:], r_pad), axis=2)
-                observation = np.concatenate((l_obs, r_obs), axis=2)
-            else:
-                observation = circuit[:, :, pos - self.ker_radius: pos + self.ker_radius + 1]   
-            action, _ = self.agent.predict(observation, deterministic=True)
-            circuit = self.rep.make_action(action=action, circuit=circuit, position=pos)
-        return self.rep.rep_to_circuit(np.transpose(circuit, axes=[2,1,0]))
+        circuit = np.expand_dims(circuit, axis=0)
+        circuit_env = QuantumCircuit(config_file = self.env.config_file, dataset_file = None, circuits = circuit)
+
+        terminated = False
+        obs, _ = circuit_env.reset(i=0)
+        while not terminated:
+            action, _ = self.model.predict(obs, deterministic=True)
+            obs, reward, terminated, truncated, info = circuit_env.step(action, reward=False)
+        if not return_qibo_circuit:
+            return circuit_env.current_state.transpose(2,1,0)
+        return circuit_env.get_qibo_circuit()

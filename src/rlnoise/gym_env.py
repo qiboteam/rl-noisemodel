@@ -40,13 +40,11 @@ class DensityMatrixReward(object):
 class QuantumCircuit(gymnasium.Env):
     '''
     Args: 
-        dataset_file: path to the dataset file.
         config_file: path to the configuration file.
-        reward: object, reward function, default is DensityMatrixReward().
     '''
     config_file: Path 
     dataset_file: Path = None
-    circuits = None
+    circuits: np.ndarray = None
     labels = None
     val_split = None
     reward: object = DensityMatrixReward()
@@ -74,11 +72,7 @@ class QuantumCircuit(gymnasium.Env):
 
         if self.circuits is None:
             self.circuits, self.labels = load_dataset(self.dataset_file)
-        else:
-            assert self.labels is not None, "Labels must be provided if circuits are provided."
-            assert len(self.circuits) == len(self.labels), "Circuits and labels must have the same length."
         
-
         if not self.kernel_size % 2 == 1:
             raise ValueError("Kernel_size must be an odd number.")
         
@@ -108,6 +102,8 @@ class QuantumCircuit(gymnasium.Env):
         state = state.transpose(2,1,0) 
         padding = np.zeros((self.encoding_dim, self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
         self.padded_circuit = np.concatenate((padding, state, padding), axis=2)
+        if self.labels is None:
+            return state, None
         return state, self.labels[i]
     
     def _get_obs(self):
@@ -120,7 +116,7 @@ class QuantumCircuit(gymnasium.Env):
         self.current_state, self.current_target = self.init_state(i)
         return self._get_obs(), None
     
-    def step(self, action):
+    def step(self, action, reward = True):
         if self.only_depol:
             action[:, :3] = np.zeros((self.n_qubits, 3))
         self.current_state = self.rep.make_action(action, self.current_state, self.position)
@@ -129,8 +125,12 @@ class QuantumCircuit(gymnasium.Env):
         else:
             self.position += 1
             terminated = False
+        if reward:
+            reward = self.reward(self.get_qibo_circuit(), self.current_target, terminated)
+        else:
+            reward = 0.
         # Observation, Reward, Terminated, Truncated (always False), Info (Dict)
-        return self._get_obs(), self.reward(self.get_qibo_circuit(), self.current_target, terminated), terminated, False, {}
+        return self._get_obs(), reward, terminated, False, {}
 
     def get_qibo_circuit(self):
         return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0))

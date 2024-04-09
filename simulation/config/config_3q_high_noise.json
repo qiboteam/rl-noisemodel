@@ -36,8 +36,8 @@
     "plot_results": true,
     "model_name": "3q_hard_noise",
     "result_folder": "results",
-    "model_folder": "models",
-    "check_freq": 500,
+    "model_folder": "simulation/models",
+    "check_freq": 2048,
     "verbose": true
   }
 }

@@ -25,21 +25,55 @@ class CustomCallback(BaseCallback):
         self.save_path = f"{model_folder}/{model_name}"
         self.check_freq = callback_params['check_freq']
         self.verbose = callback_params['verbose']
-        self.best_mean_reward = -np.inf
         self.best_mean_fidelity = -np.inf
-        self.best_mean_trace_dist = np.inf
 
         self.eval_results = []
         self.train_results = []
         self.timestep_list = []
 
-    def _on_rollout_start(self) -> None:
-        """
-        A rollout is the collection of environment interaction
-        using the current policy.
-        This event is triggered before collecting new samples.
-        """
-        pass
+    def model_evaluation(self, train_set):
+        '''
+        Function for evaluating the model
+        Args:
+            train_set: bool, whether to evaluate on training or validation set.
+        Returns:
+            avg reward, avg fidelity, avg trace distance
+        '''
+        avg_rew = []
+        avg_trace_distance = []
+        avg_fidelity = []
+        if train_set:
+            start = 0
+            stop = self.env.n_circ_train
+        else:
+            start = self.env.n_circ_train
+            stop = self.env.n_circ
+
+        for i in range(start, stop):
+            obs, _ = self.env.reset(i=i)
+            done = False
+            while not done:
+                action, _ = self.model.predict(obs, deterministic=True)       
+                obs, reward, done, terminated, info = self.env.step(action)
+            predicted_circ = self.env.get_qibo_circuit()
+            dm_model = predicted_circ().state()
+
+            avg_rew.append(reward)
+            avg_fidelity.append(compute_fidelity(self.env.labels[i], dm_model))
+            avg_trace_distance.append(trace_distance(self.env.labels[i], dm_model))
+
+        rew = np.array(avg_rew)
+        fid = np.array(avg_fidelity)
+        trace_d = np.array(avg_trace_distance)
+        return  {
+                "reward":    rew.mean(),
+                "reward_std":    rew.std(),
+                "fidelity":    fid.mean(),
+                "fidelity_std":    fid.std(),
+                "trace_distance":    trace_d.mean(),
+                "trace_distance_std":    trace_d.std()
+                }
+
 
     def _on_step(self) -> bool:
         """
@@ -52,19 +86,22 @@ class CustomCallback(BaseCallback):
         """
         if self.n_calls==1 or self.n_calls % self.check_freq == 0:
             training_results = self.model_evaluation(train_set = True)
-            evaluation_results = self.model_evaluation(train_set = True)
+            evaluation_results = self.model_evaluation(train_set = False)
             self.train_results.append(training_results)
             self.eval_results.append(evaluation_results)
             self.timestep_list.append(self.num_timesteps)
 
             if self.verbose:
                 print(f"Timesteps: {self.num_timesteps}")
-                print("Best mean reward: {:.2f} - Current mean reward: {:.2f}".format(self.best_mean_reward, evaluation_results['reward'].item()))
-                print('Fidelityn: {:.2f} std: {:.2f}'.format(
-                    evaluation_results["fidelity"].item(),evaluation_results["fidelity_std"].item()))
+                print("Reward: ", training_results["reward"])
+                print('Test set Fidelity: {:.2f} std: {:.2f}'.format(evaluation_results["fidelity"], evaluation_results["fidelity_std"]))
             if self.save_best is True:
-                self.save_best_model(evaluation_results["fidelity"])
-            self.save_best_results(evaluation_results["reward"],evaluation_results["fidelity"],evaluation_results["trace_distance"],evaluation_results["bures_distance"])
+                if evaluation_results["fidelity"] >= self.best_mean_fidelity:
+                    if self.verbose:
+                        print(f"Saving new best model at {self.num_timesteps} timesteps.")
+                        print(f"Saving new best model in {self.save_path}.")
+                    self.model.save(f"{self.save_path}.zip")
+                    self.best_mean_fidelity = evaluation_results["fidelity"]
         return True
 
     def _on_rollout_end(self) -> None:
@@ -112,71 +149,12 @@ class CustomCallback(BaseCallback):
         ax[0,1].errorbar(time_steps,train_results["fidelity"],yerr=train_results["fidelity_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[0,2].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[0,0].legend()
-        plt.show()
+        plt.show()         
 
-    def save_best_results(self, reward, fidelity, trace_dist): 
-        reward = reward.item() 
-        fidelity = fidelity.item()
-        trace_dist = trace_dist.item()
-        if fidelity > self.best_mean_fidelity:
-            self.best_mean_reward = reward
-            self.best_mean_fidelity = fidelity
-            self.best_mean_trace_dist = trace_dist           
-
-    def save_best_model(self,fidelity):
-        if fidelity.item() >= self.best_mean_fidelity:
-            if self.verbose:
-                print(f"Saving new best model at {self.num_timesteps} timesteps.")
-                print(f"Saving new best model in {self.save_path}.")
-            self.model.save(f"{self.save_path}.zip")
-
-    def model_evaluation(self, train_set):
-        '''
-        Function for evaluating the model
-        Args:
-            evaluation_circ: circuit in array form where evaluate the model
-            evaluation_labels: labels of the noisy circuit 
-        Return: 
-            avg reward, avg fidelity, avg trace distance
-        '''
-        avg_rew = []
-        avg_trace_distance = []
-        avg_fidelity = []
-        if train_set:
-            start = 0
-            stop = self.env.n_circ_train
-        else:
-            start = self.env.n_circ_train
-            stop = self.env.n_circ
-
-        for i in range(start, stop):
-
-            obs = self.env.reset(i=i)
-            done = False
-            while not done:
-                action, _states = self.model.predict(obs, deterministic=True)
-                action = action[0]          
-                obs, rewards, done, info = self.env.step(action)
-            predicted_circ = self.env.get_qibo_circuit()
-            dm_model = predicted_circ().state()
-
-            avg_rew.append(rewards)
-            avg_fidelity.append(compute_fidelity(self.env.labels[i], dm_model))
-            avg_trace_distance.append(trace_distance(self.env.labels[i], dm_model))
-
-        rew = np.array(avg_rew)
-        fid = np.array(avg_fidelity)
-        trace_d = np.array(avg_trace_distance)
-        return np.array(
-            [
-                (
-                    rew.mean(),
-                    rew.std(),
-                    fid.mean(),
-                    fid.std(),
-                    trace_d.mean(),
-                    trace_d.std(),
-                )
-            ],
-        )
-        
+    def _on_rollout_start(self) -> None:
+        """
+        A rollout is the collection of environment interaction
+        using the current policy.
+        This event is triggered before collecting new samples.
+        """
+        pass
