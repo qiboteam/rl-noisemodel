@@ -1,0 +1,45 @@
+{
+  "dataset": {
+    "n_circuits": 500,
+    "moments": 7,
+    "qubits": 3,
+    "enhanced": true,
+    "clifford": true
+  },
+  "gym_env": {
+    "kernel_size": 3,
+    "action_penalty": 0.0,
+    "action_space_max_value": 0.2,
+    "enable_only_depolarizing": false,
+    "val_split": 0.2
+  },
+  "noise": {
+    "primitive_gates": ["RZ", "RX", "CZ"],
+    "channels": ["DepolarizingChannel", "ResetChannel"],
+    "dep_lambda": 0.02,
+    "p0": 0.08, 
+    "epsilon_x": 0.1,
+    "epsilon_z": 0.07,
+    "x_coherent_on_gate": ["rx"],
+    "z_coherent_on_gate": ["rz"],
+    "damping_on_gate": ["rx", "cz"],
+    "depol_on_gate": ["rz", "cz"]
+  },
+  "agent": {
+    "policy": "MlpPolicy",
+    "features_dim": 32,
+    "nn_update_steps": 1024,
+    "batch_size": 64
+  },
+  "callback": {
+    "save_best_model": true,
+    "plot_results": true,
+    "model_name": "3q_hard_noise",
+    "result_folder": "results",
+    "model_folder": "models",
+    "check_freq": 2000,
+    "verbose": true
+  }
+}
+
+

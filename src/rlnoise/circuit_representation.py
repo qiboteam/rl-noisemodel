@@ -6,9 +6,9 @@ def gate_to_idx(gate):
     """Map gate to index in the circuit representation."""
     if gate is gates.RZ:
         return 0
-    elif gate is gates.RX or gate is gates.X:
+    elif gate is gates.RX:
         return 1
-    elif gate is gates.CZ or gate is gates.CNOT:
+    elif gate is gates.CZ:
         return 2
     elif gate == "param":
         return 3
@@ -91,10 +91,8 @@ class CircuitRepresentation(object):
             gate = gates.RX(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
         elif array[gate_to_idx(gates.RZ)] == 1:
             gate = gates.RZ(qubit, theta=array[gate_to_idx('param')]*2*np.pi)
-        elif array[gate_to_idx(gates.CZ)] == 1 and "CNOT" not in self.primitive_gates:
+        elif array[gate_to_idx(gates.CZ)] == 1:
             gate = gates.CZ(qubit, qubit2) 
-        elif array[gate_to_idx(gates.CNOT)] == 1 or array[gate_to_idx(gates.CNOT)] == -1 and "CNOT" in self.primitive_gates:
-            gate = gates.CNOT(qubit, qubit2)
         else:
             gate = None
         if array[gate_to_idx("epsilon_x")] != 0:
@@ -102,7 +100,6 @@ class CircuitRepresentation(object):
         if array[gate_to_idx("epsilon_z")] != 0:
             channel_list.append(gates.RZ(qubit, theta=array[gate_to_idx("epsilon_z")]))
         if array[gate_to_idx(gates.ResetChannel)] != 0:
-
             channel_list.append(gates.ResetChannel(qubit, [array[gate_to_idx(gates.ResetChannel)], 0]))
         if array[gate_to_idx(gates.DepolarizingChannel)] != 0:
             channel_list.append(gates.DepolarizingChannel([qubit], lam=array[gate_to_idx(gates.DepolarizingChannel)]))
@@ -121,7 +118,7 @@ class CircuitRepresentation(object):
             count=-1
             target = None
             for qubit, row in enumerate(rep_array[moment]):
-                if row[gate_to_idx(gates.CZ)]==1 and "CNOT" not in self.primitive_gates: 
+                if row[gate_to_idx(gates.CZ)]==1: 
                     if count == -1:
                         _, pending_channels = self.array_to_gate(row,qubit)
                         count=qubit        

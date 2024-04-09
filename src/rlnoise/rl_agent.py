@@ -1,11 +1,14 @@
 from rlnoise.neural_network import CNNFeaturesExtractor
 from rlnoise.callback import CustomCallback
 from stable_baselines3 import PPO
+from rlnoise.gym_env import QuantumCircuit
+import numpy as np
+from qibo import Circuit
 import json
 
 class Agent(object):
 
-    def __init__(self, config_file, env):
+    def __init__(self, config_file, env: QuantumCircuit):
 
         self.callback = CustomCallback(config_path = config_file, env = env)  
 
@@ -17,6 +20,7 @@ class Agent(object):
         features_dim = config["agent"]["features_dim"]
         n_steps = config["agent"]["nn_update_steps"]
         batch_size = config["agent"]["batch_size"]
+        self.env = env
 
         policy_kwargs = dict(
         features_extractor_class = CNNFeaturesExtractor,
@@ -41,7 +45,9 @@ class Agent(object):
     def apply(self, circuit):
         if isinstance(circuit, Circuit):
             circuit = self.rep.circuit_to_array(circuit)
-        circuit = np.transpose(circuit, axes=[2,1,0])
+        circ_len = circuit.shape[0]
+        padding = np.zeros((8, self.env.nqubits, int(self.kernel_size/2)), dtype=np.float32)
+        self.padded_circuit = np.concatenate((padding, state, padding), axis=2)
 
         for pos in range(circuit.shape[-1]):
             l_flag = pos - self.ker_radius < 0

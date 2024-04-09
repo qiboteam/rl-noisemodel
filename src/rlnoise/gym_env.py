@@ -6,8 +6,8 @@ from pathlib import Path
 from dataclasses import dataclass
 from rlnoise.dataset import load_dataset
 from rlnoise.circuit_representation import CircuitRepresentation
-import gym
-from gym import spaces
+import gymnasium
+from gymnasium import spaces
 from qibo import gates
 
 def gate_action_index(gate):
@@ -37,7 +37,7 @@ class DensityMatrixReward(object):
         return 0.
 
 @dataclass
-class QuantumCircuit(gym.Env):
+class QuantumCircuit(gymnasium.Env):
     '''
     Args: 
         dataset_file: path to the dataset file.
@@ -99,12 +99,9 @@ class QuantumCircuit(gym.Env):
             dtype=np.float32
             )
         
-    def init_state(self, i=None, train=True):
+    def init_state(self, i=None):
         if i is None:
-            if train:
                 i = random.randint(0, self.n_circ_train)
-            else:
-                i = random.randint(self.n_circ_train, self.n_circ)
         self.circuit_number = i
         self.circuit_lenght = self.circuits[i].shape[0]
         state = copy.deepcopy(self.circuits[i])
@@ -118,21 +115,22 @@ class QuantumCircuit(gym.Env):
         self.padded_circuit[:,:,r:-r] = self.current_state
         return np.asarray(self.padded_circuit[:,:,self.position:self.position+self.kernel_size], dtype=np.float32)
         
-    def reset(self, i=None):
+    def reset(self, i=None, seed=None):
         self.position = 0
         self.current_state, self.current_target = self.init_state(i)
-        return self._get_obs()
+        return self._get_obs(), None
     
     def step(self, action):
         if self.only_depol:
             action[:, :3] = np.zeros((self.n_qubits, 3))
         self.current_state = self.rep.make_action(action, self.current_state, self.position)
-        if self.position == self.circuit_lenght - 1:
+        if self.position >= self.circuit_lenght - 1:
             terminated = True
         else:
             self.position += 1
             terminated = False
-        return self._get_obs(), self.reward(self.get_qibo_circuit(), self.current_target, terminated), terminated, None
+        # Observation, Reward, Terminated, Truncated (always False), Info (Dict)
+        return self._get_obs(), self.reward(self.get_qibo_circuit(), self.current_target, terminated), terminated, False, {}
 
     def get_qibo_circuit(self):
         return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0))

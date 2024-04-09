@@ -103,9 +103,6 @@ class Dataset(object):
     
     def save(self, filename, val_split=0.2):
         '''Save the dataset to a npz file'''
-
-        if os.path.exists(filename):
-            raise Warning(f"File {filename} already exists. The file will be overwrite.")
         
         directory = os.path.dirname(filename)
         if not os.path.exists(directory):

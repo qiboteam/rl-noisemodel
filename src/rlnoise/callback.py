@@ -51,7 +51,6 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
         if self.n_calls==1 or self.n_calls % self.check_freq == 0:
-            # Retrieve training reward
             training_results = self.model_evaluation(train_set = True)
             evaluation_results = self.model_evaluation(train_set = True)
             self.train_results.append(training_results)
