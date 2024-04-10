@@ -19,10 +19,9 @@ class CustomCallback(BaseCallback):
         self.save_best = callback_params['save_best_model']
         self.plot = callback_params['plot_results']
         model_name = callback_params['model_name']
-        model_folder = callback_params['model_folder']
         results_folder = callback_params['result_folder']
         self.results_path = f"{results_folder}/{model_name}"
-        self.save_path = f"{model_folder}/{model_name}"
+        self.save_path = f"{results_folder}/{model_name}"
         self.check_freq = callback_params['check_freq']
         self.verbose = callback_params['verbose']
         self.best_mean_fidelity = -np.inf

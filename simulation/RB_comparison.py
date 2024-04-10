@@ -1,7 +1,6 @@
 import numpy as np
 from stable_baselines3 import PPO
 from rlnoise.utils import model_evaluation, RB_evaluation
-from rlnoise.rewards import DensityMatrixReward
 from rlnoise.dataset import CircuitRepresentation
 
 results_list_untrained=[]
@@ -35,35 +34,3 @@ with open(bench_results_path+result_filename,"wb") as f:
     np.savez(f,
              trained=model_results,
              RB=rb_results)
-
-
-        #    TRAINING ON DIFFERENT DATASET SIZE (Evaluating the best dataset size for overfitting)
-
-# circuits_depth=15                    
-# n_circ=[10,50,200,400]
-# f = open(benchmark_circ_path+"/depth_%dDep-Term_CZ_3Q_1000.npz"%(circuits_depth),"rb")
-# tmp=np.load(f,allow_pickle=True)
-# val_set=copy.deepcopy(tmp['val_set'])
-# val_label=copy.deepcopy(tmp['val_label'])
-# train_set=copy.deepcopy(tmp['train_set'])
-# train_label=copy.deepcopy(tmp['train_label'])
-# for data_size in n_circ:
-
-#     circuit_env_training = QuantumCircuit(
-#     circuits = train_set[:data_size],
-#     representation = rep,
-#     labels = train_label[:data_size],
-#     reward = reward,
-#     kernel_size=kernel_size
-#     )
-#     callback=CustomCallback(check_freq=2000,evaluation_set=tmp,train_environment=circuit_env_training,trainset_depth=circuits_depth,test_on_data_size=data_size)                                          
-#     model = PPO(
-#     policy,
-#     circuit_env_training,
-#     policy_kwargs=policy_kwargs, 
-#     verbose=0,
-#     )
-#     model.learn(100000,progress_bar=True, callback=callback)
-# f.close()
-
-

@@ -30,6 +30,7 @@ class Dataset(object):
         super(Dataset, self).__init__()
         with open(config_file) as f:
             config = json.load(f)
+        self.config = config
         
         self.primitive_gates = config['noise']['primitive_gates']
         dataset_options = config['dataset']
@@ -38,15 +39,31 @@ class Dataset(object):
         self.n_circuits = dataset_options['n_circuits']
         self.clifford = dataset_options['clifford']
         enhanced_dataset = dataset_options['enhanced']
-        rep = CircuitRepresentation(config_file)
-        noise_model = CustomNoiseModel(config_file)
+        self.rep = CircuitRepresentation(config_file)
+        self.noise_model = CustomNoiseModel(config_file)
         if enhanced_dataset:
             self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
         else:
             self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
-        self.noisy_circuits = [noise_model.apply(c) for c in self.circuits]
+        self.noisy_circuits = [self.noise_model.apply(c) for c in self.circuits]
         self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
-        self.circ_rep = np.asarray([rep.circuit_to_array(c)for c in self.circuits], dtype=object)
+        self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
+
+    def generate_rb_dataset(self):
+        rb_options = self.config["rb"]
+        circuits_list = []
+        labels = []
+        for len in range(rb_options["start"], rb_options["stop"], rb_options["step"]):
+            self.n_gates = len
+            circuits = np.asarray([self.generate_random_circuit() for _ in range(rb_options["n_circ"])])
+            noisy_circuits = [self.noise_model.apply(c) for c in circuits]
+            dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(rb_options["n_circ"])])
+            circ_rep = [self.rep.circuit_to_array(c)for c in circuits]
+            circuits_list.append(circ_rep)
+            labels.append(dm_labels)
+        
+        circuits_list  = np.asarray(circuits_list, dtype=object)
+        np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)
 
     def generate_clifford_circuit(self):
         '''Generate a random Clifford circuit'''
@@ -82,7 +99,7 @@ class Dataset(object):
         if self.n_qubits < 2 and "CZ" in self.primitive_gates:
             raise ValueError("Impossible to use CZ on single qubit circuits.")
         circuit = Circuit(self.n_qubits, density_matrix=True)
-        while len(circuit.queue) < self.n_gates:
+        while len(circuit.queue.moments) < self.n_gates:
             q0 = random.choice(range(self.n_qubits))
             gate = string_to_gate(random.choice(self.primitive_gates))
             if isinstance(gate, gates.CZ):

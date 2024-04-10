@@ -27,27 +27,6 @@ def expectation_from_samples(obs, freq, qubit_map=None):
         expval += obs[index, index] * counts[j]
     return np.real(expval)
 
-
-def run_qiskit(circuits, backend, nshots=10000, layout=None):
-    circuits_qiskit = []
-    for circ in circuits:
-        circuits_qiskit.append(QuantumCircuit().from_qasm_str(circ.to_qasm()))
-    circuits_qiskit = transpile(circuits_qiskit, initial_layout=layout, optimization_level=0)
-    job = backend.run(circuits_qiskit, shots=nshots)
-    print(job.status())
-    result = job.result()
-
-    counts = []
-    for qc in circuits_qiskit:
-        counts_qiskit = Counter(result.get_counts(qc))
-        counts_qibo = Counter()
-        keys = counts_qiskit.keys()
-        for k in keys:
-            counts_qibo[k[::-1]] = counts_qiskit[k]
-        del counts_qiskit
-        counts.append(counts_qibo)
-    return counts
-
 def run_qibo(circuits, backend, nshots=10000):
     freqs = []
     for circ in circuits:
@@ -157,42 +136,6 @@ def apply_readout_mitigation(freqs, calibration_matrix):
     return freqs_mit
 
 
-def rx_rule(gate, platform):
-    from qibolab.pulses import PulseSequence
-
-    num = int(gate.parameters[0] / (np.pi/2))
-    start = 0
-    sequence = PulseSequence()
-    for _ in range(num):
-        qubit = gate.target_qubits[0]
-        RX90_pulse = platform.create_RX90_pulse(
-            qubit,
-            start=start,
-            relative_phase=0,
-        )
-        sequence.add(RX90_pulse)
-        start = RX90_pulse.finish
-
-    return sequence, {}
-
-def x_rule(gate, platform):
-    from qibolab.pulses import PulseSequence
-    num = 2
-    start = 0
-    sequence = PulseSequence()
-    for _ in range(num):
-        qubit = gate.target_qubits[0]
-        RX90_pulse = platform.create_RX90_pulse(
-            qubit,
-            start=start,
-            relative_phase=0,
-        )
-        sequence.add(RX90_pulse)
-        start = RX90_pulse.finish
-
-    return sequence, {}
-
-
 def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend_qs, layout):
     from hardware.state_tomography import StateTomography
     
@@ -232,52 +175,3 @@ def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend
         results.append([circ, rho_exact, rho, rho_mit, st.cal_mat])
 
     return results
-
-
-def classical_shadows(circ, shadow_size, backend, backend_qiskit):
-    from rlnoise.hardware_test.classical_shadows import ClassicalShadows
-    
-    model = ClassicalShadows(circuit=circ,shadow_size=shadow_size)
-
-    model.get_classical_shadow(backend=backend, backend_qiskit=backend_qiskit)
-    rho = model.shadow_state_reconstruction()
-
-    circ.density_matrix = True
-    backend_exact = construct_backend('numpy')
-    rho_exact = backend_exact.execute_circuit(circ).state()
-
-    log.info(circ.draw())
-    result = [circ, rho_exact, rho]
-    log.info(result)
-
-    return result
-
-
-def qiskit_state_tomography(circ, nshots, backend):
-
-    circ_qiskit = QuantumCircuit().from_qasm_str(circ.to_qasm()).reverse_bits()
-
-
-    st = StateTomography_qiskit(circ_qiskit,backend=backend)
-    st.set_transpile_options(optimization_level=0)
-    results = st.run(backend, shots=nshots)
-    rho = results.analysis_results("state").value.to_operator().data
-
-
-    st = MitigatedStateTomography(circ_qiskit,backend=backend)
-    st.set_transpile_options(optimization_level=0)
-    results = st.run(backend)
-    rho_mit = results.analysis_results("state").value.to_operator().data
-
-    cal_mat = results.analysis_results("Local Readout Mitigator").value.assignment_matrix()
-
-    circ.density_matrix = True
-    backend_exact = construct_backend('numpy')
-    rho_exact = backend_exact.execute_circuit(circ).state()
-
-
-    log.info(circ.draw())
-    result = [circ, rho_exact, rho, rho_mit, cal_mat]
-    log.info(result)
-
-    return result

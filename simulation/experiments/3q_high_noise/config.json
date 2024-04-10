@@ -34,11 +34,17 @@
   "callback": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "3q_hard_noise",
-    "result_folder": "simulation/results",
-    "model_folder": "simulation/models",
+    "model_name": "model",
+    "result_folder": "simulation/experiments/3q_high_noise",
     "check_freq": 2048,
     "verbose": true
+  },
+  "rb":{
+    "dataset": "simulation/experiments/3q_high_noise/rb_dataset",
+    "start": 3,
+    "stop": 31,
+    "step": 3,
+    "n_circ": 50
   }
 }
 
