@@ -11,8 +11,7 @@ from rlnoise.circuit_representation import CircuitRepresentation
 
 def load_dataset(filename):
     '''Load a dataset from a npz file.
-    Returns the training and validation sets and labels in the following order:
-    train_set, train_label, val_set, val_label.
+    Returns the circuits and labels.
     '''
 
     if not os.path.exists(filename):
@@ -101,7 +100,7 @@ class Dataset(object):
                 circuit.add(gate(q0, theta=theta))
         return circuit
     
-    def save(self, filename, val_split=0.2):
+    def save(self, filename):
         '''Save the dataset to a npz file'''
         
         directory = os.path.dirname(filename)

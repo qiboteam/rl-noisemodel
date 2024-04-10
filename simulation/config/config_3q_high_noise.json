@@ -35,7 +35,7 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "3q_hard_noise",
-    "result_folder": "results",
+    "result_folder": "simulation/results",
     "model_folder": "simulation/models",
     "check_freq": 2048,
     "verbose": true

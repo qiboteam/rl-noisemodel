@@ -8,7 +8,7 @@ import json
 
 class Agent(object):
 
-    def __init__(self, config_file, env: QuantumCircuit):
+    def __init__(self, config_file, env: QuantumCircuit, model_file_path=None):
 
         self.callback = CustomCallback(config_path = config_file, env = env)  
 
@@ -30,17 +30,22 @@ class Agent(object):
         ),
         net_arch=dict(pi=[32, 32], vf=[32, 32])
         )
-
-        self.model = PPO(
-        policy,
-        env,
-        policy_kwargs = policy_kwargs,
-        n_steps = n_steps,
-        batch_size = batch_size
-        )
+        if model_file_path is not None:
+            self.load(model_file_path)
+        else:
+            self.model = PPO(
+            policy,
+            env,
+            policy_kwargs = policy_kwargs,
+            n_steps = n_steps,
+            batch_size = batch_size
+            )
 
     def train(self, n_steps):
         self.model.learn(total_timesteps=n_steps, progress_bar=True, callback=self.callback) 
+
+    def load(self, file_path):
+        self.model = PPO.load(file_path)
 
     def apply(self, circuit, return_qibo_circuit = True):
         if isinstance(circuit, Circuit):

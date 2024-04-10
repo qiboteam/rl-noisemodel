@@ -7,11 +7,4 @@ config_file = "simulation/config/config_3q_high_noise.json"
 env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 
 agent = Agent(config_file = config_file, env = env)
-agent.train(n_steps = 10000)
-
-
-                                     
-
-
-
-
+agent.train(n_steps = 5000)
