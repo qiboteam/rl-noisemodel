@@ -3,86 +3,54 @@ from rlnoise.circuit_representation import CircuitRepresentation
 from rlnoise.noise_model import CustomNoiseModel
 import numpy as np
 from qibo import Circuit
+from qibo import gates
+from qibo.backends import NumpyBackend
 from qibo.noise import NoiseModel, DepolarizingError
+from scipy.optimize import curve_fit
 
 def rb_dataset_generator(config_file):
     dataset = Dataset(config_file)
     dataset.generate_rb_dataset()
     
 def run_rb(rb_dataset, config):
-    rep = CircuitRepresentation(config)
-    noise = CustomNoiseModel(config)
     dataset = np.load(rb_dataset, allow_pickle=True)
     circuits = dataset["circuits"]
-    labels = dataset["labels"]
+    circuits = preprocess_circuits(circuits, config)
 
+    return randomized_benchmarking(circuits)
 
+def preprocess_circuits(circuits, config):
+    rep = CircuitRepresentation(config)
+    noise = CustomNoiseModel(config)
 
-    noise_model = None if args.backend == 'qibolab' else CustomNoiseModel(args.config)
+    final_circuits = {}
 
-    depths, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=noise_model)
-
-    with open('RB.json', 'w') as f:
-        json.dump({"depths": depths, "survival probs": survival_probs, "errors": err, "optimal params": optimal_params.tolist()}, f, indent=2)
-
-    import matplotlib.pyplot as plt
-    plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='orange')
-    plt.plot(depths, model(depths), c='orange')
-
-    import matplotlib.patches as mpatches
-    patches = [mpatches.Patch(color='orange', label=f"True Noise, Decay: {optimal_params[1]:.2f}")]
-    from qibo.backends import NumpyBackend
-
-    # Build a Depolarizing toy model
-    depolarizing_toy_model = NoiseModel()
-    depolarizing_toy_model.add(DepolarizingError(1 - optimal_params[1]))
-    _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=depolarizing_toy_model, backend=NumpyBackend())
-
-    plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='blue')
-    plt.plot(depths, model(depths), c='blue')
-    patches.append(mpatches.Patch(color='blue', label=f"Depolarizing toy model, Decay: {optimal_params[1]:.2f}"))
-
-    if args.agent is not None:
-        agent = PPO.load(args.agent)
-        agent_noise_model = RL_NoiseModel(agent, rep)
-        _, survival_probs, err, optimal_params, model = randomized_benchmarking(circuits, noise_model=agent_noise_model, backend=NumpyBackend())
-        plt.errorbar(depths, survival_probs, yerr=err, fmt="o", elinewidth=1, capsize=3, c='green')
-        plt.plot(depths, model(depths), c='green')
-        patches.append(mpatches.Patch(color='green', label=f"RL Agent, Decay: {optimal_params[1]:.2f}"))
-
-    plt.legend(handles=patches)
-
-    plt.ylabel('Survival Probability')
-    plt.xlabel('Depth')
-    plt.savefig('RB.pdf', format='pdf', dpi=300)
-    plt.show()
-
-
-def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=None):
-    nqubits = circuits[0].nqubits
-    calibration_matrix = cm(nqubits, backend=backend, noise_model=noise_model, nshots=nshots)
-    circuits = [ c.copy(True) for c in circuits ] 
-    if backend is None:
-        from qibo.backends import GlobalBackend
-        backend = GlobalBackend()
-    
-    circ = { c.depth: [] for c in circuits }
-    for c in tqdm(circuits):
-        depth = c.depth
-        inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
-        c = fill_identity(c)
-        if noise_model is not None:
-            c = noise_model.apply(c)
-        c.add(inverse_unitary)
-        circ[depth].append(c)        
-        
-    probs = { d: [] for d in circ.keys() }
-    init_state = f"{0:0{nqubits}b}"
-    for depth, circs in tqdm(circ.items()):
-        print(f'> Looping over circuits of depth {depth}')
-        for c in circs:
+    for same_len_circuits in circuits:
+        for rep_c in same_len_circuits:
+            c = rep.rep_to_circuit(rep_c)
+            depth = c.depth
+            if depth not in final_circuits.keys():
+                final_circuits[depth] = []
+            nqubits = c.nqubits
+            inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
+            c = fill_identity(c)
+            c = noise.apply(c)
+            c.add(inverse_unitary)
             for i in range(nqubits):
                 c.add(gates.M(i))
+            final_circuits[depth].append(c)
+    return final_circuits
+
+def randomized_benchmarking(circuits, nshots=1000):
+    
+    backend = NumpyBackend()
+    nqubits = list(circuits.values())[0][0].nqubits
+    probs = { d: [] for d in circuits.keys() }
+    init_state = f"{0:0{nqubits}b}"
+    
+    for depth, circs in circuits.items():
+        print(f'> Looping over circuits of depth {depth}')
+        for c in circs:
             
             result = backend.execute_circuit(c, nshots=nshots)
             freq = result.frequencies()
@@ -91,6 +59,7 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
                 probs[depth].append(0)
             else:
                 probs[depth].append(freq[init_state]/nshots)
+
     avg_probs = [ (d, np.mean(p)) for d,p in probs.items() ]
     std_probs = [ (d, np.std(p)) for d,p in probs.items() ]
     avg_probs = sorted(avg_probs, key=lambda x: x[0])
@@ -99,8 +68,8 @@ def randomized_benchmarking(circuits, backend=None, nshots=1000, noise_model=Non
     depths, survival_probs = zip(*avg_probs)
     _, err = zip(*std_probs)
     optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
-    model = lambda depth: optimal_params[0] * np.power(optimal_params[1],depth) + optimal_params[2]
-    return depths, survival_probs, err, optimal_params, model
+    optimal_params = { 'a': optimal_params[0], 'l': optimal_params[1], 'b': optimal_params[2], "model": "a * l**depth + b" }
+    return optimal_params
 
 
 def fill_identity(circuit: Circuit):
@@ -119,4 +88,48 @@ def fill_identity(circuit: Circuit):
             else:
                 new_circuit.add(gates.I(qubit))
     return new_circuit
+
+def RB_evaluation(lambda_RB,circ_representation,target_label):
+    dataset_size = len(target_label)
+    trace_distance_rb_list = []
+    bures_distance_rb_list = []
+    fidelity_rb_list = []
+    trace_distance_no_noise_list = []
+    bures_distance_no_noise_list = []
+    fidelity_no_noise_list = []
+    rb_noise_model=CustomNoiseModel("src/rlnoise/config.json")
+    RB_label = np.array([rb_noise_model.apply(CircuitRepresentation().rep_to_circuit(circ_representation[i]))().state() 
+                         for i in range(dataset_size)])
+    label_no_noise_added = np.array([CircuitRepresentation().rep_to_circuit(circ_representation[i])().state() 
+                         for i in range(dataset_size)])
+    for idx,label in enumerate(RB_label):
+        fidelity_rb_list.append(compute_fidelity(label,target_label[idx]))
+        trace_distance_rb_list.append(trace_distance(label,target_label[idx]))
+        bures_distance_rb_list.append(bures_distance(label,target_label[idx]))
+        fidelity_no_noise_list.append(compute_fidelity(label_no_noise_added[idx],target_label[idx]))
+        trace_distance_no_noise_list.append(trace_distance(label_no_noise_added[idx],target_label[idx]))
+        bures_distance_no_noise_list.append(bures_distance(label_no_noise_added[idx],target_label[idx]))
+    fidelity = np.array(fidelity_rb_list)
+    trace_dist = np.array(trace_distance_rb_list)
+    bures_dist = np.array(bures_distance_rb_list)
+    no_noise_fidelity = np.array(fidelity_no_noise_list)
+    no_noise_trace_dist = np.array(trace_distance_no_noise_list)
+    no_noise_bures_dist = np.array(bures_distance_no_noise_list)
+    results = np.array([(
+                       fidelity.mean(),fidelity.std(),
+                       trace_dist.mean(),trace_dist.std(),
+                       bures_dist.mean(),bures_dist.std(),
+                       no_noise_fidelity.mean(),no_noise_fidelity.std(),
+                       no_noise_trace_dist.mean(),no_noise_trace_dist.std(),
+                       no_noise_bures_dist.mean(),no_noise_bures_dist.std()  )],
+                       dtype=[
+                              ('fidelity','<f4'),('fidelity_std','<f4'),
+                              ('trace_distance','<f4'),('trace_distance_std','<f4'),
+                              ('bures_distance','<f4'),('bures_distance_std','<f4'),
+                              ('fidelity_no_noise','<f4'),('fidelity_no_noise_std','<f4'),
+                              ('trace_distance_no_noise','<f4'),('trace_distance_no_noise_std','<f4'),
+                              ('bures_distance_no_noise','<f4'),('bures_distance_no_noise_std','<f4')  ])
+    
+    return results
+
 
