@@ -7,6 +7,7 @@ from qibo.quantum_info import trace_distance as qibo_trace_distance, fidelity
 from scipy.linalg import sqrtm
 
 def trace_distance(rho1,rho2):
+    """Compute the trace distance between two density matrices."""
     return qibo_trace_distance(rho1,rho2)
 
 def qibo_compute_fidelity(density_matrix0, density_matrix1):
@@ -38,6 +39,7 @@ def test_avg_fidelity(rho1,rho2):
     return avg_fidelity
 
 def u3_dec(gate):
+    """Decompose a U3 gate into RZ and RX gates."""
     # t, p, l = gate.parameters
     params = gate.parameters
     t = params[0]
