@@ -68,7 +68,7 @@ class Agent(object):
             return circuit_env.current_state.transpose(2,1,0)
         return circuit_env.get_qibo_circuit()
     
-    def apply_rb_dataset(self, rb_dataset):
+    def apply_rb_dataset(self, rb_dataset, verbose = False):
         '''Apply the policy to a dataset of circuits used for RB and return the fidelity and trace distance.'''
         dataset = np.load(rb_dataset, allow_pickle=True)
         circuits = dataset["circuits"]
@@ -90,7 +90,8 @@ class Agent(object):
         print("Evaluating RL agent...")
         for label_index, circs in enumerate(circuits.values()):
             depth = circs[0].depth
-            print(f'> Looping over circuits of depth: {depth}')
+            if verbose:
+                print(f'> Looping over circuits of depth: {depth}')
             fidelity = []
             trace_dist = []
             for i, c in enumerate(circs):

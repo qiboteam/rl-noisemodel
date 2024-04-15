@@ -10,7 +10,7 @@ result_file = "simulation/experiments/3q_high_noise/rl_eval.npz"
 
 env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 
-agent = Agent(config_file = config_file, env = env)
+agent = Agent(config_file = config_file, env = env, model_file_path = model_file_path)
 result = agent.apply_rb_dataset(rb_dataset)
 
 print("Result of RL evaluation, the columns are: depth, fidelity, fidelity_std, trace_distance, trace_distance_std.")

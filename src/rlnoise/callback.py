@@ -20,7 +20,7 @@ class CustomCallback(BaseCallback):
         self.plot = callback_params['plot_results']
         model_name = callback_params['model_name']
         results_folder = callback_params['result_folder']
-        self.results_path = f"{results_folder}/{model_name + '_train_result'}"
+        self.results_path = f"{results_folder}/{model_name}"
         self.save_path = f"{results_folder}/{model_name}"
         self.check_freq = callback_params['check_freq']
         self.verbose = callback_params['verbose']
@@ -127,7 +127,7 @@ class CustomCallback(BaseCallback):
         self.timestep_list = np.asarray(self.timestep_list)/1000
 
         np.savez(
-            self.results_path, 
+            self.results_path + '_train_result', 
             timesteps = self.timestep_list, 
             train_results = self.train_results, 
             val_results = self.eval_results,
@@ -157,7 +157,8 @@ class CustomCallback(BaseCallback):
         ax[1].errorbar(time_steps,train_results["fidelity"],yerr=train_results["fidelity_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[2].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
         ax[0].legend()
-        plt.show()         
+        plt.show()      
+        plt.savefig(f"{self.results_path}_train_plot.png")   
 
     def _on_rollout_start(self) -> None:
         """

@@ -28,7 +28,7 @@
   "agent": {
     "policy": "MlpPolicy",
     "features_dim": 32,
-    "nn_update_steps": 1024,
+    "nn_update_steps": 1000,
     "batch_size": 64
   },
   "callback": {

@@ -51,7 +51,7 @@ def preprocess_circuits(circuits, config, evaluate=False):
             final_circuits[depth].append(c)
     return final_circuits
 
-def randomized_benchmarking(circuits, nshots=1000):
+def randomized_benchmarking(circuits, nshots=1000, verbose=False):
     """Run randomized benchmarking on the circuits."""
     backend = NumpyBackend()
     nqubits = list(circuits.values())[0][0].nqubits
@@ -60,7 +60,8 @@ def randomized_benchmarking(circuits, nshots=1000):
     
     print('Running randomized benchmarking...')
     for depth, circs in circuits.items():
-        print(f'> Looping over circuits of depth: {depth}')
+        if verbose:
+            print(f'> Looping over circuits of depth: {depth}')
         for c in circs:
             result = backend.execute_circuit(c, nshots=nshots)
             freq = result.frequencies()
@@ -99,7 +100,7 @@ def fill_identity(circuit: Circuit):
                 new_circuit.add(gates.I(qubit))
     return new_circuit
 
-def rb_evaluation(lambda_rb, rb_dataset, config):
+def rb_evaluation(lambda_rb, rb_dataset, config, verbose=False):
     """
     Evaluate the RB model on the circuits in the dataset.
     Return the fidelity and trace distance of the noisy and noiseless circuits.
@@ -118,7 +119,8 @@ def rb_evaluation(lambda_rb, rb_dataset, config):
 
     for label_index, circs in enumerate(circuits.values()):
         depth = circs[0].depth
-        print(f'> Looping over circuits of depth: {depth}')
+        if verbose:
+            print(f'> Looping over circuits of depth: {depth}')
         fidelity = []
         trace_dist = []
         fidelity_no_noise = []
