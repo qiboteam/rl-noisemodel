@@ -62,7 +62,6 @@ def randomized_benchmarking(circuits, nshots=1000):
     for depth, circs in circuits.items():
         print(f'> Looping over circuits of depth: {depth}')
         for c in circs:
-            
             result = backend.execute_circuit(c, nshots=nshots)
             freq = result.frequencies()
             

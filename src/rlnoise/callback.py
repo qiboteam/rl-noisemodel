@@ -20,7 +20,7 @@ class CustomCallback(BaseCallback):
         self.plot = callback_params['plot_results']
         model_name = callback_params['model_name']
         results_folder = callback_params['result_folder']
-        self.results_path = f"{results_folder}/{model_name}"
+        self.results_path = f"{results_folder}/{model_name + '_train_result'}"
         self.save_path = f"{results_folder}/{model_name}"
         self.check_freq = callback_params['check_freq']
         self.verbose = callback_params['verbose']
@@ -82,9 +82,6 @@ class CustomCallback(BaseCallback):
                     ("trace_distance", '<f4'),
                     ("trace_distance_std", '<f4')
                 ])
-
-                
-
 
     def _on_step(self) -> bool:
         """

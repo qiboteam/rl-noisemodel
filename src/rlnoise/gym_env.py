@@ -63,7 +63,6 @@ class QuantumCircuit(gymnasium.Env):
             config = json.load(f)
         gym_env_params = config["gym_env"]
         self.kernel_size = gym_env_params['kernel_size']
-        self.action_space_max_value = gym_env_params['action_space_max_value']
         self.only_depol = gym_env_params['enable_only_depolarizing']
         if self.val_split is None:
             self.val_split = gym_env_params['val_split']

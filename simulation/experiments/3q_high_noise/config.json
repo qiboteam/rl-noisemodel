@@ -16,8 +16,8 @@
   "noise": {
     "primitive_gates": ["RZ", "RX", "CZ"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
-    "dep_lambda": 0.02,
-    "p0": 0.08, 
+    "dep_lambda": 0.05,
+    "p0": 0.07, 
     "epsilon_x": 0.1,
     "epsilon_z": 0.07,
     "x_coherent_on_gate": ["rx"],
@@ -36,7 +36,7 @@
     "plot_results": true,
     "model_name": "model",
     "result_folder": "simulation/experiments/3q_high_noise",
-    "check_freq": 2048,
+    "check_freq": 5000,
     "verbose": true
   },
   "rb":{
