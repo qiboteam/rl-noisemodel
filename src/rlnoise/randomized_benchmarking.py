@@ -148,7 +148,7 @@ def rb_evaluation(lambda_rb, rb_dataset, config, verbose=False):
             trace_dist_no_noise.mean(),
             trace_dist_no_noise.std()
             )],
-            dtype=[('depth','<f4'),
+            dtype=[ ('depth','<f4'),
                     ('fidelity','<f4'),
                     ('fidelity_std','<f4'),
                     ('trace_distance','<f4'),
