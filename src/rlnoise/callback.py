@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
-from rlnoise.utils import compute_fidelity, trace_distance
+from rlnoise.utils import compute_fidelity, mse
 
 class CustomCallback(BaseCallback):
     """
@@ -36,10 +36,10 @@ class CustomCallback(BaseCallback):
         Args:
             train_set: bool, whether to evaluate on training or validation set.
         Returns:
-            avg reward, avg fidelity, avg trace distance
+            avg reward, avg fidelity, avg mse
         '''
         avg_rew = []
-        avg_trace_distance = []
+        avg_mse = []
         avg_fidelity = []
 
         if train_set:
@@ -60,27 +60,27 @@ class CustomCallback(BaseCallback):
 
             avg_rew.append(reward)
             avg_fidelity.append(compute_fidelity(self.env.labels[i], dm_model))
-            avg_trace_distance.append(trace_distance(self.env.labels[i], dm_model))
+            avg_mse.append(mse(self.env.labels[i], dm_model))
 
         rew = np.array(avg_rew)
         fid = np.array(avg_fidelity)
-        trace_d = np.array(avg_trace_distance)
+        mse_ = np.array(avg_mse)
 
         return  np.array([(
                     rew.mean(),
                     rew.std(),
                     fid.mean(),
                     fid.std(),
-                    trace_d.mean(),
-                    trace_d.std()
+                    mse_.mean(),
+                    mse_.std()
                 )],
                 dtype = [
                     ("reward", '<f4'),
                     ("reward_std", '<f4'),
                     ("fidelity", '<f4'),
                     ("fidelity_std", '<f4'),
-                    ("trace_distance", '<f4'),
-                    ("trace_distance_std", '<f4')
+                    ("mse", '<f4'),
+                    ("mse_std", '<f4')
                 ])
 
     def _on_step(self) -> bool:
@@ -100,9 +100,9 @@ class CustomCallback(BaseCallback):
             self.timestep_list.append(self.num_timesteps)
 
             if self.verbose:
-                print(f"Timesteps: {self.num_timesteps}")
-                print("Reward: ", training_results["reward"].item())
-                print('Test set Fidelity: {:.2f} std: {:.2f}'.format(evaluation_results["fidelity"].item(), evaluation_results["fidelity_std"].item()))
+                print(f"Timesteps/1000: {self.num_timesteps/1000}")
+                print("Reward: {:.4f}".format(training_results["reward"].item()))
+                print('Test set Fidelity: {:.4f} std: {:.4f}'.format(evaluation_results["fidelity"].item(), evaluation_results["fidelity_std"].item()))
             if self.save_best is True:
                 if evaluation_results["fidelity"] >= self.best_mean_fidelity:
                     if self.verbose:
@@ -132,33 +132,6 @@ class CustomCallback(BaseCallback):
             train_results = self.train_results, 
             val_results = self.eval_results,
             allow_pickle = True)
-        
-        if self.plot is True:
-            self.plot_results()
-
-    def plot_results(self):
-        import matplotlib.pyplot as plt
-
-        train_results = self.train_results.reshape(-1)
-        eval_results = self.eval_results.reshape(-1)
-        time_steps = self.timestep_list
-
-        fig, ax = plt.subplots(1, 3, figsize=(21, 7))
-        errorevery = 1
-
-        ax[0].errorbar(time_steps, eval_results["reward"], yerr=0,label='evaluation_set',errorevery=errorevery,capsize=4, marker='.')
-        ax[0].set(xlabel='timesteps/1000', ylabel='Reward',title='Reward')
-        ax[1].errorbar(time_steps,eval_results["fidelity"],yerr=eval_results["fidelity_std"],errorevery=errorevery,capsize=4, marker='.')
-        ax[1].set(xlabel='timesteps/1000', ylabel='Fidelity',title='Fidelity')
-        ax[2].errorbar(time_steps,eval_results["trace_distance"],yerr=eval_results["trace_distance_std"],errorevery=errorevery,capsize=4, marker='.')
-        ax[2].set(xlabel='timesteps/1000', ylabel='Trace Distance',title='Trace distance')
-
-        ax[0].errorbar(time_steps,train_results["reward"],yerr=train_results["reward_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
-        ax[1].errorbar(time_steps,train_results["fidelity"],yerr=train_results["fidelity_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
-        ax[2].errorbar(time_steps,train_results["trace_distance"],yerr=train_results["trace_distance_std"],color='orange',label='train_set',errorevery=errorevery,capsize=4, marker='.')
-        ax[0].legend()
-        plt.show()      
-        plt.savefig(f"{self.results_path}_train_plot.png")   
 
     def _on_rollout_start(self) -> None:
         """

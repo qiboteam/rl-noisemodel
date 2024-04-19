@@ -23,7 +23,7 @@ def load_dataset(filename):
     return circuits, labels
 
 class Dataset(object):
-    def __init__(self, config_file):
+    def __init__(self, config_file, evaluation=False):
         '''
         Generate dataset for the training of RL-algorithm.
         '''
@@ -38,6 +38,8 @@ class Dataset(object):
         self.n_qubits = dataset_options['qubits']
         self.n_circuits = dataset_options['n_circuits']
         self.clifford = dataset_options['clifford']
+        self.eval_size = dataset_options['eval_size']
+        self.eval_depth = dataset_options['eval_depth']
         enhanced_dataset = dataset_options['enhanced']
         self.rep = CircuitRepresentation(config_file)
         self.noise_model = CustomNoiseModel(config_file)
@@ -64,6 +66,16 @@ class Dataset(object):
         
         circuits_list  = np.asarray(circuits_list, dtype=object)
         np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)
+
+    def generate_eval_dataset(self, save_path):
+        '''Generate a dataset for evaluation of the RL-model'''
+        self.n_gates = self.eval_depth
+        circuits = [self.generate_random_circuit() for _ in range(self.eval_size)]
+        noisy_circuits = [self.noise_model.apply(c) for c in circuits]
+        dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(self.eval_size)])
+        circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in circuits], dtype=object)
+        np.savez(save_path, circuits = circ_rep, labels = dm_labels)
+        
 
     def generate_clifford_circuit(self):
         '''Generate a random Clifford circuit'''

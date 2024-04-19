@@ -2,7 +2,7 @@ from rlnoise.neural_network import CNNFeaturesExtractor
 from rlnoise.callback import CustomCallback
 from stable_baselines3 import PPO
 from rlnoise.gym_env import QuantumCircuit
-from rlnoise.utils import compute_fidelity, trace_distance
+from rlnoise.utils import compute_fidelity, mse
 import numpy as np
 from qibo import Circuit
 import json
@@ -93,26 +93,26 @@ class Agent(object):
             if verbose:
                 print(f'> Looping over circuits of depth: {depth}')
             fidelity = []
-            trace_dist = []
+            mse_ = []
             for i, c in enumerate(circs):
                 noisy_circuit = self.apply(c)    
                 dm_noise = noisy_circuit().state()
                 fidelity.append(compute_fidelity(labels[label_index][i], dm_noise))
-                trace_dist.append(trace_distance(labels[label_index][i], dm_noise))
+                mse_.append(mse(labels[label_index][i], dm_noise))
             fidelity = np.array(fidelity)
-            trace_dist = np.array(trace_dist)
+            mse_ = np.array(mse_)
             result = np.array([(
                 depth,
                 fidelity.mean(),
                 fidelity.std(),
-                trace_dist.mean(),
-                trace_dist.std(),
+                mse_.mean(),
+                mse_.std(),
                 )],
                 dtype=[('depth','<f4'),
                         ('fidelity','<f4'),
                         ('fidelity_std','<f4'),
-                        ('trace_distance','<f4'),
-                        ('trace_distance_std','<f4'),
+                        ('mse','<f4'),
+                        ('mse_std','<f4'),
                     ])
             final_result.append(result)
         

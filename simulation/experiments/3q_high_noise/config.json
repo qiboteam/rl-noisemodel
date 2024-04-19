@@ -1,6 +1,8 @@
 {
   "dataset": {
     "n_circuits": 500,
+    "eval_size": 200,
+    "eval_depth": 15,
     "moments": 7,
     "qubits": 3,
     "enhanced": true,
@@ -16,7 +18,7 @@
   "noise": {
     "primitive_gates": ["RZ", "RX", "CZ"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
-    "dep_lambda": 0.05,
+    "dep_lambda": 0.04,
     "p0": 0.07, 
     "epsilon_x": 0.1,
     "epsilon_z": 0.07,

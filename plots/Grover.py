@@ -1,9 +1,8 @@
 from rlnoise.noise_model import CustomNoiseModel
 from rlnoise.randomized_benchmarking import fill_identity
-from rlnoise.metrics import compute_fidelity
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
-from rlnoise.utils import grover
+from rlnoise.utils import grover, mms, mse, compute_fidelity
 from qibo.models import Circuit
 from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
@@ -12,7 +11,7 @@ exp_folder = "simulation/experiments/3q_high_noise/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-lambda_rb = 0.12
+lambda_rb = 0.113
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
@@ -27,11 +26,23 @@ noise.add(DepolarizingError(lambda_rb))
 rb_processed_circuit = fill_identity(circuit)
 RB_noisy_circuit = noise.apply(rb_processed_circuit)
 
+dm_truth = noisy_circuit().state()
+dm_rl = rl_noisy_circuit().state()
+dm_RB = RB_noisy_circuit().state()
+
+print("Circuit Info:")
 print("Length: ", len(circuit.queue))
 print("Moments: ", len(circuit.queue.moments))
-print("No noise", compute_fidelity(noisy_circuit().state(), circuit().state()))
-print("RL agent", compute_fidelity(noisy_circuit().state(), rl_noisy_circuit().state()))
-print("RB noise", compute_fidelity(noisy_circuit().state(), RB_noisy_circuit().state()))
+print("Fidelity:")
+print("No noise: ", compute_fidelity(dm_truth, circuit().state()))
+print("RL agent: ", compute_fidelity(dm_truth, dm_rl))
+print("RB noise: ", compute_fidelity(dm_truth, dm_RB))
+print("MMS: ", compute_fidelity(dm_truth, mms(8)))
+print("MSE:")
+print("No noise: ", mse(dm_truth, circuit().state()))
+print("RL agent: ", mse(dm_truth, dm_rl))
+print("RB noise: ", mse(dm_truth, dm_RB))
+print("MMS: ", mse(dm_truth, mms(8)))
 
 def copy_circ(circ):
     new_circ = Circuit(3, density_matrix=True)
@@ -106,7 +117,6 @@ r3 = [x + bar_width for x in r2]
 
 fig=plt.figure(figsize=(12, 9))
 ax=fig.add_subplot(111)
-# Create the bar plot
 ax.bar(r1, values1, width=bar_width, label='Ground truth noise', color='#e60049')
 ax.bar(r2, values2, width=bar_width, label='RL (standard)', color='#0bb4ff')
 ax.bar(r3, values3, width=bar_width, label='RB', color='green')
@@ -119,5 +129,22 @@ plt.ylabel('Counts')
 plt.ylim(0, 3500)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
-plt.savefig("Grover_shots.pdf", )
-plt.show()
+plt.savefig("Grover_shots.pdf")
+plt.close()
+
+# Heatmaps
+import numpy as np
+squared_error_rl = np.abs(np.square(dm_truth - dm_rl))
+squared_error_rb = np.abs(np.square(dm_truth - dm_RB))
+
+fig, axs = plt.subplots(1, 2, figsize=(16, 9))
+
+# Plot the heatmaps
+cax1 = axs[0].imshow(squared_error_rl, cmap='viridis')
+fig.colorbar(cax1, ax=axs[0])
+axs[0].set_title('MSE Truth-RL')
+
+cax2 = axs[1].imshow(squared_error_rb, cmap='viridis')
+fig.colorbar(cax2, ax=axs[1])
+axs[1].set_title('MSE Truth-RB')
+plt.savefig("Grover_heatmap.pdf")

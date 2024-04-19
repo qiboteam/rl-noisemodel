@@ -1,7 +1,11 @@
 from rlnoise.dataset import Dataset
 
-config_file = "simulation/experiments/3q_high_noise/config.json"
-save_path = "simulation/experiments/3q_high_noise/dataset"
+exp_folder = "simulation/experiments/3q_high_noise/"
+
+config_file = exp_folder + "config.json"
+save_path = exp_folder + "dataset"
+eval_path = exp_folder + "eval_dataset"
 
 dataset = Dataset(config_file)
 dataset.save(save_path)
+dataset.generate_eval_dataset(eval_path)

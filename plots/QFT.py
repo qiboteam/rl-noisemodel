@@ -1,9 +1,8 @@
 from rlnoise.noise_model import CustomNoiseModel
 from rlnoise.randomized_benchmarking import fill_identity
-from rlnoise.metrics import compute_fidelity
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
-from rlnoise.utils import qft, unroll_circuit
+from rlnoise.utils import qft, unroll_circuit, mms, mse, compute_fidelity
 from qibo.models import Circuit
 from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
@@ -12,7 +11,7 @@ exp_folder = "simulation/experiments/3q_high_noise/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-lambda_rb = 0.12
+lambda_rb = 0.113
 
 circuit = qft()
 circuit = unroll_circuit(circuit)
@@ -28,11 +27,23 @@ noise.add(DepolarizingError(lambda_rb))
 rb_processed_circuit = fill_identity(circuit)
 RB_noisy_circuit = noise.apply(rb_processed_circuit)
 
+dm_truth = noisy_circuit().state()
+dm_rl = rl_noisy_circuit().state()
+dm_RB = RB_noisy_circuit().state()
+
+print("Circuit Info: ")
 print("Length: ", len(circuit.queue))
 print("Moments: ", len(circuit.queue.moments))
-print("No noise", compute_fidelity(noisy_circuit().state(), circuit().state()))
-print("RL agent", compute_fidelity(noisy_circuit().state(), rl_noisy_circuit().state()))
-print("RB noise", compute_fidelity(noisy_circuit().state(), RB_noisy_circuit().state()))
+print("Fidelity: ")
+print("No noise: ", compute_fidelity(dm_truth, circuit().state()))
+print("RL agent: ", compute_fidelity(dm_truth, dm_rl))
+print("RB noise: ", compute_fidelity(dm_truth, dm_RB))
+print("MMS: ", compute_fidelity(dm_truth, mms(8)))
+print("MSE: ")
+print("No noise: ", mse(dm_truth, circuit().state()))
+print("RL agent: ", mse(dm_truth, dm_rl))
+print("RB noise: ", mse(dm_truth, dm_RB))
+print("MMS: ", mse(dm_truth, mms(8)))
 
 def copy_circ(circ):
     new_circ = Circuit(3, density_matrix=True)
@@ -119,4 +130,21 @@ plt.ylim(0, 3000)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
 plt.savefig("QFT_shots.pdf", )
-plt.show()
+plt.close()
+
+# Heatmaps
+import numpy as np
+squared_error_rl = np.abs(np.square(dm_truth - dm_rl))
+squared_error_rb = np.abs(np.square(dm_truth - dm_RB))
+
+fig, axs = plt.subplots(1, 2, figsize=(16, 9))
+
+cax1 = axs[0].imshow(squared_error_rl, cmap='viridis')
+fig.colorbar(cax1, ax=axs[0])
+axs[0].set_title('MSE Truth-RL')
+
+cax2 = axs[1].imshow(squared_error_rb, cmap='viridis')
+fig.colorbar(cax2, ax=axs[1])
+axs[1].set_title('MSE Truth-RB')
+
+plt.savefig("QFT_heatmap.pdf")
