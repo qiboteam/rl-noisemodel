@@ -1,10 +1,10 @@
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
 
-exp_folder = "simulation/experiments/3q_high_noise/"
+exp_folder = "simulation/experiments/3q_low_noise/"
 
 config_file = exp_folder + "config.json"
-dataset_file = exp_folder + "dataset"
+dataset_file = exp_folder + "dataset.npz"
 
 env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 

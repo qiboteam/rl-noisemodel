@@ -21,7 +21,6 @@ def run_rb(rb_dataset, config):
     """
     dataset = np.load(rb_dataset, allow_pickle=True)
     circuits = dataset["circuits"]
-    print("Preprocessing circuits...")
     circuits = preprocess_circuits(circuits, config)
 
     return randomized_benchmarking(circuits)

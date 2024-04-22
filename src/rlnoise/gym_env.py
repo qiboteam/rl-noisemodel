@@ -30,7 +30,7 @@ class DensityMatrixReward(object):
         self.metric = metric
 
     def __call__(self, circuit, target, final, alpha=1.):
-        epsilon = 1e-10 # to avoid log(0)
+        epsilon = 1e-15 # to avoid log(0)
         if final:
             circuit_dm = np.array(circuit().state())
             return -np.log(alpha * self.metric(circuit_dm, target) + epsilon)
