@@ -82,7 +82,7 @@ class Dataset(object):
         circuit = random_clifford(self.n_qubits, return_circuit=True, density_matrix=True)
         new_circuit = Circuit(self.n_qubits, density_matrix=True)
         for gate in circuit.queue:
-            if gate.name.upper() in self.primitive_gates:
+            if gate.name in self.primitive_gates:
                 new_circuit.add(gate)
             elif gate.name == "cx":
                 new_circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
@@ -108,25 +108,35 @@ class Dataset(object):
 
     def generate_random_circuit(self):
         """Generate a random circuit."""
-        if self.n_qubits < 2 and "CZ" in self.primitive_gates:
+        if self.n_qubits < 2 and "cz" in self.primitive_gates:
             raise ValueError("Impossible to use CZ on single qubit circuits.")
         circuit = Circuit(self.n_qubits, density_matrix=True)
         while len(circuit.queue.moments) < self.n_gates:
             q0 = random.choice(range(self.n_qubits))
-            gate = string_to_gate(random.choice(self.primitive_gates))
-            if isinstance(gate, gates.CZ):
+            gate = random.choice(self.primitive_gates)
+            if gate == 'cz':
                 q1 = random.choice(
                     list(set(range(self.n_qubits)) - {q0})
                 )       
-                circuit.add(gate(q1,q0))
-            elif issubclass(gate, gates.ParametrizedGate):
+                circuit.add(gates.CZ(q1,q0))
+            elif gate == 'rx':
                 theta = (
                     random.choice([0, 0.25, 0.5, 0.75])
                     if self.clifford
                     else np.random.random()
                 )
                 theta *= 2 * np.pi
-                circuit.add(gate(q0, theta=theta))
+                circuit.add(gates.RX(q0, theta=theta))
+            elif gate == 'rz':
+                theta = (
+                    random.choice([0, 0.25, 0.5, 0.75])
+                    if self.clifford
+                    else np.random.random()
+                )
+                theta *= 2 * np.pi
+                circuit.add(gates.RZ(q0, theta=theta))
+            else:
+                raise ValueError(f"Gate {gate} not present in the primitive gates.")
         return circuit
     
     def save(self, filename):

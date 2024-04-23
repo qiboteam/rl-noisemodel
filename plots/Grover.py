@@ -7,8 +7,9 @@ from qibo.models import Circuit
 from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
 import json
+import numpy as np
 
-exp_folder = "simulation/experiments/3q_high_noise/"
+exp_folder = "simulation/experiments/3q_low_noise/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
@@ -16,15 +17,15 @@ lambda_rb = 0.0466
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
-noisy_circuit = noise_model.apply(circuit)
+noisy_circuit = noise_model.apply(grover())
 
 env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 rl_noise_model = Agent(config_file = config_file, env = env, model_file_path = model_file)
-rl_noisy_circuit = rl_noise_model.apply(circuit)
+rl_noisy_circuit = rl_noise_model.apply(grover())
 
 noise = NoiseModel()
 noise.add(DepolarizingError(lambda_rb))
-rb_processed_circuit = fill_identity(circuit)
+rb_processed_circuit = fill_identity(grover())
 RB_noisy_circuit = noise.apply(rb_processed_circuit)
 
 dm_truth = noisy_circuit().state()
@@ -61,35 +62,18 @@ result_dict["mse"]["MMS"] = float(mse(dm_truth, mms(8)))
 with open(exp_folder + "Grover_result.json", "w") as f:
     json.dump(result_dict, f)
 
-def copy_circ(circ):
-    new_circ = Circuit(3, density_matrix=True)
-    for gate in circ.queue:
-        new_circ.add(gate)
-    return new_circ       
+def compute_probabilities(rho):
+    probs = {}
+    for i in range(8):
+        probs[format(i, "03b")] = np.abs(rho[i, i])
+    return probs
+            
+no_noise_shots = compute_probabilities(circuit().state())
+noise_shots = compute_probabilities(dm_truth)
+rl_shots = compute_probabilities(dm_rl)
+RB_shots = compute_probabilities(dm_RB)
 
-final_circuit2 = copy_circ(circuit)
-final_circuit2.add(gates.M(0,1,2))
-noisy_circuit2 = copy_circ(noisy_circuit)
-noisy_circuit2.add(gates.M(0,1,2))
-rl_noisy_circuit2 = copy_circ(rl_noisy_circuit)
-rl_noisy_circuit2.add(gates.M(0,1,2))
-RB_noisy_circuit2 = copy_circ(RB_noisy_circuit)
-RB_noisy_circuit2.add(gates.M(0,1,2))
-
-no_noise_shots = final_circuit2.execute(nshots=10000)
-noise_shots = noisy_circuit2.execute(nshots=10000)
-rl_shots = rl_noisy_circuit2.execute(nshots=10000)
-RB_shots = RB_noisy_circuit2.execute(nshots=10000)
-
-no_noise_shots = dict(sorted(dict(no_noise_shots.frequencies()).items()))
-noise_shots = dict(sorted(dict(noise_shots.frequencies()).items()))
-rl_shots = dict(sorted(dict(rl_shots.frequencies()).items()))
-RB_shots = dict(sorted(dict(RB_shots.frequencies()).items()))
-for i in ("000", "001", "010", "011", "100", "101"):
-    no_noise_shots[i] = 0
-no_noise_shots = dict(sorted(no_noise_shots.items()))
-
-print("Shots:")
+print("Probs:")
 print("No noise", no_noise_shots)
 print("Noise", noise_shots)
 print("RL", rl_shots)
@@ -144,7 +128,7 @@ ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 # Customize the plot
 plt.xlabel('Result')
 plt.ylabel('Counts')
-plt.ylim(0, 3500)
+#plt.ylim(0, 3500)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
 plt.savefig(exp_folder + "Grover_shots.pdf")

@@ -2,7 +2,7 @@
   "dataset": {
     "n_circuits": 500,
     "eval_size": 200,
-    "eval_depth": 15,
+    "eval_depth": 25,
     "moments": 25,
     "qubits": 3,
     "enhanced": false,
@@ -16,7 +16,7 @@
     "val_split": 0.2
   },
   "noise": {
-    "primitive_gates": ["RZ", "RX", "CZ"],
+    "primitive_gates": ["rz", "rx", "cz"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
     "dep_lambda": 0.02,
     "p0": 0.03, 
@@ -37,12 +37,12 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_low_noise",
+    "result_folder": "simulation/experiments/3q_low_noise_long_dataset",
     "check_freq": 5000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_low_noise/rb_dataset",
+    "dataset": "simulation/experiments/3q_low_noise_long_dataset/rb_dataset",
     "start": 3,
     "stop": 31,
     "step": 3,

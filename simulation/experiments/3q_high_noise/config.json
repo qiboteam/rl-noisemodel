@@ -16,7 +16,7 @@
     "val_split": 0.2
   },
   "noise": {
-    "primitive_gates": ["RZ", "RX", "CZ"],
+    "primitive_gates": ["rz", "rx", "cz"],
     "channels": ["DepolarizingChannel", "ResetChannel"],
     "dep_lambda": 0.03,
     "p0": 0.06, 
