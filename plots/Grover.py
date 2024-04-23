@@ -6,12 +6,13 @@ from rlnoise.utils import grover, mms, mse, compute_fidelity
 from qibo.models import Circuit
 from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
+import json
 
 exp_folder = "simulation/experiments/3q_high_noise/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-lambda_rb = 0.105
+lambda_rb = 0.0466
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
@@ -44,6 +45,22 @@ print("RL agent: ", mse(dm_truth, dm_rl))
 print("RB noise: ", mse(dm_truth, dm_RB))
 print("MMS: ", mse(dm_truth, mms(8)))
 
+result_dict = {}
+result_dict["fidelity"] = {}
+result_dict["mse"] = {}
+result_dict["fidelity"]["no_noise"] = float(compute_fidelity(dm_truth, circuit().state()))
+result_dict["fidelity"]["RL"] = float(compute_fidelity(dm_truth, dm_rl))
+result_dict["fidelity"]["RB"] = float(compute_fidelity(dm_truth, dm_RB))
+result_dict["fidelity"]["MMS"] = float(compute_fidelity(dm_truth, mms(8)))
+result_dict["mse"]["no_noise"] = float(mse(dm_truth, circuit().state()))
+result_dict["mse"]["RL"] = float(mse(dm_truth, dm_rl))
+result_dict["mse"]["RB"] = float(mse(dm_truth, dm_RB))
+result_dict["mse"]["MMS"] = float(mse(dm_truth, mms(8)))
+
+# Save result to json file
+with open(exp_folder + "Grover_result.json", "w") as f:
+    json.dump(result_dict, f)
+
 def copy_circ(circ):
     new_circ = Circuit(3, density_matrix=True)
     for gate in circ.queue:
@@ -72,6 +89,7 @@ for i in ("000", "001", "010", "011", "100", "101"):
     no_noise_shots[i] = 0
 no_noise_shots = dict(sorted(no_noise_shots.items()))
 
+print("Shots:")
 print("No noise", no_noise_shots)
 print("Noise", noise_shots)
 print("RL", rl_shots)
@@ -129,7 +147,7 @@ plt.ylabel('Counts')
 plt.ylim(0, 3500)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
-plt.savefig("Grover_shots.pdf")
+plt.savefig(exp_folder + "Grover_shots.pdf")
 plt.close()
 
 # Heatmaps
@@ -147,4 +165,4 @@ axs[0].set_title('MSE Truth-RL')
 cax2 = axs[1].imshow(squared_error_rb, cmap='viridis')
 fig.colorbar(cax2, ax=axs[1])
 axs[1].set_title('MSE Truth-RB')
-plt.savefig("Grover_heatmap.pdf")
+plt.savefig(exp_folder + "Grover_heatmap.pdf")

@@ -1,6 +1,6 @@
 from rlnoise.dataset import Dataset
 
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_high_noise/"
 
 config_file = exp_folder + "config.json"
 save_path = exp_folder + "dataset"

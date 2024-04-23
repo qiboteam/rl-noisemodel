@@ -1,9 +1,9 @@
 {
   "dataset": {
-    "n_circuits": 100,
-    "eval_size": 100,
+    "n_circuits": 500,
+    "eval_size": 200,
     "eval_depth": 15,
-    "moments": 10,
+    "moments": 25,
     "qubits": 3,
     "enhanced": false,
     "clifford": true
@@ -49,3 +49,5 @@
     "n_circ": 50
   }
 }
+
+
