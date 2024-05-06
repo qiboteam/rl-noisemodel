@@ -15,6 +15,11 @@
     "enable_only_depolarizing": false,
     "val_split": 0.2
   },
+  "reward": {
+    "metric": "mse",
+    "function": "log",
+    "alpha": 100
+  },
   "noise": {
     "primitive_gates": ["rz", "rx", "cz"],
     "channels": ["DepolarizingChannel", "ResetChannel"],

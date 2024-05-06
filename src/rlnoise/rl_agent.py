@@ -117,5 +117,33 @@ class Agent(object):
             final_result.append(result)
         
         return np.asarray(final_result)
-        
-        
+    
+    def apply_eval_dataset(self, dataset, verbose = True):
+        '''Apply the policy to a dataset of circuits used for testing and return the fidelity, trace distance.'''
+        dataset = np.load(dataset, allow_pickle=True)
+        circuits = dataset["circuits"]
+        labels = dataset["labels"]
+        final_result = []
+        avg_fidelity = 0.
+        avg_mse = 0.
+        for i, c in enumerate(circuits):
+            noisy_circuit = self.apply(c)    
+            dm_noise = noisy_circuit().state()
+            fidelity = compute_fidelity(labels[i], dm_noise)
+            mse_ = mse(labels[i], dm_noise)
+            result = np.array([(
+                fidelity,
+                mse_,
+            )],
+                dtype=[ ('fidelity','<f4'),
+                        ('mse','<f4'),
+                    ])
+            final_result.append(result)
+            avg_fidelity += fidelity
+            avg_mse += mse_
+        if verbose:
+            print("Avg fidelity: ", avg_fidelity/len(circuits))
+            print("Avg mse: ", avg_mse/len(circuits))
+        return np.asarray(final_result)
+            
+            

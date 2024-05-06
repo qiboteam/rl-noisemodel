@@ -110,14 +110,6 @@ def trace_distance(rho1,rho2):
     """Compute the trace distance between two density matrices."""
     return qibo_trace_distance(rho1,rho2)
 
-def qibo_compute_fidelity(density_matrix0, density_matrix1):
-    """Compute the fidelity for two density matrices (pure or mixed states).
-
-    .. math::
-            F( \rho , \sigma ) = -\text{Tr}( \sqrt{\sqrt{\rho} \sigma \sqrt{\rho}})^2
-    """
-    return fidelity(density_matrix0, density_matrix1)
-
 def compute_fidelity(density_matrix0, density_matrix1):
     """Compute the fidelity for two density matrices (pure or mixed states).
 
@@ -126,8 +118,6 @@ def compute_fidelity(density_matrix0, density_matrix1):
     """
     sqrt_mat1_mat2 = sqrtm(density_matrix0 @ density_matrix1)
     trace = np.real(np.trace(sqrt_mat1_mat2)**2)
-    if trace > 1:
-        trace=1
     return trace
 
 def test_avg_fidelity(rho1,rho2):

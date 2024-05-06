@@ -6,6 +6,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from rlnoise.dataset import load_dataset
 from rlnoise.circuit_representation import CircuitRepresentation
+from rlnoise.utils import mse, trace_distance, compute_fidelity
 import gymnasium
 from gymnasium import spaces
 from qibo import gates
@@ -26,14 +27,28 @@ class DensityMatrixReward(object):
     It is possible to customize the reward function by passing a different metric function.
     It is also possible to use a different customized metric function.
     """
-    def __init__(self, metric=lambda x,y: np.sqrt(np.abs(((x-y)**2)).mean())):
-        self.metric = metric
+    def __init__(self, metric="mse", function="log", alpha=1.):
+        if metric == "mse":
+            self.metric = mse
+        elif metric == "fidelity":
+            self.metric = compute_fidelity
+        elif metric == "trace_distance":
+            self.metric = trace_distance
+        else:
+            raise ValueError("Invalid metric function.")
 
-    def __call__(self, circuit, target, final, alpha=1.):
-        epsilon = 1e-15 # to avoid log(0)
+        if function == "log":
+            self.function = lambda x: -np.log(alpha * x + 1e-15)
+        elif function == "linear":
+            self.function = lambda x: alpha * x
+        else:
+            raise ValueError("Invalid function.")
+        
+
+    def __call__(self, circuit, target, final):
         if final:
             circuit_dm = np.array(circuit().state())
-            return -np.log(alpha * self.metric(circuit_dm, target) + epsilon)
+            return self.function(self.metric(circuit_dm, target))
         return 0.
 
 @dataclass
@@ -47,7 +62,6 @@ class QuantumCircuit(gymnasium.Env):
     circuits: np.ndarray = None
     labels = None
     val_split = None
-    reward: object = DensityMatrixReward()
     kernel_size: int = None
     action_space_max_value: float = None
     only_depol: bool = None
@@ -62,12 +76,19 @@ class QuantumCircuit(gymnasium.Env):
         with open(self.config_file) as f:
             config = json.load(f)
         gym_env_params = config["gym_env"]
+        reward_params = gym_env_params["reward"]
         self.kernel_size = gym_env_params['kernel_size']
         self.only_depol = gym_env_params['enable_only_depolarizing']
         if self.val_split is None:
             self.val_split = gym_env_params['val_split']
 
         self.rep = CircuitRepresentation(self.config_file)
+
+        # Define the reward function
+        reward_matric = reward_params["metric"]
+        reward_func = reward_params["function"]
+        reward_alpha = reward_params["alpha"]
+        self.reward = DensityMatrixReward(metric=reward_matric, function=reward_func, alpha=reward_alpha)
 
         if self.circuits is None:
             self.circuits, self.labels = load_dataset(self.dataset_file)
