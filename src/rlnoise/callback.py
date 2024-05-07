@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
-from rlnoise.utils import compute_fidelity, mse
+from rlnoise.utils import compute_fidelity, mse, trace_distance
 
 class CustomCallback(BaseCallback):
     """
@@ -41,6 +41,7 @@ class CustomCallback(BaseCallback):
         avg_rew = []
         avg_mse = []
         avg_fidelity = []
+        avg_trace_distance = []
 
         if train_set:
             start = 0
@@ -61,10 +62,12 @@ class CustomCallback(BaseCallback):
             avg_rew.append(reward)
             avg_fidelity.append(compute_fidelity(self.env.labels[i], dm_model))
             avg_mse.append(mse(self.env.labels[i], dm_model))
+            avg_trace_distance.append(trace_distance(self.env.labels[i], dm_model))
 
         rew = np.array(avg_rew)
         fid = np.array(avg_fidelity)
         mse_ = np.array(avg_mse)
+        trace_dist = np.array(avg_trace_distance)
 
         return  np.array([(
                     rew.mean(),
@@ -72,7 +75,9 @@ class CustomCallback(BaseCallback):
                     fid.mean(),
                     fid.std(),
                     mse_.mean(),
-                    mse_.std()
+                    mse_.std(),
+                    trace_dist.mean(),
+                    trace_dist.std()
                 )],
                 dtype = [
                     ("reward", '<f4'),
@@ -80,7 +85,9 @@ class CustomCallback(BaseCallback):
                     ("fidelity", '<f4'),
                     ("fidelity_std", '<f4'),
                     ("mse", '<f4'),
-                    ("mse_std", '<f4')
+                    ("mse_std", '<f4'),
+                    ("trace_distance", '<f4'),
+                    ("trace_distance_std", '<f4')
                 ])
 
     def _on_step(self) -> bool:

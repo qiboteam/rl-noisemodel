@@ -106,6 +106,10 @@ def mse(a,b):
     """Compute the Mean Squared Error between two matrices."""
     return np.mean(np.abs((a - b)**2))
 
+def mae(a,b):
+    """Compute the Mean Absolute Error between two matrices."""
+    return np.mean(np.abs(a - b))
+
 def trace_distance(rho1,rho2):
     """Compute the trace distance between two density matrices."""
     return qibo_trace_distance(rho1,rho2)

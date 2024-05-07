@@ -35,35 +35,48 @@ with open(results_path,"rb") as f:
     train_reward_std = train_results['reward_std'].reshape(-1)
     eval_reward = eval_results['reward'].reshape(-1)
     eval_reward_std = eval_results['reward_std'].reshape(-1)
+    trace_distance = train_results['trace_distance'].reshape(-1)
+    trace_distance_std = train_results['trace_distance_std'].reshape(-1)
+    eval_trace_distance = eval_results['trace_distance'].reshape(-1)
+    eval_trace_distance_std = eval_results['trace_distance_std'].reshape(-1)
 
-fig, ax = plt.subplots(1, 3, figsize=(30, 10))
+fig, ax = plt.subplots(2, 2, figsize=(30, 20))
 
-ax[0].plot(time_steps, train_fidelity, linewidth=4, color='#e60049')
-ax[0].plot(time_steps, eval_fidelity, linewidth=4, color='#0bb4ff')
-ax[0].fill_between(time_steps, train_fidelity - train_fidelity_std, 
+ax[0,0].plot(time_steps, train_fidelity, linewidth=4, color='#e60049')
+ax[0,0].plot(time_steps, eval_fidelity, linewidth=4, color='#0bb4ff')
+ax[0,0].fill_between(time_steps, train_fidelity - train_fidelity_std, 
                 train_fidelity + train_fidelity_std, alpha=0.2, color='#e60049')
-ax[0].fill_between(time_steps, eval_fidelity - eval_fidelity_std, 
+ax[0,0].fill_between(time_steps, eval_fidelity - eval_fidelity_std, 
                 eval_fidelity + eval_fidelity_std, alpha=0.2, color='#0bb4ff')
-ax[0].set(xlabel='Episodes/1000', ylabel='Fidelity')
-ax[0].legend(['Train Set', 'Test Set'], loc='lower right')
+ax[0,0].set(xlabel='Episodes/1000', ylabel='Fidelity')
+ax[0,0].legend(['Train Set', 'Test Set'], loc='lower right')
 
-ax[1].plot(time_steps, train_mse, linewidth=4, color='#e60049')
-ax[1].plot(time_steps, eval_mse, linewidth=4, color='#0bb4ff')
-ax[1].fill_between(time_steps, train_mse - train_mse_std, 
+ax[0,1].plot(time_steps, train_mse, linewidth=4, color='#e60049')
+ax[0,1].plot(time_steps, eval_mse, linewidth=4, color='#0bb4ff')
+ax[0,1].fill_between(time_steps, train_mse - train_mse_std, 
                 train_mse + train_mse_std, alpha=0.2, color='#e60049')
-ax[1].fill_between(time_steps, eval_mse - eval_mse_std, 
+ax[0,1].fill_between(time_steps, eval_mse - eval_mse_std, 
                 eval_mse + eval_mse_std, alpha=0.2, color='#0bb4ff')
-ax[1].set(xlabel='Episodes/1000', ylabel='MSE')
-ax[1].legend(['Train Set', 'Test Set'], loc='lower right')
+ax[0,1].set(xlabel='Episodes/1000', ylabel='MSE')
+ax[0,1].legend(['Train Set', 'Test Set'], loc='lower right')
 
-ax[2].plot(time_steps, train_reward, linewidth=4, color='#e60049')
-ax[2].plot(time_steps, eval_reward, linewidth=4, color='#0bb4ff')
-ax[2].fill_between(time_steps, train_reward - train_reward_std, 
+ax[1,0].plot(time_steps, train_reward, linewidth=4, color='#e60049')
+ax[1,0].plot(time_steps, eval_reward, linewidth=4, color='#0bb4ff')
+ax[1,0].fill_between(time_steps, train_reward - train_reward_std, 
                 train_reward + train_reward_std, alpha=0.2, color='#e60049')
-ax[2].fill_between(time_steps, eval_reward - eval_reward_std,
+ax[1,0].fill_between(time_steps, eval_reward - eval_reward_std,
                 eval_reward + eval_reward_std, alpha=0.2, color='#0bb4ff')
-ax[2].set(xlabel='Episodes/1000', ylabel='Reward')
-ax[2].legend(['Train Set', 'Test Set'], loc='lower right')
+ax[1,0].set(xlabel='Episodes/1000', ylabel='Reward')
+ax[1,0].legend(['Train Set', 'Test Set'], loc='lower right')
+
+ax[1,1].plot(time_steps, trace_distance, linewidth=4, color='#e60049')
+ax[1,1].plot(time_steps, eval_trace_distance, linewidth=4, color='#0bb4ff')
+ax[1,1].fill_between(time_steps, trace_distance - trace_distance_std, 
+                trace_distance + trace_distance_std, alpha=0.2, color='#e60049')
+ax[1,1].fill_between(time_steps, eval_trace_distance - eval_trace_distance_std,
+                eval_trace_distance + eval_trace_distance_std, alpha=0.2, color='#0bb4ff')
+ax[1,1].set(xlabel='Episodes/1000', ylabel='Trace Distance')
+ax[1,1].legend(['Train Set', 'Test Set'], loc='upper right')
 
 plt.savefig(f"Train_results.pdf")
 plt.show()

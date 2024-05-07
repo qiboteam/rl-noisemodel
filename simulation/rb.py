@@ -3,7 +3,7 @@ import numpy as np
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
 
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_low_noise_trace/"
 
 config_file = exp_folder + "config.json"
 rb_dataset = exp_folder + "rb_dataset.npz"

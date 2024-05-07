@@ -6,7 +6,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from rlnoise.dataset import load_dataset
 from rlnoise.circuit_representation import CircuitRepresentation
-from rlnoise.utils import mse, trace_distance, compute_fidelity
+from rlnoise.utils import mse, trace_distance, compute_fidelity, mae
 import gymnasium
 from gymnasium import spaces
 from qibo import gates
@@ -27,13 +27,15 @@ class DensityMatrixReward(object):
     It is possible to customize the reward function by passing a different metric function.
     It is also possible to use a different customized metric function.
     """
-    def __init__(self, metric="mse", function="log", alpha=1.):
+    def __init__(self, metric, function, alpha):
         if metric == "mse":
             self.metric = mse
         elif metric == "fidelity":
             self.metric = compute_fidelity
-        elif metric == "trace_distance":
+        elif metric == "trace":
             self.metric = trace_distance
+        elif metric == "mae":
+            self.metric = mae
         else:
             raise ValueError("Invalid metric function.")
 
@@ -76,7 +78,7 @@ class QuantumCircuit(gymnasium.Env):
         with open(self.config_file) as f:
             config = json.load(f)
         gym_env_params = config["gym_env"]
-        reward_params = gym_env_params["reward"]
+        reward_params = config["reward"]
         self.kernel_size = gym_env_params['kernel_size']
         self.only_depol = gym_env_params['enable_only_depolarizing']
         if self.val_split is None:

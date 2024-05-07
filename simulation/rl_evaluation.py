@@ -2,7 +2,7 @@ import numpy as np
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
 
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_low_noise_trace/"
 
 config_file = exp_folder + "config.json"
 model_file_path = exp_folder + "model.zip"
@@ -15,6 +15,6 @@ result_file_rl = exp_folder + "evaluation_result.npz"
 env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 
 agent = Agent(config_file = config_file, env = env, model_file_path = model_file_path)
-result = agent.apply_eval_dataset(eval_dataset_file)
+result, dms = agent.apply_eval_dataset(eval_dataset_file)
 
-np.savez(result_file_rl, result=result)
+np.savez(result_file_rl, result=result, dms=dms)
