@@ -8,6 +8,7 @@ from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
 from rlnoise.noise_model import string_to_gate, CustomNoiseModel
 from rlnoise.circuit_representation import CircuitRepresentation
+from rlnoise.utils_hardware import state_tomography
 
 def load_dataset(filename):
     '''Load a dataset from a npz file.
@@ -51,30 +52,48 @@ class Dataset(object):
         self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
         self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
 
-    def generate_rb_dataset(self):
+    def generate_rb_dataset(self, backend=None, nshots=None, likelihood=False, readout_mitigation=False):
         rb_options = self.config["rb"]
         circuits_list = []
         labels = []
         for len in range(rb_options["start"], rb_options["stop"], rb_options["step"]):
             self.n_gates = len
             circuits = np.asarray([self.generate_random_circuit() for _ in range(rb_options["n_circ"])])
-            noisy_circuits = [self.noise_model.apply(c) for c in circuits]
-            dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(rb_options["n_circ"])])
             circ_rep = [self.rep.circuit_to_array(c)for c in circuits]
+            if backend is None or backend.name != "QuantumSpain":
+                noisy_circuits = [self.noise_model.apply(c) for c in circuits]
+                dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(rb_options["n_circ"])])
+                labels.append(dm_labels)                
             circuits_list.append(circ_rep)
-            labels.append(dm_labels)
-        
         circuits_list  = np.asarray(circuits_list, dtype=object)
-        np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)
+        if not labels:
+            result = state_tomography(circuits_list, nshots, likelihood, backend)
+            if readout_mitigation:
+                labels = np.asarray([result[i][3] for i in range(len(circuits_list))])
+            else:
+                labels = np.asarray([result[i][2] for i in range(len(circuits_list))])
+            cal_mat = result[0][4]
+            np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels, cal_mat = cal_mat)
+        else:
+            np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)
 
-    def generate_eval_dataset(self, save_path):
+    def generate_eval_dataset(self, save_path, backend=None, nshots=None, likelihood=False, readout_mitigation=False):
         '''Generate a dataset for evaluation of the RL-model'''
         self.n_gates = self.eval_depth
         circuits = [self.generate_random_circuit() for _ in range(self.eval_size)]
-        noisy_circuits = [self.noise_model.apply(c) for c in circuits]
-        dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(self.eval_size)])
         circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in circuits], dtype=object)
-        np.savez(save_path, circuits = circ_rep, labels = dm_labels)
+        if backend is not None and backend.name == "QuantumSpain":
+            result = state_tomography(circuits, nshots, likelihood, backend)
+            if readout_mitigation:
+                dm_labels = np.asarray([result[i][3] for i in range(self.eval_size)])
+            else:
+                dm_labels = np.asarray([result[i][2] for i in range(self.eval_size)])
+            cal_mat = result[0][4]
+            np.savez(save_path, circuits = circ_rep, labels = dm_labels, cal_mat = cal_mat)
+        else:
+            noisy_circuits = [self.noise_model.apply(c) for c in circuits]
+            dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(self.eval_size)])
+            np.savez(save_path, circuits = circ_rep, labels = dm_labels)
         
 
     def generate_clifford_circuit(self):

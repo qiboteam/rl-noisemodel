@@ -4,11 +4,11 @@ from qibo.hamiltonians import Hamiltonian
 from itertools import product
 from functools import reduce
 import numpy as np
-from rlnoise.utils_hardware import run_qiskit, run_qibo, run_quantum_spain, calibration_matrix, apply_readout_mitigation, expectation_from_samples
+from rlnoise.utils_hardware import calibration_matrix, apply_readout_mitigation, expectation_from_samples
 from itertools import chain
 
 class StateTomography:
-    def __init__(self, nshots = 10000, backend = None, backend_qiskit = None, backend_qs = None, layout=None):
+    def __init__(self, nshots = 10000, backend = None):
         self.circuit = None
         self.nqubits = None
         self.backend = backend
@@ -16,9 +16,6 @@ class StateTomography:
         self.obs = None
         self.exps_vals = None
         self.nshots = nshots
-        self.backend_qiskit = backend_qiskit
-        self.backend_qs = backend_qs
-        self.layout = layout
         self.freqs = None
         self.mit_freqs = None
 
@@ -47,20 +44,20 @@ class StateTomography:
         dims = np.shape(self.tomo_circuits)
         circs = list(chain.from_iterable(self.tomo_circuits))
 
-        if self.backend_qiskit is not None:
-            freqs_list = run_qiskit(circs, self.backend_qiskit, self.nshots, self.layout)
-        if self.backend_qs is not None:
-            freqs_list = run_quantum_spain(circs, self.backend_qs, self.nshots, self.layout)
+        if self.backend is not None and self.backend.name == "QuantumSpain":
+            results = self.backend.execute_circuit(circs, nshots=self.nshots)
         else:
-            freqs_list = run_qibo(circs, self.backend, self.nshots)
+            results = [self.backend.execute_circuit(circ, nshots=self.nshots) for circ in circs]
 
-        freqs_list = list(np.reshape(freqs_list,dims))
-        self.freqs = freqs_list
+        freqs = [result.frequencies() for result in results]     
 
-        return freqs_list
+        freqs = list(np.reshape(freqs,dims))
+        self.freqs = freqs
+
+        return freqs
     
     def _get_cal_mat(self, noise=None):
-        self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend,backend_qiskit=self.backend_qiskit,backend_qs=self.backend_qs,layout=self.layout)
+        self.cal_mat = calibration_matrix(self.nqubits,noise_model=noise,backend=self.backend)
     
     def redadout_mit(self, freqs, noise = None):
         dims = np.shape(freqs)
@@ -85,7 +82,7 @@ class StateTomography:
                     term = term@symbols.Z(q).full_matrix(self.nqubits)            
             obs = Hamiltonian(self.nqubits,term,self.backend)
 
-            if noise is not None and self.backend_qiskit is None:
+            if noise is not None and self.backend.name != "QuantumSpain":
                 circ = noise.apply(circ)
 
             freqs = self.freqs[k]

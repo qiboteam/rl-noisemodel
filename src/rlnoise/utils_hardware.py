@@ -3,14 +3,10 @@ from collections import Counter
 import numpy as np
 from qibo import gates
 from qibo.backends import construct_backend
-from qibo.config import log
 from qibo.models import Circuit
-from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_experiments.library import MitigatedStateTomography
-from qiskit_experiments.library import StateTomography as StateTomography_qiskit
 from qiboconnection import API
-from qiboconnection.connection import ConnectionConfiguration
+from qibo.result import MeasurementOutcomes
+from collections import Counter
 
 def expectation_from_samples(obs, freq, qubit_map=None):
     obs = obs.matrix
@@ -27,37 +23,56 @@ def expectation_from_samples(obs, freq, qubit_map=None):
         expval += obs[index, index] * counts[j]
     return np.real(expval)
 
-def run_qibo(circuits, backend, nshots=10000):
-    freqs = []
-    for circ in circuits:
-        result = backend.execute_circuit(circ, nshots=nshots)
-        freqs.append(result.frequencies())
-    return freqs
 
-def transpiler(circuit,qubit_map):
-    c = Circuit(5)
-    c.add(circuit.on_qubits(*qubit_map))
-    return c
+class QuantumSpain(NumpyBackend):
+    def __init__(self, configuration, device_id, nqubits, qubit_map=None):
+        super().__init__()
+        self.name = "QuantumSpain"
+        self.platform = API(configuration = configuration)
+        self.platform.select_device_id(device_id=device_id)
+        self.nqubits = nqubits
+        self.qubit_map = qubit_map
 
+    def transpile_circ(self, circuit, qubit_map=None):
+        if qubit_map == None:
+            qubit_map = list(range(circuit.nqubits))
+        self.qubit_map = qubit_map
+        from qibo.transpiler.unitary_decompositions import u3_decomposition
+        new_c = Circuit(self.nqubits, density_matrix=True)
+        for gate in circuit.queue:
+            qubits = [self.qubit_map[j] for j in gate.qubits]
+            if isinstance(gate, gates.M):
+                new_gate = gates.M(*tuple(qubits), **gate.init_kwargs)
+                new_gate.result = gate.result
+                new_c.add(new_gate)
+            elif isinstance(gate, gates.I):
+                new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
+            else:
+                matrix = gate.matrix()
+                theta, phi, lamb = u3_decomposition(matrix)
+                new_c.add([gates.RZ(*tuple(qubits),lamb),gates.RX(*tuple(qubits),np.pi/2),gates.RZ(*tuple(qubits),theta+np.pi),gates.RX(*tuple(qubits),np.pi/2),gates.RZ(*tuple(qubits),phi+np.pi)])#gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
+        return new_c
+    
+    def execute_circuit(self, circuits, nshots=1000):
+        if isinstance(circuits, list) is False:
+            circuits = [circuits]
+        for k in range(len(circuits)):
+            circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
+        results = self.platform.execute_and_return_results(circuits, nshots=nshots, interval=10)[0]
+        result_list = []
+        for j, result in enumerate(results):
+            probs = result['probabilities']
+            counts = Counter()
+            for key in probs:
+                counts[int(key,2)] = int(probs[key]*nshots)
+            result = MeasurementOutcomes(circuits[j].measurements, self, nshots=nshots)
+            result._frequencies = counts
+            result_list.append(result)
+        # if len(result_list) == 1:
+        #     return result_list[0]
+        return result_list
 
-def run_quantum_spain(circuits, backend, nshots=10000, layout=None):
-    configuration = ConnectionConfiguration(username = "alejandro.sopena",api_key = "23287d7c-cd0c-4dfd-90d3-9fb506c11dee")
-    api = API(configuration = configuration)
-    api.select_device_id(device_id=backend)
-    # result_id = api.execute(circuits, nshots=nshots)
-    # results = api.get_result(job_id=result_id[0])
-    circuits = [transpiler(circuit,layout) for circuit in circuits]
-    results = api.execute_and_return_results(circuits, nshots=nshots,timeout=36000)[0]
-    freqs = []
-    for result in results:
-        probs = result['probabilities']
-        counts = {}
-        for key in probs:
-            counts[key] = probs[key]*nshots
-        freqs.append(counts)
-    return freqs
-
-def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None, backend_qiskit=None, backend_qs=None, layout=None):
+def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None):
     """Computes the calibration matrix for readout mitigation.
 
     Args:
@@ -89,16 +104,16 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
                 circuit.add(gates.X(q))
         circuit.add(gates.M(*range(nqubits)))
 
-        if noise_model is not None and backend.name != "qibolab" and backend_qiskit is None:
+        if noise_model is not None:
             circuit = noise_model.apply(circuit)
         cal_circs.append(circuit)
 
-    if backend_qiskit is not None:
-        freqs = run_qiskit(cal_circs, backend_qiskit, nshots=nshots, layout=layout)
-    elif backend_qs is not None:
-        freqs = run_quantum_spain(cal_circs, backend_qs, nshots=nshots, layout=layout)
+    if backend is not None and backend.name == "QuantumSpain":
+        results = backend.execute_circuit(cal_circs, nshots=nshots)
     else:
-        freqs = run_qibo(cal_circs, backend, nshots=nshots)
+        results = [backend.execute_circuit(cal_circ, nshots=nshots) for cal_circ in cal_circs]
+
+    freqs = [result.frequencies() for result in results]
 
     for i in range(2**nqubits):
         freq = freqs[i]
@@ -107,7 +122,6 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
             f = freq[key] / nshots
             column[int(key, 2)] = f
         matrix[:, i] = column
-    print(matrix)
     return np.linalg.inv(matrix)
 
 
@@ -136,10 +150,10 @@ def apply_readout_mitigation(freqs, calibration_matrix):
     return freqs_mit
 
 
-def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend_qs, layout):
+def state_tomography(circs, nshots, likelihood, backend):
     from hardware.state_tomography import StateTomography
     
-    st = StateTomography(nshots=nshots,backend=backend, backend_qiskit=backend_qiskit, backend_qs = backend_qs, layout=layout)
+    st = StateTomography(nshots=nshots,backend=backend)
 
     tomo_circs = []
     for circ in circs:
@@ -147,7 +161,6 @@ def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend
     st.tomo_circuits = tomo_circs
     
     st._get_cal_mat()
-    print(st.cal_mat)
     freqs = st.run_circuits()
     mit_freqs = st.redadout_mit(freqs)
 
@@ -170,8 +183,6 @@ def state_tomography(circs, nshots, likelihood, backend, backend_qiskit, backend
         backend_exact = construct_backend('numpy')
         rho_exact = backend_exact.execute_circuit(circ1).state()
     
-        #log.info(circ.draw())
-        print(k)
         results.append([circ, rho_exact, rho, rho_mit, st.cal_mat])
 
     return results

@@ -2,6 +2,8 @@ from rlnoise.randomized_benchmarking import run_rb, rb_evaluation
 import numpy as np
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
+from rlnoise.utils_hardware import QuantumSpain
+from qiboconnection import ConnectionConfiguration
 
 exp_folder = "simulation/experiments/3q_low_noise_trace/"
 
@@ -13,7 +15,16 @@ model_file_path = exp_folder + "model.zip"
 dataset_file = exp_folder + "dataset.npz"
 config_file = exp_folder + "config.json"
 
-optimal_params = run_rb(rb_dataset, config_file)
+if exp_folder[:10] == "simulation":
+    backend = None
+    nshots = None
+elif exp_folder[:8] == "hardware":
+    chip_conf = config_file["chip_conf"]
+    configuration = ConnectionConfiguration(username = chip_conf["username"],api_key = chip_conf["api_key"])
+    backend = QuantumSpain(configuration, device_id=chip_conf["device_id"], nqubits=chip_conf["nqubits"], qubit_map=chip_conf["qubit_map"])
+    nshots = chip_conf["nshots"]
+
+optimal_params = run_rb(rb_dataset, config_file, backend, nshots)
 print("RB Model:")
 print(optimal_params)
 decay_constant = 1 - optimal_params["l"]    
