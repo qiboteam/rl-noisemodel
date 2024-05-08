@@ -3,7 +3,7 @@ import numpy as np
 import scienceplots
 plt.style.use('science')
 
-results_path = "simulation/experiments/3q_low_noise/model_train_result.npz"
+results_path = "simulation/experiments/3q_low_noise_trace/model_train_result.npz"
 steps = 120
 
 SMALL_SIZE = 22
