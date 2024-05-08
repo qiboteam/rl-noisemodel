@@ -8,7 +8,7 @@ from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
 import json
 
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_low_noise_trace/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
