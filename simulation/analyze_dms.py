@@ -27,6 +27,7 @@ print("Average trace distance: ", np.mean(trace_distances))
 plt.imshow(average_labels, cmap='hot')
 plt.colorbar(label='Average error')
 plt.show()
+plt.savefig(exp_folder + "heatmap_avg_error.pdf")
 
 
 

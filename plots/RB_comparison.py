@@ -5,7 +5,7 @@ import scienceplots
 plt.style.use('science')
 
 mse_plot = True
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_low_noise_trace/"
 rb_result = exp_folder + "rb_result.npz"
 rl_result = exp_folder + "rl_result.npz"
 
