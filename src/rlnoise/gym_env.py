@@ -1,17 +1,15 @@
 import numpy as np
 import copy
 import json
+import random
 from pathlib import Path
 from dataclasses import dataclass
-import gym, random
-from gym import spaces
+from rlnoise.dataset import load_dataset
+from rlnoise.circuit_representation import CircuitRepresentation
+from rlnoise.utils import mse, trace_distance, compute_fidelity, mae
+import gymnasium
+from gymnasium import spaces
 from qibo import gates
-from qibo.quantum_info import trace_distance
-
-with open(f"{Path(__file__).parent}/config.json") as f:
-    config = json.load(f)
-
-gym_env_params = config['gym_env']
 
 def gate_action_index(gate):
     if gate == 'epsilon_x':
@@ -23,172 +21,138 @@ def gate_action_index(gate):
     if gate == gates.DepolarizingChannel:
         return 3
 
+class DensityMatrixReward(object):
+    """
+    This class is used to define the reward function for the quantum circuit environment.
+    It is possible to customize the reward function by passing a different metric function.
+    It is also possible to use a different customized metric function.
+    """
+    def __init__(self, metric, function, alpha):
+        if metric == "mse":
+            self.metric = mse
+        elif metric == "fidelity":
+            self.metric = compute_fidelity
+        elif metric == "trace":
+            self.metric = trace_distance
+        elif metric == "mae":
+            self.metric = mae
+        else:
+            raise ValueError("Invalid metric function.")
+
+        if function == "log":
+            self.function = lambda x: -np.log(alpha * x + 1e-15)
+        elif function == "linear":
+            self.function = lambda x: alpha * x
+        else:
+            raise ValueError("Invalid function.")
+        
+
+    def __call__(self, circuit, target, final):
+        if final:
+            circuit_dm = np.array(circuit().state())
+            return self.function(self.metric(circuit_dm, target))
+        return 0.
+
 @dataclass
-class QuantumCircuit(gym.Env):
+class QuantumCircuit(gymnasium.Env):
     '''
-        Args: 
-            circuits (list): list of circuit represented as numpy vectors
-            labels (list): list relative to the circuits
-            representation: object of the class CircuitRepresentation()
-            reward: object of the class DensityMatrixReward() or FrequencyReward()
-            others: hyperparameters passed from config.ini
+    Args: 
+        config_file: path to the configuration file.
     '''
-    noise_param_space: bool = False
-    step_reward: bool = gym_env_params['step_reward']
-    kernel_size: int = gym_env_params['kernel_size']
-    neg_reward: float = gym_env_params['neg_reward']
-    pos_reward: float = gym_env_params['pos_reward']
-    step_r_metric: str = gym_env_params['step_r_metric']
-    action_penality: float = gym_env_params['action_penalty']
-    action_space_type: str = gym_env_params['action_space']
-    action_space_max_value: float = gym_env_params['action_space_max_value']
-    circuits: object = None
-    labels: np = None
-    representation: object = None
-    reward: object = None
+    config_file: Path 
+    dataset_file: Path = None
+    circuits: np.ndarray = None
+    labels = None
+    val_split = None
+    kernel_size: int = None
+    action_space_max_value: float = None
+    only_depol: bool = None
+    encoding_dim: int = 8
+    rep = None
+    circuit_number = None
+    circuit_lenght = None
+    padded_circuit = None
 
     def __post_init__(self):
         super().__init__()
-        assert self.kernel_size % 2 == 1, "Kernel_size must be odd"
+        with open(self.config_file) as f:
+            config = json.load(f)
+        gym_env_params = config["gym_env"]
+        reward_params = config["reward"]
+        self.kernel_size = gym_env_params['kernel_size']
+        self.only_depol = gym_env_params['enable_only_depolarizing']
+        if self.val_split is None:
+            self.val_split = gym_env_params['val_split']
+
+        self.rep = CircuitRepresentation(self.config_file)
+
+        # Define the reward function
+        reward_matric = reward_params["metric"]
+        reward_func = reward_params["function"]
+        reward_alpha = reward_params["alpha"]
+        self.reward = DensityMatrixReward(metric=reward_matric, function=reward_func, alpha=reward_alpha)
+
+        if self.circuits is None:
+            self.circuits, self.labels = load_dataset(self.dataset_file)
+        
+        if not self.kernel_size % 2 == 1:
+            raise ValueError("Kernel_size must be an odd number.")
+        
         self.position = None
         self.n_circ = len(self.circuits)
+        self.n_circ_train = int((1 - self.val_split) * self.n_circ)
         self.n_qubits = self.circuits[0].shape[1]
-        self.circuit_lenght = None
-        self.rep = self.representation
-        self.actual_mse = None
-        self.previous_mse = None
-        self.encoding_dim = 8
-        self.action = None
-        self.state_after_act = None
         self.observation_space = spaces.Box(
             low = 0,
             high = 1,
-            shape = (self.encoding_dim,self.n_qubits,self.kernel_size),
+            shape = (self.encoding_dim, self.n_qubits, self.kernel_size),
             dtype = np.float32
-        )
-        if self.action_space_type == "Continuous":
-            self.action_space = spaces.Box( low=0, high=1, 
-                                           shape=(self.n_qubits,4), dtype=np.float32) #high must be one now that epsilon is directly the rotation param
-
-        elif self.action_space_type == "Discrete":
-            if self.noise_param_space is None:
-                self.noise_par_space = { 'max': 1., 'n_steps': 20}
-            else:
-                self.noise_par_space = self.noise_param_space
-            self.discrete_step = self.noise_par_space['max'] / self.noise_par_space['n_steps']
-            assert self.discrete_step > 0
-            action_shape = [self.noise_par_space['n_steps'] for _ in range(self.n_qubits*4)]
-            self.action_space = spaces.MultiDiscrete(action_shape)
+            )
+        self.action_space = spaces.Box( 
+            low=0, 
+            high=1, 
+            shape=(self.n_qubits, 4),    
+            dtype=np.float32
+            )
         
     def init_state(self, i=None):
         if i is None:
-            i = random.randint(0, self.n_circ - 1)
-        self.circuit_number=i
-        self.circuit_lenght=self.circuits[i].shape[0]
-        state=copy.deepcopy(self.circuits[i])
-        state=state.transpose(2,1,0) 
-        padding = np.zeros(( self.encoding_dim,self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
-        self.padded_circuit=np.concatenate((padding,state,padding), axis=2)
+                i = random.randint(0, self.n_circ_train)
+        self.circuit_number = i
+        self.circuit_lenght = self.circuits[i].shape[0]
+        state = copy.deepcopy(self.circuits[i])
+        state = state.transpose(2,1,0) 
+        padding = np.zeros((self.encoding_dim, self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
+        self.padded_circuit = np.concatenate((padding, state, padding), axis=2)
+        if self.labels is None:
+            return state, None
         return state, self.labels[i]
     
     def _get_obs(self):
-        pos = int(self.get_position())
-        kernel=[]
-        r=int(self.kernel_size/2)
-        self.padded_circuit[:,:,r:-r]=self.current_state
-        kernel.append(self.padded_circuit[:,:,pos:pos+self.kernel_size])
-        return np.asarray(kernel,dtype=np.float32)
-
-    def _get_info(self):
-       
-        return {'State': self._get_obs(),
-                'Pos': self.position,
-                'Circ': self.circuit_number,  
-                'State_after': self.state_after_act,
-                'Action': self.action} 
+        r = int(self.kernel_size/2)
+        self.padded_circuit[:,:,r:-r] = self.current_state
+        return np.asarray(self.padded_circuit[:,:,self.position:self.position+self.kernel_size], dtype=np.float32)
         
-    def reset(self, i=None):
-        self.position=0
+    def reset(self, i=None, seed=None):
+        self.position = 0
         self.current_state, self.current_target = self.init_state(i)
-        return self._get_obs()
+        return self._get_obs(), None
     
-    def transform_action(self, action):
-        """
-        Trasform discrete action in the form of a continuos action with"""
-        
-        action2=action.reshape((self.n_qubits,4))*self.discrete_step
-        return action2
-    
-    def step(self, action):
-        if self.action_space_type=="Discrete":
-            action=self.transform_action(action)
-        self.action=action
-        reward=0.
-        position = self.get_position()
-        if self.step_reward is True:
-            if self.step_r_metric.lower() == "trace_distance":
-                self.previous_mse=trace_distance((self.current_target),(self.get_qibo_circuit()().state()))
-            elif self.step_r_metric.lower() =='mse':
-                self.previous_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
-            else:
-                raise("Error")
-
-        for q in range(self.n_qubits):
-            for a in action[q]:
-                if a!=0:
-                    reward -= self.action_penality
-
-        self.current_state = self.rep.make_action(action, self.current_state, position)
-
-        if self.step_reward:
-            for q in range(self.n_qubits):  
-                for a in action[q]:
-                    reward += self.step_reward_fun(a)
-
-        if position == self.circuit_lenght - 1:
+    def step(self, action, reward = True):
+        if self.only_depol:
+            action[:, :3] = np.zeros((self.n_qubits, 3))
+        self.current_state = self.rep.make_action(action, self.current_state, self.position)
+        if self.position >= self.circuit_lenght - 1:
             terminated = True
         else:
-            self.position+=1
+            self.position += 1
             terminated = False
-        reward+=self.reward(self.get_qibo_circuit(), self.current_target, terminated)
-        self.state_after_act=self.get_circuit_rep()
-
-        return self._get_obs(), reward, terminated, self._get_info()
-    
-    def step_reward_fun(self):
-        '''
-        Compute reward at each Agent step. 
-        It will be positive if the action made has decreased the 
-        distance, between predicted and real state, respect the distance at previous step, negative otherwise.
-
-        Args:
-            action: action performed by the agent, NOT USED YET
-
-        Returns:
-            step_reward
-        '''
-        #add penalization only if action !=0 (?)
-        if self.step_r_metric=="Trace_distance" or "trace_distance" or "td":
-            self.actual_mse=trace_distance((self.current_target),(self.get_qibo_circuit()().state()))
-        elif self.step_r_metric=='mse' or 'MSE':
-            self.actual_mse=mse((self.current_target),(self.get_qibo_circuit()().state()))
-        if self.actual_mse>self.previous_mse:
-            reward=self.neg_reward
+        if reward:
+            reward = self.reward(self.get_qibo_circuit(), self.current_target, terminated)
         else:
-            reward=self.pos_reward
-        return reward
-    
-    def render(self):
-        print(self.get_qibo_circuit().draw(), end='\r')
-            
-    def get_position(self):
-        return self.position
+            reward = 0.
+        # Observation, Reward, Terminated, Truncated (always False), Info (Dict)
+        return self._get_obs(), reward, terminated, False, {}
 
     def get_qibo_circuit(self):
-        return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0)[:,:,:])
-    
-    def get_circuit_rep(self):
-        return self.current_state.transpose(1,2,0)
-
-def mse(x,y):
-    return np.sqrt(np.abs(((x-y)**2)).mean())
+        return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0))

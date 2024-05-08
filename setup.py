@@ -17,8 +17,8 @@ def get_version():
 setup(
     name="rlnoise",
     version=get_version(),
-    description="Quantum noise modelling with reinforcement learning.",
-    author="Simone Bordoni, Andrea Papaluca, Andrea Cacioppo, Alejandro Sopena",
+    description="Quantum noise modelling through reinforcement learning.",
+    author="Simone Bordoni, Piergiorgio Buttarini, Andrea Papaluca, Alejandro Sopena",
     author_email="",
     url="https://github.com/qiboteam/rl-noisemodel",
     packages=find_packages("src"),
@@ -38,8 +38,6 @@ setup(
         "stable_baselines3==2.0.0",
         "tqdm",
         "rich",
-        "qiskit",
-        "qiskit_experiments",
         "gym",
         "shimmy==0.2.1"
         
