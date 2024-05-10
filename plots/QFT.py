@@ -59,7 +59,7 @@ result_dict["mse"]["RB"] = float(mse(dm_truth, dm_RB))
 result_dict["mse"]["MMS"] = float(mse(dm_truth, mms(8)))
 
 # Save result to json file
-with open(exp_folder + "QFT_result.json", "w") as f:
+with open(exp_folder + "images/QFT_result.json", "w") as f:
     json.dump(result_dict, f)
 
 def copy_circ(circ):
@@ -147,7 +147,7 @@ plt.ylabel('Counts')
 plt.ylim(0, 3000)
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
-plt.savefig(exp_folder + "QFT_shots.pdf", )
+plt.savefig(exp_folder + "images/QFT_shots.pdf", )
 plt.close()
 
 # Heatmaps
@@ -165,4 +165,4 @@ cax2 = axs[1].imshow(squared_error_rb, cmap='viridis')
 fig.colorbar(cax2, ax=axs[1])
 axs[1].set_title('MSE Truth-RB')
 
-plt.savefig(exp_folder + "QFT_heatmap.pdf")
+plt.savefig(exp_folder + "images/QFT_heatmap.pdf")

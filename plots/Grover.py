@@ -3,8 +3,6 @@ from rlnoise.randomized_benchmarking import fill_identity
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
 from rlnoise.utils import grover, mms, mse, compute_fidelity
-from qibo.models import Circuit
-from qibo import gates
 from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np

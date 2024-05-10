@@ -3,7 +3,8 @@ import numpy as np
 import scienceplots
 plt.style.use('science')
 
-results_path = "simulation/experiments/3q_low_noise_trace/model_train_result.npz"
+exp_folder = "simulation/experiments/3q_low_noise_trace/"
+results_path = exp_folder + "model_train_result.npz"
 steps = 120
 
 SMALL_SIZE = 22
@@ -78,5 +79,5 @@ ax[1,1].fill_between(time_steps, eval_trace_distance - eval_trace_distance_std,
 ax[1,1].set(xlabel='Episodes/1000', ylabel='Trace Distance')
 ax[1,1].legend(['Train Set', 'Test Set'], loc='upper right')
 
-plt.savefig(f"Train_results.pdf")
+plt.savefig(exp_folder + "images/Train_results.pdf")
 plt.show()
