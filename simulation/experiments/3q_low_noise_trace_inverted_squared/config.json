@@ -17,8 +17,8 @@
   },
   "reward": {
     "metric": "trace",
-    "function": "log",
-    "alpha": 8
+    "function": "inverted_squared",
+    "alpha": 10
   },
   "noise": {
     "primitive_gates": ["rz", "rx", "cz"],
@@ -36,18 +36,18 @@
     "policy": "MlpPolicy",
     "features_dim": 32,
     "nn_update_steps": 2000,
-    "batch_size": 400
+    "batch_size": 500
   },
   "callback": {
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_low_noise_trace",
+    "result_folder": "simulation/experiments/3q_low_noise_trace_inverted_squared",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_low_noise/rb_dataset_trace",
+    "dataset": "simulation/experiments/3q_low_noise_trace_inverted_squared/rb_dataset.npz",
     "start": 3,
     "stop": 31,
     "step": 3,
