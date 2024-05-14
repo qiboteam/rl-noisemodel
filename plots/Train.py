@@ -3,7 +3,7 @@ import numpy as np
 import scienceplots
 plt.style.use('science')
 
-exp_folder = "simulation/experiments/3q_squared/"
+exp_folder = "simulation/experiments/3q_low_noise_trace_inverted/"
 results_path = exp_folder + "model_train_result.npz"
 steps = 400
 
