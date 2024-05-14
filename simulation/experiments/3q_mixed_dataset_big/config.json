@@ -1,9 +1,9 @@
 {
   "dataset": {
-    "n_circuits": 500,
+    "n_circuits": 800,
     "eval_size": 200,
     "eval_depth": 15,
-    "moments": 7,
+    "moments": 20,
     "qubits": 3,
     "enhanced": false,
     "clifford": false,
@@ -43,12 +43,12 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_mixed_dataset",
+    "result_folder": "simulation/experiments/3q_mixed_dataset_big",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_mixed_dataset/rb_dataset.npz",
+    "dataset": "simulation/experiments/3q_mixed_dataset_big/rb_dataset.npz",
     "start": 3,
     "stop": 31,
     "step": 3,
