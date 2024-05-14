@@ -4,7 +4,9 @@
     "qubit_map": [0,1,2,3,4],
     "username": "alejandro.sopena",
     "api_key": "23287d7c-cd0c-4dfd-90d3-9fb506c11dee",
-    "nshots": 1000
+    "nshots": 1000,
+    "likelihood": true,
+    "readout_mitigation": true
   },
   "dataset": {
     "n_circuits": 500,
