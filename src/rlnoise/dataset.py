@@ -57,7 +57,7 @@ class Dataset(object):
         self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
         self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
 
-    def generate_rb_dataset(self, backend=None, nshots=None, likelihood=False, readout_mitigation=False):
+    def generate_rb_dataset(self, backend=None):
         rb_options = self.config["rb"]
         circuits_list = []
         labels = []
@@ -72,6 +72,9 @@ class Dataset(object):
             circuits_list.append(circ_rep)
         circuits_list  = np.asarray(circuits_list, dtype=object)
         if not labels:
+            nshots = self.config["chip_conf"]["nshots"]
+            likelihood = self.config["chip_conf"]["likelihood"]
+            readout_mitigation = self.config["chip_conf"]["readout_mitigation"]
             result = state_tomography(circuits_list, nshots, likelihood, backend)
             if readout_mitigation:
                 labels = np.asarray([result[i][3] for i in range(len(circuits_list))])
@@ -82,12 +85,15 @@ class Dataset(object):
         else:
             np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)
 
-    def generate_eval_dataset(self, save_path, backend=None, nshots=None, likelihood=False, readout_mitigation=False):
+    def generate_eval_dataset(self, save_path, backend=None):
         '''Generate a dataset for evaluation of the RL-model'''
         self.n_gates = self.eval_depth
         circuits = [self.generate_random_circuit() for _ in range(self.eval_size)]
         circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in circuits], dtype=object)
         if backend is not None and backend.name == "QuantumSpain":
+            nshots = self.config["chip_conf"]["nshots"]
+            likelihood = self.config["chip_conf"]["likelihood"]
+            readout_mitigation = self.config["chip_conf"]["readout_mitigation"]
             result = state_tomography(circuits, nshots, likelihood, backend)
             if readout_mitigation:
                 dm_labels = np.asarray([result[i][3] for i in range(self.eval_size)])

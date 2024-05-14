@@ -9,12 +9,12 @@ from qibo.noise import NoiseModel, DepolarizingError
 from scipy.optimize import curve_fit
 from rlnoise.utils import compute_fidelity, mse, mms
 
-def rb_dataset_generator(config_file, backend=None, nshots=None, likelihood=False, readout_mitigation=False):
+def rb_dataset_generator(config_file, backend=None):
     """Generate a dataset of circuits for randomized benchmarking."""
     dataset = Dataset(config_file)
-    dataset.generate_rb_dataset(backend, nshots, likelihood, readout_mitigation)
+    dataset.generate_rb_dataset(backend)
     
-def run_rb(rb_dataset, config, backend=None, nshots=None):
+def run_rb(rb_dataset, config, backend=None):
     """Run randomized benchmarking on the circuits in the dataset.
     Return a dictionary with the optimal parameters for the RB model: a, l, b.
     where the model is a * l**depth + b.
@@ -22,8 +22,12 @@ def run_rb(rb_dataset, config, backend=None, nshots=None):
     dataset = np.load(rb_dataset, allow_pickle=True)
     circuits = dataset["circuits"]
     circuits = preprocess_circuits(circuits, config, backend)
+    if backend is not None and backend.name == "QuantumSpain":
+        nshots = config["chip_conf"]["nshots"]
+    else:
+        nshots = None
 
-    return randomized_benchmarking(circuits, backend, nshots)
+    return randomized_benchmarking(circuits, nshots, backend)
 
 def preprocess_circuits(circuits, config, evaluate=False, backend=None):
     """Preprocess the circuits for randomized benchmarking.
@@ -51,7 +55,7 @@ def preprocess_circuits(circuits, config, evaluate=False, backend=None):
             final_circuits[depth].append(c)
     return final_circuits
 
-def randomized_benchmarking(circuits, nshots=1000, verbose=False, backend=None):
+def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
     """Run randomized benchmarking on the circuits."""
     backend = NumpyBackend()
     nqubits = list(circuits.values())[0][0].nqubits
