@@ -43,6 +43,10 @@ class DensityMatrixReward(object):
             self.function = lambda x: -np.log(alpha * x + 1e-15)
         elif function == "linear":
             self.function = lambda x: alpha * x
+        elif function == "inverted":
+            self.function = lambda x: 1./(alpha * x + 1e-15)
+        elif function == "inverted_squared":
+            self.function = lambda x: 1./(alpha * x**2 + 1e-15)
         else:
             raise ValueError("Invalid function.")
         

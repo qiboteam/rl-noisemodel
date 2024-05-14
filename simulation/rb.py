@@ -5,7 +5,7 @@ from rlnoise.gym_env import QuantumCircuit
 from rlnoise.utils_hardware import QuantumSpain
 from qiboconnection import ConnectionConfiguration
 
-exp_folder = "simulation/experiments/3q_low_noise_trace/"
+exp_folder = "simulation/experiments/3q_low_noise_trace_inverted_squared/"
 
 config_file = exp_folder + "config.json"
 rb_dataset = exp_folder + "rb_dataset.npz"

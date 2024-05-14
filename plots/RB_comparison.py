@@ -5,7 +5,7 @@ import scienceplots
 plt.style.use('science')
 
 mse_plot = True
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_low_noise_trace_inverted_squared/"
 rb_result = exp_folder + "rb_result.npz"
 rl_result = exp_folder + "rl_result.npz"
 
@@ -87,5 +87,5 @@ else:
     ax[1].legend()
     ax[1].set(xlabel='Circuit Depth', ylabel='MSE', xticks=depths)
 
-plt.savefig(exp_folder + "RL_RB_comparison.pdf", )
+plt.savefig(exp_folder + "images/RL_RB_comparison.pdf", )
 plt.show()

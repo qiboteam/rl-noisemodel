@@ -2,7 +2,7 @@ from rlnoise.dataset import Dataset
 from rlnoise.utils_hardware import QuantumSpain
 from qiboconnection import ConnectionConfiguration
 
-exp_folder = "simulation/experiments/3q_low_noise_long_dataset/"
+exp_folder = "simulation/experiments/3q_mixed_dataset_big/"
 
 config_file = exp_folder + "config.json"
 save_path = exp_folder + "dataset"

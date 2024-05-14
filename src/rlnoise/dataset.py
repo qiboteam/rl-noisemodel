@@ -6,7 +6,7 @@ import numpy as np
 from qibo import gates
 from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
-from rlnoise.noise_model import string_to_gate, CustomNoiseModel
+from rlnoise.noise_model import CustomNoiseModel
 from rlnoise.circuit_representation import CircuitRepresentation
 from rlnoise.utils_hardware import state_tomography
 
@@ -42,12 +42,17 @@ class Dataset(object):
         self.eval_size = dataset_options['eval_size']
         self.eval_depth = dataset_options['eval_depth']
         enhanced_dataset = dataset_options['enhanced']
+        mixed = dataset_options['mixed']
         self.rep = CircuitRepresentation(config_file)
         self.noise_model = CustomNoiseModel(config_file)
-        if enhanced_dataset:
+        if enhanced_dataset and not mixed:
             self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
-        else:
+        elif not mixed:
             self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
+        else:
+            self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits//2)]
+            self.circuits += [self.generate_clifford_circuit() for _ in range(self.n_circuits//2)]
+            random.shuffle(self.circuits)
         self.noisy_circuits = [self.noise_model.apply(c) for c in self.circuits]
         self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
         self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)

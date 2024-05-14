@@ -17,8 +17,8 @@
   },
   "reward": {
     "metric": "trace",
-    "function": "log",
-    "alpha": 8
+    "function": "inverted",
+    "alpha": 10
   },
   "noise": {
     "primitive_gates": ["rz", "rx", "cz"],
@@ -42,12 +42,12 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_low_noise_trace",
+    "result_folder": "simulation/experiments/3q_low_noise_trace_inverted",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_low_noise/rb_dataset_trace",
+    "dataset": "simulation/experiments/3q_low_noise_trace_inverted/rb_dataset.npz",
     "start": 3,
     "stop": 31,
     "step": 3,

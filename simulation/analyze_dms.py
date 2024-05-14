@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rlnoise.utils import trace_distance
 
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_low_noise_trace/"
 ground_truth = exp_folder + "eval_dataset.npz"
 noisy_dm = exp_folder + "evaluation_result.npz"
 metric = np.abs
@@ -27,6 +27,7 @@ print("Average trace distance: ", np.mean(trace_distances))
 plt.imshow(average_labels, cmap='hot')
 plt.colorbar(label='Average error')
 plt.show()
+plt.savefig(exp_folder + "heatmap_avg_error.pdf")
 
 
 
