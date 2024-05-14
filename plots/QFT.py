@@ -4,11 +4,11 @@ from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
 from rlnoise.utils import qft, unroll_circuit, mms, mse, compute_fidelity
 from qibo.models import Circuit
-from qibo import gates
+import numpy as np
 from qibo.noise import NoiseModel, DepolarizingError
 import json
 
-exp_folder = "simulation/experiments/3q_low_noise_trace/"
+exp_folder = "simulation/experiments/3q_squared/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
@@ -68,25 +68,16 @@ def copy_circ(circ):
         new_circ.add(gate)
     return new_circ       
 
-final_circuit2 = copy_circ(circuit)
-final_circuit2.add(gates.M(0,1,2))
-noisy_circuit2 = copy_circ(noisy_circuit)
-noisy_circuit2.add(gates.M(0,1,2))
-rl_noisy_circuit2 = copy_circ(rl_noisy_circuit)
-rl_noisy_circuit2.add(gates.M(0,1,2))
-RB_noisy_circuit2 = copy_circ(RB_noisy_circuit)
-RB_noisy_circuit2.add(gates.M(0,1,2))
-
-no_noise_shots = final_circuit2.execute(nshots=10000)
-noise_shots = noisy_circuit2.execute(nshots=10000)
-rl_shots = rl_noisy_circuit2.execute(nshots=10000)
-RB_shots = RB_noisy_circuit2.execute(nshots=10000)
-
-no_noise_shots = dict(sorted(dict(no_noise_shots.frequencies()).items()))
-noise_shots = dict(sorted(dict(noise_shots.frequencies()).items()))
-rl_shots = dict(sorted(dict(rl_shots.frequencies()).items()))
-RB_shots = dict(sorted(dict(RB_shots.frequencies()).items()))
-no_noise_shots = dict(sorted(no_noise_shots.items()))
+def compute_probabilities(rho):
+    probs = {}
+    for i in range(8):
+        probs[format(i, "03b")] = np.abs(rho[i, i])
+    return probs
+            
+no_noise_shots = compute_probabilities(circuit().state())
+noise_shots = compute_probabilities(dm_truth)
+rl_shots = compute_probabilities(dm_rl)
+RB_shots = compute_probabilities(dm_RB)
 
 print("Shots:")
 print("No noise", no_noise_shots)
@@ -141,12 +132,10 @@ ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 # if test_only_depol_model:
 #     ax.bar(r4, values4, width=bar_width, label='RL (only dep)', color='orange')
 
-# Customize the plot
-plt.xlabel('Result')
-plt.ylabel('Counts')
-plt.ylim(0, 3000)
+plt.xlabel('State')
+plt.ylabel('Probability')
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
-plt.legend(loc = "upper left", ncol=1)
+plt.legend(loc = "upper right", ncol=1)
 plt.savefig(exp_folder + "images/QFT_shots.pdf", )
 plt.close()
 

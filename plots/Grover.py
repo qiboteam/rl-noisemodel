@@ -7,7 +7,7 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_low_noise_trace/"
+exp_folder = "simulation/experiments/3q_squared/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
@@ -57,7 +57,7 @@ result_dict["mse"]["RB"] = float(mse(dm_truth, dm_RB))
 result_dict["mse"]["MMS"] = float(mse(dm_truth, mms(8)))
 
 # Save result to json file
-with open(exp_folder + "Grover_result.json", "w") as f:
+with open(exp_folder + "images/Grover_result.json", "w") as f:
     json.dump(result_dict, f)
 
 def compute_probabilities(rho):
@@ -123,13 +123,11 @@ ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 # if test_only_depol_model:
 #     ax.bar(r4, values4, width=bar_width, label='RL (only dep)', color='orange')
 
-# Customize the plot
-plt.xlabel('Result')
-plt.ylabel('Counts')
-#plt.ylim(0, 3500)
+plt.xlabel('State')
+plt.ylabel('Probability')
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
-plt.savefig(exp_folder + "Grover_shots.pdf")
+plt.savefig(exp_folder + "images/Grover_shots.pdf")
 plt.close()
 
 # Heatmaps
@@ -147,4 +145,4 @@ axs[0].set_title('MSE Truth-RL')
 cax2 = axs[1].imshow(squared_error_rb, cmap='viridis')
 fig.colorbar(cax2, ax=axs[1])
 axs[1].set_title('MSE Truth-RB')
-plt.savefig(exp_folder + "Grover_heatmap.pdf")
+plt.savefig(exp_folder + "images/Grover_heatmap.pdf")
