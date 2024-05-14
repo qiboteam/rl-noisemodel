@@ -7,7 +7,7 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_mixed_dataset/"
+exp_folder = "simulation/experiments/3q_squared/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
@@ -123,10 +123,8 @@ ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 # if test_only_depol_model:
 #     ax.bar(r4, values4, width=bar_width, label='RL (only dep)', color='orange')
 
-# Customize the plot
-plt.xlabel('Result')
-plt.ylabel('Counts')
-#plt.ylim(0, 3500)
+plt.xlabel('State')
+plt.ylabel('Probability')
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
 plt.savefig(exp_folder + "images/Grover_shots.pdf")
