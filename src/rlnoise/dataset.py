@@ -51,6 +51,7 @@ class Dataset(object):
         else:
             self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits//2)]
             self.circuits += [self.generate_clifford_circuit() for _ in range(self.n_circuits//2)]
+            random.shuffle(self.circuits)
         self.noisy_circuits = [self.noise_model.apply(c) for c in self.circuits]
         self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
         self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
