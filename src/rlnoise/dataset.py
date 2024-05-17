@@ -68,19 +68,21 @@ class Dataset(object):
             if backend is None or backend.name != "QuantumSpain":
                 noisy_circuits = [self.noise_model.apply(c) for c in circuits]
                 dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(rb_options["n_circ"])])
-                labels.append(dm_labels)                
+            else:         
+                nshots = self.config["chip_conf"]["nshots"]
+                likelihood = self.config["chip_conf"]["likelihood"]
+                readout_mitigation = self.config["chip_conf"]["readout_mitigation"]
+                result = state_tomography(circuits, nshots, likelihood, backend)
+                if readout_mitigation:
+                    dm_labels = np.asarray([result[i][3] for i in range(rb_options["n_circ"])])
+                else:
+                    dm_labels = np.asarray([result[i][2] for i in range(rb_options["n_circ"])])
+                cal_mat = result[0][4]
+            labels.append(dm_labels)     
             circuits_list.append(circ_rep)
         circuits_list  = np.asarray(circuits_list, dtype=object)
-        if not labels:
-            nshots = self.config["chip_conf"]["nshots"]
-            likelihood = self.config["chip_conf"]["likelihood"]
-            readout_mitigation = self.config["chip_conf"]["readout_mitigation"]
-            result = state_tomography(circuits_list, nshots, likelihood, backend)
-            if readout_mitigation:
-                labels = np.asarray([result[i][3] for i in range(len(circuits_list))])
-            else:
-                labels = np.asarray([result[i][2] for i in range(len(circuits_list))])
-            cal_mat = result[0][4]
+        
+        if backend is not None and backend.name == "QuantumSpain":
             np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels, cal_mat = cal_mat)
         else:
             np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)

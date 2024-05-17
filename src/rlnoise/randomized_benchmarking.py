@@ -2,9 +2,10 @@ from rlnoise.dataset import Dataset
 from rlnoise.circuit_representation import CircuitRepresentation
 from rlnoise.noise_model import CustomNoiseModel
 import numpy as np
+import json
 from qibo import Circuit
 from qibo import gates
-from qibo.backends import NumpyBackend
+from qibo.backends import NumpyBackend, GlobalBackend
 from qibo.noise import NoiseModel, DepolarizingError
 from scipy.optimize import curve_fit
 from rlnoise.utils import compute_fidelity, mse, mms
@@ -21,8 +22,10 @@ def run_rb(rb_dataset, config, backend=None):
     """
     dataset = np.load(rb_dataset, allow_pickle=True)
     circuits = dataset["circuits"]
-    circuits = preprocess_circuits(circuits, config, backend)
+    circuits = preprocess_circuits(circuits, config, backend=backend)
     if backend is not None and backend.name == "QuantumSpain":
+        with open(config) as f:
+            config = json.load(f)
         nshots = config["chip_conf"]["nshots"]
     else:
         nshots = None
@@ -57,7 +60,9 @@ def preprocess_circuits(circuits, config, evaluate=False, backend=None):
 
 def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
     """Run randomized benchmarking on the circuits."""
-    backend = NumpyBackend()
+    if backend is None:
+        backend = GlobalBackend()
+    backend = GlobalBackend()
     nqubits = list(circuits.values())[0][0].nqubits
     probs = { d: [] for d in circuits.keys() }
     init_state = f"{0:0{nqubits}b}"

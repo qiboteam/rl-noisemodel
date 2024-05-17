@@ -1,7 +1,12 @@
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
+import qibo
+
+qibo.set_backend("qibojit",platform="numba")
 
 exp_folder = "simulation/experiments/3q_mixed_dataset/"
+
+exp_folder = "hardware/experiments/"
 
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"

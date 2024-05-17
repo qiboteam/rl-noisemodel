@@ -2,7 +2,7 @@ from collections import Counter
 
 import numpy as np
 from qibo import gates, symbols
-from qibo.backends import construct_backend, GlobalBackend
+from qibo.backends import construct_backend, GlobalBackend, NumpyBackend
 from qibo.models import Circuit
 from qibo.hamiltonians import Hamiltonian
 from qiboconnection import API
@@ -33,9 +33,10 @@ class QuantumSpain(NumpyBackend):
         super().__init__()
         self.name = "QuantumSpain"
         self.platform = API(configuration=configuration)
-        self.platform.select_device_id(device_id=device_id)
+        #self.platform.select_device_id(device_id=device_id)
         self.nqubits = nqubits
         self.qubit_map = qubit_map
+        self.device_id = device_id
 
     def transpile_circ(self, circuit, qubit_map=None):
         if qubit_map == None:
@@ -49,7 +50,7 @@ class QuantumSpain(NumpyBackend):
                 new_gate = gates.M(*tuple(qubits), **gate.init_kwargs)
                 new_gate.result = gate.result
                 new_c.add(new_gate)
-            elif isinstance(gate, gates.I):
+            elif isinstance(gate, gates.I) or len(gate.qubits) == 2:
                 new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
             else:
                 matrix = gate.matrix()
@@ -63,8 +64,9 @@ class QuantumSpain(NumpyBackend):
             circuits = [circuits]
         for k in range(len(circuits)):
             circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
+        print(nshots)
         results = self.platform.execute_and_return_results(
-            circuits, nshots=nshots, interval=10)[0]
+            circuits, device_id=self.device_id, nshots=nshots, interval=10)[0]
         result_list = []
         for j, result in enumerate(results):
             probs = result['probabilities']
@@ -115,7 +117,6 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
         if noise_model is not None:
             circuit = noise_model.apply(circuit)
         cal_circs.append(circuit)
-
     if backend is not None and backend.name == "QuantumSpain":
         results = backend.execute_circuit(cal_circs, nshots=nshots)
     else:
@@ -155,7 +156,7 @@ def apply_readout_mitigation(freqs, calibration_matrix):
 
     freqs_mit = Counter()
     for i, val in enumerate(calibration_matrix @ freq):
-        freqs_mit[format(i, f"0{nqubits}b")] = float(val)
+        freqs_mit[format(i, f"0{nqubits}b")] = float(val[0])
     return freqs_mit
 
 
@@ -195,7 +196,6 @@ class StateTomography:
     def run_circuits(self):
         dims = np.shape(self.tomo_circuits)
         circs = list(chain.from_iterable(self.tomo_circuits))
-
         if self.backend is not None and self.backend.name == "QuantumSpain":
             results = self.backend.execute_circuit(circs, nshots=self.nshots)
         else:
@@ -211,7 +211,7 @@ class StateTomography:
 
     def _get_cal_mat(self, noise=None):
         self.cal_mat = calibration_matrix(
-            self.nqubits, noise_model=noise, backend=self.backend)
+            self.nqubits, noise_model=noise, nshots=self.nshots, backend=self.backend)
 
     def redadout_mit(self, freqs, noise=None):
         dims = np.shape(freqs)
