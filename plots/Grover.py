@@ -7,11 +7,11 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_mixed_dataset_big/"
+exp_folder = "simulation/experiments/3q_squared/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-lambda_rb = 0.0466
+lambda_rb = 0.035
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
@@ -77,7 +77,7 @@ print("Noise", noise_shots)
 print("RL", rl_shots)
 print("RB", RB_shots)
 
-SMALL_SIZE = 22
+SMALL_SIZE = 24
 MEDIUM_SIZE = 26
 BIGGER_SIZE = 28
 
@@ -115,10 +115,10 @@ r3 = [x + bar_width for x in r2]
 #     values4 = list(rl_dep_shots.values())
 #     r4 = [x + bar_width for x in r3]
 
-fig=plt.figure(figsize=(12, 9))
+fig=plt.figure(figsize=(12, 7))
 ax=fig.add_subplot(111)
 ax.bar(r1, values1, width=bar_width, label='Ground truth noise', color='#e60049')
-ax.bar(r2, values2, width=bar_width, label='RL (standard)', color='#0bb4ff')
+ax.bar(r2, values2, width=bar_width, label='RL', color='#0bb4ff')
 ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 # if test_only_depol_model:
 #     ax.bar(r4, values4, width=bar_width, label='RL (only dep)', color='orange')
@@ -135,7 +135,7 @@ import numpy as np
 squared_error_rl = np.abs(np.square(dm_truth - dm_rl))
 squared_error_rb = np.abs(np.square(dm_truth - dm_RB))
 
-fig, axs = plt.subplots(1, 2, figsize=(16, 9))
+fig, axs = plt.subplots(1, 2, figsize=(16, 6))
 
 # Plot the heatmaps
 cax1 = axs[0].imshow(squared_error_rl, cmap='viridis')
