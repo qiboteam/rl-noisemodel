@@ -1,0 +1,59 @@
+{
+  "dataset": {
+    "n_circuits": 800,
+    "eval_size": 200,
+    "eval_depth": 15,
+    "moments": 20,
+    "qubits": 3,
+    "enhanced": false,
+    "clifford": false,
+    "mixed": true
+  },
+  "gym_env": {
+    "kernel_size": 3,
+    "action_penalty": 0.0,
+    "action_space_max_value": 0.07,
+    "enable_only_depolarizing": false,
+    "val_split": 0.2
+  },
+  "reward": {
+    "metric": "trace",
+    "function": "inverted",
+    "alpha": 10
+  },
+  "noise": {
+    "primitive_gates": ["rz", "rx", "cz"],
+    "channels": ["DepolarizingChannel", "ResetChannel"],
+    "dep_lambda": 0.02,
+    "p0": 0.03, 
+    "epsilon_x": 0.04,
+    "epsilon_z": 0.03,
+    "x_coherent_on_gate": ["rx"],
+    "z_coherent_on_gate": ["rz"],
+    "damping_on_gate": ["rx", "cz"],
+    "depol_on_gate": ["rz", "cz"]
+  },
+  "agent": {
+    "policy": "MlpPolicy",
+    "features_dim": 32,
+    "nn_update_steps": 2000,
+    "batch_size": 500
+  },
+  "callback": {
+    "save_best_model": true,
+    "plot_results": true,
+    "model_name": "model",
+    "result_folder": "simulation/experiments/3q_mixed_inverted",
+    "check_freq": 10000,
+    "verbose": true
+  },
+  "rb":{
+    "dataset": "simulation/experiments/3q_mixed_inverted/rb_dataset.npz",
+    "start": 3,
+    "stop": 31,
+    "step": 3,
+    "n_circ": 50
+  }
+}
+
+
