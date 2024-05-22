@@ -7,11 +7,11 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_mixed_dataset_big/"
+exp_folder = "simulation/experiments/3q_low_noise/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-lambda_rb = 0.0466
+lambda_rb = 0.00688
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
