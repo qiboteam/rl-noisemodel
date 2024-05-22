@@ -12,7 +12,7 @@
   "gym_env": {
     "kernel_size": 3,
     "action_penalty": 0.0,
-    "action_space_max_value": 0.07,
+    "action_space_max_value": 0.06,
     "enable_only_depolarizing": false,
     "val_split": 0.2
   },
@@ -43,12 +43,12 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_mixed_dataset_big",
+    "result_folder": "simulation/experiments/3q_enhanced_dataset",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_mixed_dataset_big/rb_dataset.npz",
+    "dataset": "simulation/experiments/3q_enhanced_dataset/rb_dataset.npz",
     "start": 3,
     "stop": 31,
     "step": 3,

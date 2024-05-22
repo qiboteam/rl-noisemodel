@@ -40,18 +40,24 @@ class Dataset(object):
         self.clifford = dataset_options['clifford']
         self.eval_size = dataset_options['eval_size']
         self.eval_depth = dataset_options['eval_depth']
-        enhanced_dataset = dataset_options['enhanced']
+        enhanced_dataset = dataset_options['distributed_clifford']
         mixed = dataset_options['mixed']
         self.rep = CircuitRepresentation(config_file)
         self.noise_model = CustomNoiseModel(config_file)
         if enhanced_dataset and not mixed:
+            print("Generating distributed clifford dataset.")
             self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
         elif not mixed:
+            print("Generating random dataset.")
             self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
-        else:
-            self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits//2)]
-            self.circuits += [self.generate_clifford_circuit() for _ in range(self.n_circuits//2)]
+        elif mixed:
+            print("Generating mixed dataset.")
+            self.circuits = [self.generate_random_circuit() for _ in range(int(self.n_circuits/4))]
+            self.circuits += [self.generate_smaller_circuits() for _ in range(int(self.n_circuits/4))]
+            self.circuits += [self.generate_clifford_circuit() for _ in range(int(self.n_circuits/2))]
             random.shuffle(self.circuits)
+        else:
+            raise ValueError("Unknown dataset type.")
         self.noisy_circuits = [self.noise_model.apply(c) for c in self.circuits]
         self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
         self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
@@ -110,6 +116,38 @@ class Dataset(object):
             else:
                 raise ValueError(f"Unknown gate {gate.name}")
         return new_circuit
+
+    def generate_smaller_circuits(self):
+        """Generate a circuit with a smaller number of qubits to improve generalization properties."""
+        qubits_subset = random.sample(range(self.n_qubits), random.randint(1, self.n_qubits-1))
+        circuit = Circuit(self.n_qubits, density_matrix=True)
+        while len(circuit.queue.moments) < self.n_gates:
+            q0 = random.choice(qubits_subset)
+            gate = random.choice(self.primitive_gates)
+            if gate == 'cz':
+                q1 = random.choice(
+                    list(set(range(self.n_qubits)) - {q0})
+                )       
+                circuit.add(gates.CZ(q1,q0))
+            elif gate == 'rx':
+                theta = (
+                    random.choice([0, 0.25, 0.5, 0.75])
+                    if self.clifford
+                    else np.random.random()
+                )
+                theta *= 2 * np.pi
+                circuit.add(gates.RX(q0, theta=theta))
+            elif gate == 'rz':
+                theta = (
+                    random.choice([0, 0.25, 0.5, 0.75])
+                    if self.clifford
+                    else np.random.random()
+                )
+                theta *= 2 * np.pi
+                circuit.add(gates.RZ(q0, theta=theta))
+            else:
+                raise ValueError(f"Gate {gate} not present in the primitive gates.")
+        return circuit
 
     def generate_random_circuit(self):
         """Generate a random circuit."""
