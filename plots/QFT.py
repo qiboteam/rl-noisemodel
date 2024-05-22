@@ -2,26 +2,27 @@ from rlnoise.noise_model import CustomNoiseModel
 from rlnoise.randomized_benchmarking import fill_identity
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
-from rlnoise.utils import qft, unroll_circuit, mms, mse, compute_fidelity
+from rlnoise.utils import qft, mms, mse, compute_fidelity
 from qibo.models import Circuit
 import numpy as np
 from qibo.noise import NoiseModel, DepolarizingError
 import json
 
-exp_folder = "simulation/experiments/3q_low_noise/"
+exp_folder = "simulation/experiments/3q_trace_inverted/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
 lambda_rb = 0.00688
 
 circuit = qft()
-circuit = unroll_circuit(circuit)
+print(circuit.draw())
 noise_model = CustomNoiseModel(config_file=config_file)
 noisy_circuit = noise_model.apply(circuit)
 
 env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 rl_noise_model = Agent(config_file = config_file, env = env, model_file_path = model_file)
 rl_noisy_circuit = rl_noise_model.apply(circuit)
+print(rl_noisy_circuit.draw())
 
 noise = NoiseModel()
 noise.add(DepolarizingError(lambda_rb))
@@ -135,7 +136,7 @@ ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 plt.xlabel('State')
 plt.ylabel('Probability')
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
-plt.legend(loc = "upper right", ncol=1)
+plt.legend(loc = "upper right", ncol=3)
 plt.savefig(exp_folder + "images/QFT_shots.pdf", )
 plt.close()
 
