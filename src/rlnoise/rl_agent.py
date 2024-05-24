@@ -19,6 +19,8 @@ class Agent(object):
 
         nqubits = config["dataset"]["qubits"]
         policy = config["agent"]["policy"]
+        filter_size = config["agent"]["filter_size"]
+        conv_filters = config["agent"]["n_filters"]
         features_dim = config["agent"]["features_dim"]
         n_steps = config["agent"]["nn_update_steps"]
         batch_size = config["agent"]["batch_size"]
@@ -28,7 +30,8 @@ class Agent(object):
         features_extractor_class = CNNFeaturesExtractor,
         features_extractor_kwargs = dict(
             features_dim = features_dim,
-            filter_shape = (nqubits, 1)
+            filter_shape = (nqubits, filter_size),
+            n_filters = conv_filters
         ),
         net_arch=dict(pi=[32, 32], vf=[32, 32])
         )

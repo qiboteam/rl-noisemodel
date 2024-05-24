@@ -52,8 +52,8 @@ class Dataset(object):
             self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
         elif mixed:
             print("Generating mixed dataset.")
-            self.circuits = [self.generate_random_circuit() for _ in range(int(self.n_circuits/4))]
-            self.circuits += [self.generate_smaller_circuits() for _ in range(int(self.n_circuits/4))]
+            self.circuits = [self.generate_random_circuit() for _ in range(int(3*self.n_circuits/8))]
+            self.circuits += [self.generate_smaller_circuits() for _ in range(int(self.n_circuits/8))]
             self.circuits += [self.generate_clifford_circuit() for _ in range(int(self.n_circuits/2))]
             random.shuffle(self.circuits)
         else:

@@ -11,7 +11,7 @@ exp_folder = "simulation/experiments/3q_enhanced_dataset/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-lambda_rb = 0.00688
+lambda_rb = 0.0388
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
