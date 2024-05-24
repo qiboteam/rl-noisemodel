@@ -8,13 +8,13 @@ class CNNFeaturesExtractor(BaseFeaturesExtractor):
             observation_space,
             features_dim,
             filter_shape,
-            n_filters                 
+            n_filters,                 
     ):
         super().__init__(observation_space, features_dim)
         indim = observation_space.shape[0]
         sample = torch.as_tensor(observation_space.sample()[None]).float()
         conv1 = torch.nn.Conv2d( in_channels=indim, out_channels=n_filters, 
-                                kernel_size=filter_shape)
+                                kernel_size=filter_shape, padding=1, stride=1)
         conv2 = torch.nn.Conv2d( in_channels=n_filters, out_channels=n_filters, 
                                 kernel_size=filter_shape)
         
