@@ -1,7 +1,7 @@
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
 
-exp_folder = "simulation/experiments/3q_2conv_1/"
+exp_folder = "simulation/experiments/3q_2conv_2/"
 
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
