@@ -8,7 +8,7 @@ import numpy as np
 from qibo.noise import NoiseModel, DepolarizingError
 import json
 
-exp_folder = "simulation/experiments/3q_squared/"
+exp_folder = "simulation/experiments/3q_2conv_2/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"

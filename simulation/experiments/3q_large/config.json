@@ -12,7 +12,7 @@
   "gym_env": {
     "kernel_size": 3,
     "action_penalty": 0.0,
-    "action_space_max_value": 0.07,
+    "action_space_max_value": 0.05,
     "enable_only_depolarizing": false,
     "val_split": 0.2
   },
@@ -35,23 +35,23 @@
   },
   "agent": {
     "policy": "MlpPolicy",
-    "features_dim": 256,
+    "features_dim": 128,
     "nn_update_steps": 2000,
     "batch_size": 500,
-    "filter_size": 2,
-    "conv_layers": 2,
-    "n_filters": 128
+    "filter_size": 1,
+    "conv_layers": 1,
+    "n_filters": 32
   },
   "callback": {
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_2conv_2",
+    "result_folder": "simulation/experiments/3q_2conv_1",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_2conv_2/rb_dataset.npz",
+    "dataset": "simulation/experiments/3q_2conv_1/rb_dataset.npz",
     "start": 3,
     "stop": 31,
     "step": 3,
