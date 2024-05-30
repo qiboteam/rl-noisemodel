@@ -20,7 +20,6 @@ class CustomCallback(BaseCallback):
         self.plot = callback_params['plot_results']
         model_name = callback_params['model_name']
         results_folder = callback_params['result_folder']
-        self.results_path = f"{results_folder}/{model_name}"
         self.save_path = f"{results_folder}/{model_name}"
         self.check_freq = callback_params['check_freq']
         self.verbose = callback_params['verbose']
@@ -134,7 +133,7 @@ class CustomCallback(BaseCallback):
         self.timestep_list = np.asarray(self.timestep_list)/1000
 
         np.savez(
-            self.results_path + '_train_result', 
+            self.save_path + '_train_result', 
             timesteps = self.timestep_list, 
             train_results = self.train_results, 
             val_results = self.eval_results,
