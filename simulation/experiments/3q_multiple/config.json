@@ -45,7 +45,7 @@
   "callback": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "model_1",
+    "model_name": "model",
     "result_folder": "simulation/experiments/3q_multiple",
     "check_freq": 10000,
     "verbose": true
