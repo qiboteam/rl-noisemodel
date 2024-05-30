@@ -46,12 +46,12 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_2conv_1",
+    "result_folder": "simulation/experiments/3q_large_1",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_2conv_1/rb_dataset.npz",
+    "dataset": "simulation/experiments/3q_large/rb_dataset.npz",
     "start": 3,
     "stop": 31,
     "step": 3,
