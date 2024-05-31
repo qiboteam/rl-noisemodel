@@ -1,0 +1,3577 @@
+[Qibo 0.2.7|INFO|2024-05-30 22:16:11]: Using qibojit (numba) backend on /CPU:0
+Timesteps/1000: 0.001
+Reward: 0.4242
+Test set Fidelity: 0.7166 std: 0.0705
+Saving new best model at 1 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 10.0
+Reward: 0.4160
+Test set Fidelity: 0.6661 std: 0.0779
+Timesteps/1000: 20.0
+Reward: 0.4162
+Test set Fidelity: 0.6667 std: 0.0783
+Timesteps/1000: 30.0
+Reward: 0.4202
+Test set Fidelity: 0.6662 std: 0.0777
+Timesteps/1000: 40.0
+Reward: 0.4240
+Test set Fidelity: 0.6729 std: 0.0711
+Timesteps/1000: 50.0
+Reward: 0.4428
+Test set Fidelity: 0.6935 std: 0.0851
+Timesteps/1000: 60.0
+Reward: 0.4812
+Test set Fidelity: 0.7093 std: 0.0871
+Timesteps/1000: 70.0
+Reward: 0.5156
+Test set Fidelity: 0.7351 std: 0.1030
+Saving new best model at 70000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 80.0
+Reward: 0.5664
+Test set Fidelity: 0.7542 std: 0.0889
+Saving new best model at 80000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 90.0
+Reward: 0.6159
+Test set Fidelity: 0.7630 std: 0.0858
+Saving new best model at 90000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 100.0
+Reward: 0.6723
+Test set Fidelity: 0.7890 std: 0.0520
+Saving new best model at 100000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 110.0
+Reward: 0.6892
+Test set Fidelity: 0.7868 std: 0.0583
+Timesteps/1000: 120.0
+Reward: 0.8170
+Test set Fidelity: 0.8219 std: 0.0504
+Saving new best model at 120000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 130.0
+Reward: 0.9338
+Test set Fidelity: 0.8667 std: 0.0483
+Saving new best model at 130000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 140.0
+Reward: 0.9061
+Test set Fidelity: 0.8527 std: 0.0517
+Timesteps/1000: 150.0
+Reward: 1.0679
+Test set Fidelity: 0.8740 std: 0.0403
+Saving new best model at 150000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 160.0
+Reward: 1.1859
+Test set Fidelity: 0.8942 std: 0.0339
+Saving new best model at 160000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 170.0
+Reward: 1.1257
+Test set Fidelity: 0.8993 std: 0.0330
+Saving new best model at 170000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 180.0
+Reward: 1.3755
+Test set Fidelity: 0.9040 std: 0.0378
+Saving new best model at 180000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 190.0
+Reward: 1.7458
+Test set Fidelity: 0.9217 std: 0.0348
+Saving new best model at 190000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 200.0
+Reward: 2.0597
+Test set Fidelity: 0.9365 std: 0.0330
+Saving new best model at 200000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 210.0
+Reward: 2.1349
+Test set Fidelity: 0.9457 std: 0.0305
+Saving new best model at 210000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 220.0
+Reward: 2.7106
+Test set Fidelity: 0.9415 std: 0.0340
+Timesteps/1000: 230.0
+Reward: 2.4411
+Test set Fidelity: 0.9403 std: 0.0384
+Timesteps/1000: 240.0
+Reward: 2.7835
+Test set Fidelity: 0.9494 std: 0.0299
+Saving new best model at 240000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 250.0
+Reward: 2.4293
+Test set Fidelity: 0.9398 std: 0.0369
+Timesteps/1000: 260.0
+Reward: 2.5266
+Test set Fidelity: 0.9491 std: 0.0308
+Timesteps/1000: 270.0
+Reward: 3.1633
+Test set Fidelity: 0.9555 std: 0.0251
+Saving new best model at 270000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 280.0
+Reward: 3.2127
+Test set Fidelity: 0.9602 std: 0.0209
+Saving new best model at 280000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 290.0
+Reward: 3.2260
+Test set Fidelity: 0.9671 std: 0.0143
+Saving new best model at 290000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 300.0
+Reward: 3.6049
+Test set Fidelity: 0.9527 std: 0.0291
+Timesteps/1000: 310.0
+Reward: 3.9994
+Test set Fidelity: 0.9585 std: 0.0238
+Timesteps/1000: 320.0
+Reward: 3.9549
+Test set Fidelity: 0.9559 std: 0.0207
+Timesteps/1000: 330.0
+Reward: 4.1990
+Test set Fidelity: 0.9623 std: 0.0189
+Timesteps/1000: 340.0
+Reward: 4.4704
+Test set Fidelity: 0.9580 std: 0.0240
+Timesteps/1000: 350.0
+Reward: 4.0293
+Test set Fidelity: 0.9596 std: 0.0207
+Timesteps/1000: 360.0
+Reward: 4.3796
+Test set Fidelity: 0.9613 std: 0.0148
+Timesteps/1000: 370.0
+Reward: 3.5862
+Test set Fidelity: 0.9497 std: 0.0243
+Timesteps/1000: 380.0
+Reward: 4.0626
+Test set Fidelity: 0.9544 std: 0.0175
+Timesteps/1000: 390.0
+Reward: 4.0201
+Test set Fidelity: 0.9533 std: 0.0209
+Timesteps/1000: 400.0
+Reward: 4.4799
+Test set Fidelity: 0.9577 std: 0.0215
+Timesteps/1000: 410.0
+Reward: 5.0217
+Test set Fidelity: 0.9650 std: 0.0143
+Timesteps/1000: 420.0
+Reward: 5.2173
+Test set Fidelity: 0.9648 std: 0.0167
+Timesteps/1000: 430.0
+Reward: 5.5035
+Test set Fidelity: 0.9678 std: 0.0138
+Saving new best model at 430000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 440.0
+Reward: 4.9777
+Test set Fidelity: 0.9668 std: 0.0164
+Timesteps/1000: 450.0
+Reward: 5.2080
+Test set Fidelity: 0.9622 std: 0.0195
+Timesteps/1000: 460.0
+Reward: 6.0547
+Test set Fidelity: 0.9716 std: 0.0122
+Saving new best model at 460000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 470.0
+Reward: 6.8208
+Test set Fidelity: 0.9710 std: 0.0113
+Timesteps/1000: 480.0
+Reward: 7.7442
+Test set Fidelity: 0.9744 std: 0.0079
+Saving new best model at 480000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 490.0
+Reward: 8.1297
+Test set Fidelity: 0.9769 std: 0.0070
+Saving new best model at 490000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 500.0
+Reward: 8.5329
+Test set Fidelity: 0.9799 std: 0.0046
+Saving new best model at 500000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 510.0
+Reward: 8.3018
+Test set Fidelity: 0.9780 std: 0.0074
+Timesteps/1000: 520.0
+Reward: 8.7436
+Test set Fidelity: 0.9767 std: 0.0093
+Timesteps/1000: 530.0
+Reward: 8.9645
+Test set Fidelity: 0.9786 std: 0.0074
+Timesteps/1000: 540.0
+Reward: 10.5900
+Test set Fidelity: 0.9820 std: 0.0040
+Saving new best model at 540000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 550.0
+Reward: 11.5139
+Test set Fidelity: 0.9838 std: 0.0005
+Saving new best model at 550000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 560.0
+Reward: 12.6673
+Test set Fidelity: 0.9848 std: 0.0012
+Saving new best model at 560000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 570.0
+Reward: 12.0666
+Test set Fidelity: 0.9835 std: 0.0031
+Timesteps/1000: 580.0
+Reward: 13.9827
+Test set Fidelity: 0.9852 std: 0.0020
+Saving new best model at 580000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 590.0
+Reward: 15.0665
+Test set Fidelity: 0.9840 std: 0.0023
+Timesteps/1000: 600.0
+Reward: 14.9401
+Test set Fidelity: 0.9841 std: 0.0021
+Timesteps/1000: 610.0
+Reward: 18.1716
+Test set Fidelity: 0.9849 std: 0.0001
+Timesteps/1000: 620.0
+Reward: 18.8168
+Test set Fidelity: 0.9847 std: 0.0003
+Timesteps/1000: 630.0
+Reward: 20.7431
+Test set Fidelity: 0.9852 std: 0.0025
+Saving new best model at 630000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 640.0
+Reward: 20.5608
+Test set Fidelity: 0.9843 std: 0.0037
+Timesteps/1000: 650.0
+Reward: 22.2748
+Test set Fidelity: 0.9844 std: 0.0040
+Timesteps/1000: 660.0
+Reward: 20.7438
+Test set Fidelity: 0.9844 std: 0.0030
+Timesteps/1000: 670.0
+Reward: 21.9071
+Test set Fidelity: 0.9839 std: 0.0042
+Timesteps/1000: 680.0
+Reward: 23.6847
+Test set Fidelity: 0.9841 std: 0.0061
+Timesteps/1000: 690.0
+Reward: 25.2656
+Test set Fidelity: 0.9844 std: 0.0067
+Timesteps/1000: 700.0
+Reward: 27.4497
+Test set Fidelity: 0.9839 std: 0.0094
+Timesteps/1000: 710.0
+Reward: 25.9700
+Test set Fidelity: 0.9830 std: 0.0106
+Timesteps/1000: 720.0
+Reward: 28.1058
+Test set Fidelity: 0.9830 std: 0.0107
+Timesteps/1000: 730.0
+Reward: 26.7926
+Test set Fidelity: 0.9837 std: 0.0091
+Timesteps/1000: 740.0
+Reward: 29.9660
+Test set Fidelity: 0.9847 std: 0.0106
+Timesteps/1000: 750.0
+Reward: 32.1333
+Test set Fidelity: 0.9852 std: 0.0109
+Timesteps/1000: 760.0
+Reward: 33.4864
+Test set Fidelity: 0.9843 std: 0.0121
+Timesteps/1000: 770.0
+Reward: 37.1091
+Test set Fidelity: 0.9846 std: 0.0105
+Timesteps/1000: 780.0
+Reward: 41.7831
+Test set Fidelity: 0.9840 std: 0.0120
+Timesteps/1000: 790.0
+Reward: 40.2152
+Test set Fidelity: 0.9841 std: 0.0118
+Timesteps/1000: 800.0
+Reward: 39.0056
+Test set Fidelity: 0.9838 std: 0.0128
+Timesteps/1000: 810.0
+Reward: 40.6742
+Test set Fidelity: 0.9845 std: 0.0125
+Timesteps/1000: 820.0
+Reward: 39.1309
+Test set Fidelity: 0.9844 std: 0.0127
+Timesteps/1000: 830.0
+Reward: 37.0964
+Test set Fidelity: 0.9836 std: 0.0134
+Timesteps/1000: 840.0
+Reward: 36.3881
+Test set Fidelity: 0.9829 std: 0.0144
+Timesteps/1000: 850.0
+Reward: 34.6258
+Test set Fidelity: 0.9836 std: 0.0137
+Timesteps/1000: 860.0
+Reward: 35.4693
+Test set Fidelity: 0.9851 std: 0.0125
+Timesteps/1000: 870.0
+Reward: 37.3275
+Test set Fidelity: 0.9844 std: 0.0132
+Timesteps/1000: 880.0
+Reward: 35.9814
+Test set Fidelity: 0.9852 std: 0.0122
+Saving new best model at 880000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 890.0
+Reward: 33.0548
+Test set Fidelity: 0.9845 std: 0.0130
+Timesteps/1000: 900.0
+Reward: 35.9824
+Test set Fidelity: 0.9848 std: 0.0126
+Timesteps/1000: 910.0
+Reward: 36.4189
+Test set Fidelity: 0.9847 std: 0.0129
+Timesteps/1000: 920.0
+Reward: 36.2776
+Test set Fidelity: 0.9854 std: 0.0117
+Saving new best model at 920000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 930.0
+Reward: 38.1993
+Test set Fidelity: 0.9835 std: 0.0140
+Timesteps/1000: 940.0
+Reward: 39.1995
+Test set Fidelity: 0.9835 std: 0.0138
+Timesteps/1000: 950.0
+Reward: 40.1956
+Test set Fidelity: 0.9829 std: 0.0150
+Timesteps/1000: 960.0
+Reward: 42.9697
+Test set Fidelity: 0.9824 std: 0.0156
+Timesteps/1000: 970.0
+Reward: 39.9376
+Test set Fidelity: 0.9835 std: 0.0143
+Timesteps/1000: 980.0
+Reward: 40.3198
+Test set Fidelity: 0.9835 std: 0.0142
+Timesteps/1000: 990.0
+Reward: 41.1579
+Test set Fidelity: 0.9838 std: 0.0139
+Timesteps/1000: 1000.0
+Reward: 41.8332
+Test set Fidelity: 0.9846 std: 0.0133
+Timesteps/1000: 1010.0
+Reward: 44.1338
+Test set Fidelity: 0.9843 std: 0.0137
+Timesteps/1000: 1020.0
+Reward: 47.1703
+Test set Fidelity: 0.9830 std: 0.0154
+Timesteps/1000: 1030.0
+Reward: 46.9125
+Test set Fidelity: 0.9828 std: 0.0155
+Timesteps/1000: 1040.0
+Reward: 48.0136
+Test set Fidelity: 0.9833 std: 0.0148
+Timesteps/1000: 1050.0
+Reward: 49.0830
+Test set Fidelity: 0.9824 std: 0.0160
+Timesteps/1000: 1060.0
+Reward: 47.2485
+Test set Fidelity: 0.9835 std: 0.0148
+Timesteps/1000: 1070.0
+Reward: 50.7171
+Test set Fidelity: 0.9827 std: 0.0156
+Timesteps/1000: 1080.0
+Reward: 49.6132
+Test set Fidelity: 0.9817 std: 0.0166
+Timesteps/1000: 1090.0
+Reward: 52.9529
+Test set Fidelity: 0.9824 std: 0.0157
+Timesteps/1000: 1100.0
+Reward: 56.0903
+Test set Fidelity: 0.9819 std: 0.0162
+Timesteps/1000: 1110.0
+Reward: 62.3443
+Test set Fidelity: 0.9814 std: 0.0170
+Timesteps/1000: 1120.0
+Reward: 60.0490
+Test set Fidelity: 0.9818 std: 0.0163
+Timesteps/1000: 1130.0
+Reward: 60.0353
+Test set Fidelity: 0.9823 std: 0.0157
+Timesteps/1000: 1140.0
+Reward: 58.1954
+Test set Fidelity: 0.9831 std: 0.0152
+Timesteps/1000: 1150.0
+Reward: 57.5387
+Test set Fidelity: 0.9816 std: 0.0166
+Timesteps/1000: 1160.0
+Reward: 57.6364
+Test set Fidelity: 0.9820 std: 0.0163
+Timesteps/1000: 1170.0
+Reward: 55.1053
+Test set Fidelity: 0.9818 std: 0.0164
+Timesteps/1000: 1180.0
+Reward: 56.3952
+Test set Fidelity: 0.9826 std: 0.0157
+Timesteps/1000: 1190.0
+Reward: 57.7923
+Test set Fidelity: 0.9823 std: 0.0161
+Timesteps/1000: 1200.0
+Reward: 61.4573
+Test set Fidelity: 0.9831 std: 0.0154
+Timesteps/1000: 1210.0
+Reward: 62.7452
+Test set Fidelity: 0.9829 std: 0.0157
+Timesteps/1000: 1220.0
+Reward: 61.1038
+Test set Fidelity: 0.9830 std: 0.0154
+Timesteps/1000: 1230.0
+Reward: 61.1386
+Test set Fidelity: 0.9828 std: 0.0157
+Timesteps/1000: 1240.0
+Reward: 60.4225
+Test set Fidelity: 0.9839 std: 0.0146
+Timesteps/1000: 1250.0
+Reward: 58.3972
+Test set Fidelity: 0.9852 std: 0.0132
+Timesteps/1000: 1260.0
+Reward: 62.9250
+Test set Fidelity: 0.9844 std: 0.0139
+Timesteps/1000: 1270.0
+Reward: 64.1734
+Test set Fidelity: 0.9851 std: 0.0133
+Timesteps/1000: 1280.0
+Reward: 62.9847
+Test set Fidelity: 0.9841 std: 0.0144
+Timesteps/1000: 1290.0
+Reward: 63.7112
+Test set Fidelity: 0.9846 std: 0.0139
+Timesteps/1000: 1300.0
+Reward: 66.8695
+Test set Fidelity: 0.9850 std: 0.0134
+Timesteps/1000: 1310.0
+Reward: 63.9618
+Test set Fidelity: 0.9849 std: 0.0135
+Timesteps/1000: 1320.0
+Reward: 64.9789
+Test set Fidelity: 0.9845 std: 0.0139
+Timesteps/1000: 1330.0
+Reward: 64.8976
+Test set Fidelity: 0.9847 std: 0.0136
+Timesteps/1000: 1340.0
+Reward: 67.2915
+Test set Fidelity: 0.9851 std: 0.0131
+Timesteps/1000: 1350.0
+Reward: 68.2842
+Test set Fidelity: 0.9846 std: 0.0137
+Timesteps/1000: 1360.0
+Reward: 64.1121
+Test set Fidelity: 0.9846 std: 0.0137
+Timesteps/1000: 1370.0
+Reward: 64.3123
+Test set Fidelity: 0.9845 std: 0.0138
+Timesteps/1000: 1380.0
+Reward: 63.2451
+Test set Fidelity: 0.9858 std: 0.0128
+Saving new best model at 1380000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1390.0
+Reward: 63.1304
+Test set Fidelity: 0.9864 std: 0.0121
+Saving new best model at 1390000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1400.0
+Reward: 63.5732
+Test set Fidelity: 0.9872 std: 0.0113
+Saving new best model at 1400000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1410.0
+Reward: 67.1204
+Test set Fidelity: 0.9866 std: 0.0119
+Timesteps/1000: 1420.0
+Reward: 64.4154
+Test set Fidelity: 0.9856 std: 0.0130
+Timesteps/1000: 1430.0
+Reward: 63.2336
+Test set Fidelity: 0.9870 std: 0.0115
+Timesteps/1000: 1440.0
+Reward: 66.1758
+Test set Fidelity: 0.9871 std: 0.0114
+Timesteps/1000: 1450.0
+Reward: 65.1307
+Test set Fidelity: 0.9879 std: 0.0105
+Saving new best model at 1450000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1460.0
+Reward: 65.5839
+Test set Fidelity: 0.9888 std: 0.0098
+Saving new best model at 1460000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1470.0
+Reward: 65.4875
+Test set Fidelity: 0.9885 std: 0.0100
+Timesteps/1000: 1480.0
+Reward: 66.5649
+Test set Fidelity: 0.9878 std: 0.0106
+Timesteps/1000: 1490.0
+Reward: 65.7627
+Test set Fidelity: 0.9884 std: 0.0100
+Timesteps/1000: 1500.0
+Reward: 68.2103
+Test set Fidelity: 0.9879 std: 0.0106
+Timesteps/1000: 1510.0
+Reward: 68.4891
+Test set Fidelity: 0.9874 std: 0.0111
+Timesteps/1000: 1520.0
+Reward: 70.0573
+Test set Fidelity: 0.9879 std: 0.0106
+Timesteps/1000: 1530.0
+Reward: 68.1250
+Test set Fidelity: 0.9879 std: 0.0104
+Timesteps/1000: 1540.0
+Reward: 67.7291
+Test set Fidelity: 0.9891 std: 0.0094
+Saving new best model at 1540000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1550.0
+Reward: 70.4934
+Test set Fidelity: 0.9890 std: 0.0095
+Timesteps/1000: 1560.0
+Reward: 70.1592
+Test set Fidelity: 0.9890 std: 0.0096
+Timesteps/1000: 1570.0
+Reward: 73.4011
+Test set Fidelity: 0.9882 std: 0.0105
+Timesteps/1000: 1580.0
+Reward: 76.6598
+Test set Fidelity: 0.9886 std: 0.0099
+Timesteps/1000: 1590.0
+Reward: 78.3218
+Test set Fidelity: 0.9891 std: 0.0096
+Timesteps/1000: 1600.0
+Reward: 76.8225
+Test set Fidelity: 0.9896 std: 0.0091
+Saving new best model at 1600000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1610.0
+Reward: 74.5460
+Test set Fidelity: 0.9893 std: 0.0093
+Timesteps/1000: 1620.0
+Reward: 74.1669
+Test set Fidelity: 0.9887 std: 0.0100
+Timesteps/1000: 1630.0
+Reward: 73.5691
+Test set Fidelity: 0.9887 std: 0.0099
+Timesteps/1000: 1640.0
+Reward: 72.4948
+Test set Fidelity: 0.9882 std: 0.0105
+Timesteps/1000: 1650.0
+Reward: 73.2362
+Test set Fidelity: 0.9891 std: 0.0096
+Timesteps/1000: 1660.0
+Reward: 75.6799
+Test set Fidelity: 0.9887 std: 0.0100
+Timesteps/1000: 1670.0
+Reward: 76.1333
+Test set Fidelity: 0.9890 std: 0.0097
+Timesteps/1000: 1680.0
+Reward: 73.7785
+Test set Fidelity: 0.9888 std: 0.0099
+Timesteps/1000: 1690.0
+Reward: 71.1847
+Test set Fidelity: 0.9893 std: 0.0095
+Timesteps/1000: 1700.0
+Reward: 74.6344
+Test set Fidelity: 0.9894 std: 0.0093
+Timesteps/1000: 1710.0
+Reward: 75.9090
+Test set Fidelity: 0.9895 std: 0.0093
+Timesteps/1000: 1720.0
+Reward: 79.4129
+Test set Fidelity: 0.9898 std: 0.0090
+Saving new best model at 1720000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1730.0
+Reward: 80.7685
+Test set Fidelity: 0.9908 std: 0.0080
+Saving new best model at 1730000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_10.
+Timesteps/1000: 1740.0
+Reward: 78.5325
+Test set Fidelity: 0.9906 std: 0.0080
+Timesteps/1000: 1750.0
+Reward: 80.5556
+Test set Fidelity: 0.9906 std: 0.0081
+Timesteps/1000: 1760.0
+Reward: 83.7253
+Test set Fidelity: 0.9905 std: 0.0083
+Timesteps/1000: 1770.0
+Reward: 81.3643
+Test set Fidelity: 0.9896 std: 0.0090
+Timesteps/1000: 1780.0
+Reward: 85.2058
+Test set Fidelity: 0.9903 std: 0.0083
+Timesteps/1000: 1790.0
+Reward: 86.1285
+Test set Fidelity: 0.9904 std: 0.0083
+Timesteps/1000: 1800.0
+Reward: 87.1926
+Test set Fidelity: 0.9897 std: 0.0089
+Timesteps/1000: 1810.0
+Reward: 88.3773
+Test set Fidelity: 0.9903 std: 0.0083
+Timesteps/1000: 1820.0
+Reward: 88.2058
+Test set Fidelity: 0.9901 std: 0.0086
+Timesteps/1000: 1830.0
+Reward: 82.7747
+Test set Fidelity: 0.9896 std: 0.0092
+Timesteps/1000: 1840.0
+Reward: 82.9867
+Test set Fidelity: 0.9890 std: 0.0098
+Timesteps/1000: 1850.0
+Reward: 79.8499
+Test set Fidelity: 0.9884 std: 0.0105
+Timesteps/1000: 1860.0
+Reward: 77.8049
+Test set Fidelity: 0.9883 std: 0.0106
+Timesteps/1000: 1870.0
+Reward: 88.3061
+Test set Fidelity: 0.9882 std: 0.0107
+Timesteps/1000: 1880.0
+Reward: 87.7321
+Test set Fidelity: 0.9884 std: 0.0105
+Timesteps/1000: 1890.0
+Reward: 90.4441
+Test set Fidelity: 0.9885 std: 0.0104
+Timesteps/1000: 1900.0
+Reward: 90.9002
+Test set Fidelity: 0.9889 std: 0.0100
+Timesteps/1000: 1910.0
+Reward: 93.4701
+Test set Fidelity: 0.9883 std: 0.0106
+Timesteps/1000: 1920.0
+Reward: 95.5213
+Test set Fidelity: 0.9887 std: 0.0102
+Timesteps/1000: 1930.0
+Reward: 96.7117
+Test set Fidelity: 0.9886 std: 0.0102
+Timesteps/1000: 1940.0
+Reward: 97.6820
+Test set Fidelity: 0.9891 std: 0.0097
+Timesteps/1000: 1950.0
+Reward: 99.5906
+Test set Fidelity: 0.9889 std: 0.0098
+Timesteps/1000: 1960.0
+Reward: 96.4964
+Test set Fidelity: 0.9884 std: 0.0104
+Timesteps/1000: 1970.0
+Reward: 96.5848
+Test set Fidelity: 0.9885 std: 0.0102
+Timesteps/1000: 1980.0
+Reward: 93.2542
+Test set Fidelity: 0.9883 std: 0.0102
+Timesteps/1000: 1990.0
+Reward: 100.1718
+Test set Fidelity: 0.9885 std: 0.0102
+Timesteps/1000: 2000.0
+Reward: 97.7093
+Test set Fidelity: 0.9885 std: 0.0101
+ 100% ━━━━━━━━━━━━━━━━━━━━ 2,000,000/2,000,000  [ 2:27:15 < 0:00:00 , 283 it/s ]
+Timesteps/1000: 0.001
+Reward: 0.4106
+Test set Fidelity: 0.6827 std: 0.0554
+Saving new best model at 1 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 10.0
+Reward: 0.4013
+Test set Fidelity: 0.6225 std: 0.0647
+Timesteps/1000: 20.0
+Reward: 0.4015
+Test set Fidelity: 0.6226 std: 0.0646
+Timesteps/1000: 30.0
+Reward: 0.4008
+Test set Fidelity: 0.6230 std: 0.0640
+Timesteps/1000: 40.0
+Reward: 0.4023
+Test set Fidelity: 0.6257 std: 0.0629
+Timesteps/1000: 50.0
+Reward: 0.4142
+Test set Fidelity: 0.6550 std: 0.0689
+Timesteps/1000: 60.0
+Reward: 0.4254
+Test set Fidelity: 0.6703 std: 0.0632
+Timesteps/1000: 70.0
+Reward: 0.4477
+Test set Fidelity: 0.6888 std: 0.0488
+Saving new best model at 70000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 80.0
+Reward: 0.4735
+Test set Fidelity: 0.7106 std: 0.0502
+Saving new best model at 80000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 90.0
+Reward: 0.5282
+Test set Fidelity: 0.7520 std: 0.0234
+Saving new best model at 90000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 100.0
+Reward: 0.5980
+Test set Fidelity: 0.7964 std: 0.0327
+Saving new best model at 100000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 110.0
+Reward: 0.6301
+Test set Fidelity: 0.7792 std: 0.0394
+Timesteps/1000: 120.0
+Reward: 0.6522
+Test set Fidelity: 0.7842 std: 0.0325
+Timesteps/1000: 130.0
+Reward: 0.8415
+Test set Fidelity: 0.8372 std: 0.0209
+Saving new best model at 130000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 140.0
+Reward: 0.8955
+Test set Fidelity: 0.8550 std: 0.0303
+Saving new best model at 140000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 150.0
+Reward: 0.9128
+Test set Fidelity: 0.8717 std: 0.0269
+Saving new best model at 150000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 160.0
+Reward: 1.0297
+Test set Fidelity: 0.8999 std: 0.0278
+Saving new best model at 160000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 170.0
+Reward: 1.0725
+Test set Fidelity: 0.8946 std: 0.0318
+Timesteps/1000: 180.0
+Reward: 1.0749
+Test set Fidelity: 0.9154 std: 0.0341
+Saving new best model at 180000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 190.0
+Reward: 1.1873
+Test set Fidelity: 0.9199 std: 0.0291
+Saving new best model at 190000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 200.0
+Reward: 1.2655
+Test set Fidelity: 0.9291 std: 0.0318
+Saving new best model at 200000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 210.0
+Reward: 1.3771
+Test set Fidelity: 0.9304 std: 0.0307
+Saving new best model at 210000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 220.0
+Reward: 1.5598
+Test set Fidelity: 0.9372 std: 0.0279
+Saving new best model at 220000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 230.0
+Reward: 1.7099
+Test set Fidelity: 0.9446 std: 0.0264
+Saving new best model at 230000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 240.0
+Reward: 1.9212
+Test set Fidelity: 0.9487 std: 0.0248
+Saving new best model at 240000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 250.0
+Reward: 2.2230
+Test set Fidelity: 0.9506 std: 0.0237
+Saving new best model at 250000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 260.0
+Reward: 2.2012
+Test set Fidelity: 0.9514 std: 0.0247
+Saving new best model at 260000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 270.0
+Reward: 2.1237
+Test set Fidelity: 0.9496 std: 0.0250
+Timesteps/1000: 280.0
+Reward: 2.5868
+Test set Fidelity: 0.9543 std: 0.0239
+Saving new best model at 280000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 290.0
+Reward: 2.9626
+Test set Fidelity: 0.9592 std: 0.0221
+Saving new best model at 290000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 300.0
+Reward: 3.2326
+Test set Fidelity: 0.9601 std: 0.0212
+Saving new best model at 300000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 310.0
+Reward: 3.7402
+Test set Fidelity: 0.9661 std: 0.0198
+Saving new best model at 310000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 320.0
+Reward: 4.1135
+Test set Fidelity: 0.9662 std: 0.0170
+Saving new best model at 320000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 330.0
+Reward: 4.1147
+Test set Fidelity: 0.9662 std: 0.0185
+Saving new best model at 330000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 340.0
+Reward: 5.0969
+Test set Fidelity: 0.9711 std: 0.0170
+Saving new best model at 340000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 350.0
+Reward: 5.3736
+Test set Fidelity: 0.9737 std: 0.0161
+Saving new best model at 350000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 360.0
+Reward: 7.2949
+Test set Fidelity: 0.9778 std: 0.0154
+Saving new best model at 360000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 370.0
+Reward: 6.4896
+Test set Fidelity: 0.9757 std: 0.0153
+Timesteps/1000: 380.0
+Reward: 8.4003
+Test set Fidelity: 0.9793 std: 0.0116
+Saving new best model at 380000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 390.0
+Reward: 8.2686
+Test set Fidelity: 0.9790 std: 0.0094
+Timesteps/1000: 400.0
+Reward: 10.2393
+Test set Fidelity: 0.9821 std: 0.0081
+Saving new best model at 400000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 410.0
+Reward: 10.5762
+Test set Fidelity: 0.9815 std: 0.0066
+Timesteps/1000: 420.0
+Reward: 11.3799
+Test set Fidelity: 0.9817 std: 0.0059
+Timesteps/1000: 430.0
+Reward: 13.4120
+Test set Fidelity: 0.9821 std: 0.0055
+Saving new best model at 430000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 440.0
+Reward: 12.7563
+Test set Fidelity: 0.9806 std: 0.0055
+Timesteps/1000: 450.0
+Reward: 14.2023
+Test set Fidelity: 0.9802 std: 0.0066
+Timesteps/1000: 460.0
+Reward: 17.1383
+Test set Fidelity: 0.9840 std: 0.0048
+Saving new best model at 460000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 470.0
+Reward: 15.2724
+Test set Fidelity: 0.9832 std: 0.0046
+Timesteps/1000: 480.0
+Reward: 14.7026
+Test set Fidelity: 0.9818 std: 0.0060
+Timesteps/1000: 490.0
+Reward: 15.5219
+Test set Fidelity: 0.9832 std: 0.0054
+Timesteps/1000: 500.0
+Reward: 16.1934
+Test set Fidelity: 0.9829 std: 0.0056
+Timesteps/1000: 510.0
+Reward: 17.0150
+Test set Fidelity: 0.9843 std: 0.0045
+Saving new best model at 510000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 520.0
+Reward: 16.8281
+Test set Fidelity: 0.9837 std: 0.0055
+Timesteps/1000: 530.0
+Reward: 16.5151
+Test set Fidelity: 0.9826 std: 0.0070
+Timesteps/1000: 540.0
+Reward: 18.0278
+Test set Fidelity: 0.9832 std: 0.0070
+Timesteps/1000: 550.0
+Reward: 18.8834
+Test set Fidelity: 0.9850 std: 0.0058
+Saving new best model at 550000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 560.0
+Reward: 19.1664
+Test set Fidelity: 0.9849 std: 0.0057
+Timesteps/1000: 570.0
+Reward: 19.0276
+Test set Fidelity: 0.9861 std: 0.0042
+Saving new best model at 570000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 580.0
+Reward: 20.0395
+Test set Fidelity: 0.9863 std: 0.0043
+Saving new best model at 580000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 590.0
+Reward: 19.6518
+Test set Fidelity: 0.9848 std: 0.0053
+Timesteps/1000: 600.0
+Reward: 20.2223
+Test set Fidelity: 0.9856 std: 0.0040
+Timesteps/1000: 610.0
+Reward: 19.8650
+Test set Fidelity: 0.9855 std: 0.0048
+Timesteps/1000: 620.0
+Reward: 19.3589
+Test set Fidelity: 0.9865 std: 0.0038
+Saving new best model at 620000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 630.0
+Reward: 19.5916
+Test set Fidelity: 0.9869 std: 0.0033
+Saving new best model at 630000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 640.0
+Reward: 20.3756
+Test set Fidelity: 0.9870 std: 0.0043
+Saving new best model at 640000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 650.0
+Reward: 24.0706
+Test set Fidelity: 0.9867 std: 0.0046
+Timesteps/1000: 660.0
+Reward: 26.6552
+Test set Fidelity: 0.9870 std: 0.0037
+Saving new best model at 660000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 670.0
+Reward: 24.9868
+Test set Fidelity: 0.9863 std: 0.0051
+Timesteps/1000: 680.0
+Reward: 26.3662
+Test set Fidelity: 0.9872 std: 0.0046
+Saving new best model at 680000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 690.0
+Reward: 27.3057
+Test set Fidelity: 0.9880 std: 0.0045
+Saving new best model at 690000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 700.0
+Reward: 25.4511
+Test set Fidelity: 0.9866 std: 0.0053
+Timesteps/1000: 710.0
+Reward: 28.6008
+Test set Fidelity: 0.9867 std: 0.0047
+Timesteps/1000: 720.0
+Reward: 25.4384
+Test set Fidelity: 0.9872 std: 0.0039
+Timesteps/1000: 730.0
+Reward: 27.6957
+Test set Fidelity: 0.9854 std: 0.0048
+Timesteps/1000: 740.0
+Reward: 25.6997
+Test set Fidelity: 0.9839 std: 0.0050
+Timesteps/1000: 750.0
+Reward: 26.5079
+Test set Fidelity: 0.9839 std: 0.0046
+Timesteps/1000: 760.0
+Reward: 28.5082
+Test set Fidelity: 0.9838 std: 0.0049
+Timesteps/1000: 770.0
+Reward: 28.9210
+Test set Fidelity: 0.9833 std: 0.0039
+Timesteps/1000: 780.0
+Reward: 28.6365
+Test set Fidelity: 0.9841 std: 0.0032
+Timesteps/1000: 790.0
+Reward: 35.2044
+Test set Fidelity: 0.9842 std: 0.0018
+Timesteps/1000: 800.0
+Reward: 36.8248
+Test set Fidelity: 0.9858 std: 0.0014
+Timesteps/1000: 810.0
+Reward: 41.8716
+Test set Fidelity: 0.9846 std: 0.0018
+Timesteps/1000: 820.0
+Reward: 46.1318
+Test set Fidelity: 0.9865 std: 0.0011
+Timesteps/1000: 830.0
+Reward: 48.1280
+Test set Fidelity: 0.9870 std: 0.0016
+Timesteps/1000: 840.0
+Reward: 45.1937
+Test set Fidelity: 0.9869 std: 0.0015
+Timesteps/1000: 850.0
+Reward: 40.6597
+Test set Fidelity: 0.9870 std: 0.0017
+Timesteps/1000: 860.0
+Reward: 46.7387
+Test set Fidelity: 0.9877 std: 0.0019
+Timesteps/1000: 870.0
+Reward: 45.8873
+Test set Fidelity: 0.9880 std: 0.0021
+Saving new best model at 870000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 880.0
+Reward: 42.0769
+Test set Fidelity: 0.9864 std: 0.0030
+Timesteps/1000: 890.0
+Reward: 44.7927
+Test set Fidelity: 0.9871 std: 0.0024
+Timesteps/1000: 900.0
+Reward: 41.0889
+Test set Fidelity: 0.9866 std: 0.0035
+Timesteps/1000: 910.0
+Reward: 42.3740
+Test set Fidelity: 0.9876 std: 0.0024
+Timesteps/1000: 920.0
+Reward: 44.9534
+Test set Fidelity: 0.9882 std: 0.0028
+Saving new best model at 920000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 930.0
+Reward: 42.7819
+Test set Fidelity: 0.9881 std: 0.0028
+Timesteps/1000: 940.0
+Reward: 40.4463
+Test set Fidelity: 0.9878 std: 0.0036
+Timesteps/1000: 950.0
+Reward: 39.2068
+Test set Fidelity: 0.9878 std: 0.0034
+Timesteps/1000: 960.0
+Reward: 41.0290
+Test set Fidelity: 0.9871 std: 0.0038
+Timesteps/1000: 970.0
+Reward: 46.9149
+Test set Fidelity: 0.9883 std: 0.0037
+Saving new best model at 970000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 980.0
+Reward: 43.5926
+Test set Fidelity: 0.9869 std: 0.0030
+Timesteps/1000: 990.0
+Reward: 39.8114
+Test set Fidelity: 0.9859 std: 0.0036
+Timesteps/1000: 1000.0
+Reward: 44.5457
+Test set Fidelity: 0.9869 std: 0.0029
+Timesteps/1000: 1010.0
+Reward: 45.1132
+Test set Fidelity: 0.9879 std: 0.0028
+Timesteps/1000: 1020.0
+Reward: 48.3780
+Test set Fidelity: 0.9885 std: 0.0025
+Saving new best model at 1020000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1030.0
+Reward: 47.1756
+Test set Fidelity: 0.9888 std: 0.0023
+Saving new best model at 1030000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1040.0
+Reward: 47.4109
+Test set Fidelity: 0.9889 std: 0.0026
+Saving new best model at 1040000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1050.0
+Reward: 41.3877
+Test set Fidelity: 0.9887 std: 0.0024
+Timesteps/1000: 1060.0
+Reward: 41.8556
+Test set Fidelity: 0.9874 std: 0.0027
+Timesteps/1000: 1070.0
+Reward: 45.2059
+Test set Fidelity: 0.9886 std: 0.0024
+Timesteps/1000: 1080.0
+Reward: 41.7900
+Test set Fidelity: 0.9877 std: 0.0022
+Timesteps/1000: 1090.0
+Reward: 49.0529
+Test set Fidelity: 0.9888 std: 0.0026
+Timesteps/1000: 1100.0
+Reward: 47.8762
+Test set Fidelity: 0.9890 std: 0.0029
+Saving new best model at 1100000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1110.0
+Reward: 48.7077
+Test set Fidelity: 0.9879 std: 0.0026
+Timesteps/1000: 1120.0
+Reward: 45.9108
+Test set Fidelity: 0.9880 std: 0.0024
+Timesteps/1000: 1130.0
+Reward: 50.2008
+Test set Fidelity: 0.9874 std: 0.0033
+Timesteps/1000: 1140.0
+Reward: 50.3218
+Test set Fidelity: 0.9875 std: 0.0032
+Timesteps/1000: 1150.0
+Reward: 54.9945
+Test set Fidelity: 0.9876 std: 0.0045
+Timesteps/1000: 1160.0
+Reward: 49.7280
+Test set Fidelity: 0.9885 std: 0.0041
+Timesteps/1000: 1170.0
+Reward: 45.8125
+Test set Fidelity: 0.9875 std: 0.0034
+Timesteps/1000: 1180.0
+Reward: 47.6682
+Test set Fidelity: 0.9865 std: 0.0036
+Timesteps/1000: 1190.0
+Reward: 50.6866
+Test set Fidelity: 0.9862 std: 0.0039
+Timesteps/1000: 1200.0
+Reward: 55.3428
+Test set Fidelity: 0.9867 std: 0.0040
+Timesteps/1000: 1210.0
+Reward: 54.7362
+Test set Fidelity: 0.9868 std: 0.0034
+Timesteps/1000: 1220.0
+Reward: 53.9831
+Test set Fidelity: 0.9878 std: 0.0028
+Timesteps/1000: 1230.0
+Reward: 50.0775
+Test set Fidelity: 0.9880 std: 0.0029
+Timesteps/1000: 1240.0
+Reward: 50.5690
+Test set Fidelity: 0.9882 std: 0.0027
+Timesteps/1000: 1250.0
+Reward: 56.3649
+Test set Fidelity: 0.9886 std: 0.0026
+Timesteps/1000: 1260.0
+Reward: 61.4808
+Test set Fidelity: 0.9883 std: 0.0027
+Timesteps/1000: 1270.0
+Reward: 61.3307
+Test set Fidelity: 0.9877 std: 0.0028
+Timesteps/1000: 1280.0
+Reward: 64.5822
+Test set Fidelity: 0.9875 std: 0.0033
+Timesteps/1000: 1290.0
+Reward: 79.1603
+Test set Fidelity: 0.9882 std: 0.0035
+Timesteps/1000: 1300.0
+Reward: 73.7114
+Test set Fidelity: 0.9877 std: 0.0036
+Timesteps/1000: 1310.0
+Reward: 64.2864
+Test set Fidelity: 0.9874 std: 0.0035
+Timesteps/1000: 1320.0
+Reward: 67.8732
+Test set Fidelity: 0.9877 std: 0.0028
+Timesteps/1000: 1330.0
+Reward: 65.9952
+Test set Fidelity: 0.9890 std: 0.0027
+Saving new best model at 1330000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1340.0
+Reward: 58.6046
+Test set Fidelity: 0.9877 std: 0.0033
+Timesteps/1000: 1350.0
+Reward: 58.8187
+Test set Fidelity: 0.9876 std: 0.0034
+Timesteps/1000: 1360.0
+Reward: 56.6619
+Test set Fidelity: 0.9883 std: 0.0030
+Timesteps/1000: 1370.0
+Reward: 53.1034
+Test set Fidelity: 0.9876 std: 0.0037
+Timesteps/1000: 1380.0
+Reward: 59.5381
+Test set Fidelity: 0.9880 std: 0.0034
+Timesteps/1000: 1390.0
+Reward: 57.4777
+Test set Fidelity: 0.9878 std: 0.0034
+Timesteps/1000: 1400.0
+Reward: 55.6348
+Test set Fidelity: 0.9883 std: 0.0028
+Timesteps/1000: 1410.0
+Reward: 58.5187
+Test set Fidelity: 0.9888 std: 0.0026
+Timesteps/1000: 1420.0
+Reward: 73.3883
+Test set Fidelity: 0.9896 std: 0.0027
+Saving new best model at 1420000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1430.0
+Reward: 61.9010
+Test set Fidelity: 0.9890 std: 0.0026
+Timesteps/1000: 1440.0
+Reward: 72.3766
+Test set Fidelity: 0.9896 std: 0.0023
+Timesteps/1000: 1450.0
+Reward: 80.4457
+Test set Fidelity: 0.9897 std: 0.0025
+Saving new best model at 1450000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1460.0
+Reward: 77.9908
+Test set Fidelity: 0.9898 std: 0.0027
+Saving new best model at 1460000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1470.0
+Reward: 78.2486
+Test set Fidelity: 0.9895 std: 0.0030
+Timesteps/1000: 1480.0
+Reward: 73.9546
+Test set Fidelity: 0.9898 std: 0.0031
+Saving new best model at 1480000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1490.0
+Reward: 88.8174
+Test set Fidelity: 0.9899 std: 0.0029
+Saving new best model at 1490000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1500.0
+Reward: 78.2059
+Test set Fidelity: 0.9896 std: 0.0031
+Timesteps/1000: 1510.0
+Reward: 63.3733
+Test set Fidelity: 0.9900 std: 0.0030
+Saving new best model at 1510000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_20.
+Timesteps/1000: 1520.0
+Reward: 61.4714
+Test set Fidelity: 0.9898 std: 0.0031
+Timesteps/1000: 1530.0
+Reward: 65.5819
+Test set Fidelity: 0.9893 std: 0.0032
+Timesteps/1000: 1540.0
+Reward: 59.2441
+Test set Fidelity: 0.9892 std: 0.0030
+Timesteps/1000: 1550.0
+Reward: 68.7676
+Test set Fidelity: 0.9898 std: 0.0026
+Timesteps/1000: 1560.0
+Reward: 60.5134
+Test set Fidelity: 0.9894 std: 0.0023
+Timesteps/1000: 1570.0
+Reward: 61.0931
+Test set Fidelity: 0.9894 std: 0.0021
+Timesteps/1000: 1580.0
+Reward: 63.8322
+Test set Fidelity: 0.9896 std: 0.0021
+Timesteps/1000: 1590.0
+Reward: 61.9592
+Test set Fidelity: 0.9892 std: 0.0022
+Timesteps/1000: 1600.0
+Reward: 63.9576
+Test set Fidelity: 0.9886 std: 0.0029
+Timesteps/1000: 1610.0
+Reward: 62.8008
+Test set Fidelity: 0.9888 std: 0.0024
+Timesteps/1000: 1620.0
+Reward: 54.5491
+Test set Fidelity: 0.9884 std: 0.0023
+Timesteps/1000: 1630.0
+Reward: 53.0988
+Test set Fidelity: 0.9876 std: 0.0028
+Timesteps/1000: 1640.0
+Reward: 52.7188
+Test set Fidelity: 0.9873 std: 0.0034
+Timesteps/1000: 1650.0
+Reward: 50.2484
+Test set Fidelity: 0.9872 std: 0.0034
+Timesteps/1000: 1660.0
+Reward: 56.6370
+Test set Fidelity: 0.9882 std: 0.0037
+Timesteps/1000: 1670.0
+Reward: 56.0917
+Test set Fidelity: 0.9881 std: 0.0038
+Timesteps/1000: 1680.0
+Reward: 57.1992
+Test set Fidelity: 0.9873 std: 0.0041
+Timesteps/1000: 1690.0
+Reward: 57.5522
+Test set Fidelity: 0.9866 std: 0.0050
+Timesteps/1000: 1700.0
+Reward: 58.3478
+Test set Fidelity: 0.9868 std: 0.0042
+Timesteps/1000: 1710.0
+Reward: 61.0551
+Test set Fidelity: 0.9871 std: 0.0035
+Timesteps/1000: 1720.0
+Reward: 67.1274
+Test set Fidelity: 0.9873 std: 0.0032
+Timesteps/1000: 1730.0
+Reward: 63.8703
+Test set Fidelity: 0.9879 std: 0.0028
+Timesteps/1000: 1740.0
+Reward: 70.6847
+Test set Fidelity: 0.9876 std: 0.0033
+Timesteps/1000: 1750.0
+Reward: 61.4929
+Test set Fidelity: 0.9881 std: 0.0028
+Timesteps/1000: 1760.0
+Reward: 63.3920
+Test set Fidelity: 0.9884 std: 0.0026
+Timesteps/1000: 1770.0
+Reward: 65.2183
+Test set Fidelity: 0.9880 std: 0.0023
+Timesteps/1000: 1780.0
+Reward: 73.6896
+Test set Fidelity: 0.9888 std: 0.0026
+Timesteps/1000: 1790.0
+Reward: 65.7747
+Test set Fidelity: 0.9887 std: 0.0029
+Timesteps/1000: 1800.0
+Reward: 75.2116
+Test set Fidelity: 0.9888 std: 0.0028
+Timesteps/1000: 1810.0
+Reward: 67.5655
+Test set Fidelity: 0.9895 std: 0.0033
+Timesteps/1000: 1820.0
+Reward: 76.4721
+Test set Fidelity: 0.9893 std: 0.0033
+Timesteps/1000: 1830.0
+Reward: 75.7641
+Test set Fidelity: 0.9892 std: 0.0032
+Timesteps/1000: 1840.0
+Reward: 82.8420
+Test set Fidelity: 0.9894 std: 0.0036
+Timesteps/1000: 1850.0
+Reward: 77.4250
+Test set Fidelity: 0.9893 std: 0.0032
+Timesteps/1000: 1860.0
+Reward: 83.7932
+Test set Fidelity: 0.9893 std: 0.0032
+Timesteps/1000: 1870.0
+Reward: 85.0535
+Test set Fidelity: 0.9891 std: 0.0032
+Timesteps/1000: 1880.0
+Reward: 87.2725
+Test set Fidelity: 0.9891 std: 0.0028
+Timesteps/1000: 1890.0
+Reward: 88.9348
+Test set Fidelity: 0.9891 std: 0.0026
+Timesteps/1000: 1900.0
+Reward: 105.4989
+Test set Fidelity: 0.9883 std: 0.0029
+Timesteps/1000: 1910.0
+Reward: 103.6710
+Test set Fidelity: 0.9888 std: 0.0030
+Timesteps/1000: 1920.0
+Reward: 111.5424
+Test set Fidelity: 0.9893 std: 0.0030
+Timesteps/1000: 1930.0
+Reward: 115.1788
+Test set Fidelity: 0.9886 std: 0.0031
+Timesteps/1000: 1940.0
+Reward: 124.8010
+Test set Fidelity: 0.9884 std: 0.0035
+Timesteps/1000: 1950.0
+Reward: 113.1158
+Test set Fidelity: 0.9880 std: 0.0036
+Timesteps/1000: 1960.0
+Reward: 110.1996
+Test set Fidelity: 0.9883 std: 0.0035
+Timesteps/1000: 1970.0
+Reward: 102.9166
+Test set Fidelity: 0.9886 std: 0.0035
+Timesteps/1000: 1980.0
+Reward: 121.6237
+Test set Fidelity: 0.9885 std: 0.0040
+Timesteps/1000: 1990.0
+Reward: 109.4968
+Test set Fidelity: 0.9884 std: 0.0040
+Timesteps/1000: 2000.0
+Reward: 106.2064
+Test set Fidelity: 0.9883 std: 0.0040
+ 100% ━━━━━━━━━━━━━━━━━━━━ 2,000,000/2,000,000  [ 2:32:42 < 0:00:00 , 193 it/s ]
+Timesteps/1000: 0.001
+Reward: 0.4455
+Test set Fidelity: 0.6633 std: 0.0341
+Saving new best model at 1 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 10.0
+Reward: 0.4369
+Test set Fidelity: 0.6023 std: 0.0416
+Timesteps/1000: 20.0
+Reward: 0.4371
+Test set Fidelity: 0.6024 std: 0.0416
+Timesteps/1000: 30.0
+Reward: 0.4362
+Test set Fidelity: 0.6021 std: 0.0416
+Timesteps/1000: 40.0
+Reward: 0.4366
+Test set Fidelity: 0.6022 std: 0.0416
+Timesteps/1000: 50.0
+Reward: 0.4402
+Test set Fidelity: 0.6040 std: 0.0411
+Timesteps/1000: 60.0
+Reward: 0.4441
+Test set Fidelity: 0.6241 std: 0.0539
+Timesteps/1000: 70.0
+Reward: 0.4593
+Test set Fidelity: 0.6465 std: 0.0659
+Timesteps/1000: 80.0
+Reward: 0.4660
+Test set Fidelity: 0.6486 std: 0.0724
+Timesteps/1000: 90.0
+Reward: 0.4656
+Test set Fidelity: 0.6542 std: 0.0709
+Timesteps/1000: 100.0
+Reward: 0.5099
+Test set Fidelity: 0.7236 std: 0.0649
+Saving new best model at 100000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 110.0
+Reward: 0.5421
+Test set Fidelity: 0.7492 std: 0.0532
+Saving new best model at 110000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 120.0
+Reward: 0.6038
+Test set Fidelity: 0.7904 std: 0.0454
+Saving new best model at 120000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 130.0
+Reward: 0.6336
+Test set Fidelity: 0.8073 std: 0.0446
+Saving new best model at 130000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 140.0
+Reward: 0.7203
+Test set Fidelity: 0.8378 std: 0.0380
+Saving new best model at 140000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 150.0
+Reward: 0.7005
+Test set Fidelity: 0.8320 std: 0.0421
+Timesteps/1000: 160.0
+Reward: 0.7196
+Test set Fidelity: 0.8331 std: 0.0446
+Timesteps/1000: 170.0
+Reward: 0.7776
+Test set Fidelity: 0.8416 std: 0.0432
+Saving new best model at 170000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 180.0
+Reward: 0.7697
+Test set Fidelity: 0.8251 std: 0.0651
+Timesteps/1000: 190.0
+Reward: 0.8065
+Test set Fidelity: 0.8438 std: 0.0436
+Saving new best model at 190000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 200.0
+Reward: 0.9293
+Test set Fidelity: 0.8689 std: 0.0364
+Saving new best model at 200000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 210.0
+Reward: 0.9027
+Test set Fidelity: 0.8692 std: 0.0373
+Saving new best model at 210000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 220.0
+Reward: 1.1324
+Test set Fidelity: 0.8997 std: 0.0346
+Saving new best model at 220000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 230.0
+Reward: 1.0757
+Test set Fidelity: 0.8934 std: 0.0363
+Timesteps/1000: 240.0
+Reward: 0.9779
+Test set Fidelity: 0.8810 std: 0.0438
+Timesteps/1000: 250.0
+Reward: 1.2236
+Test set Fidelity: 0.9034 std: 0.0376
+Saving new best model at 250000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 260.0
+Reward: 1.2418
+Test set Fidelity: 0.9069 std: 0.0397
+Saving new best model at 260000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 270.0
+Reward: 1.4780
+Test set Fidelity: 0.9253 std: 0.0349
+Saving new best model at 270000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 280.0
+Reward: 1.5234
+Test set Fidelity: 0.9287 std: 0.0356
+Saving new best model at 280000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 290.0
+Reward: 1.7354
+Test set Fidelity: 0.9379 std: 0.0312
+Saving new best model at 290000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 300.0
+Reward: 2.0127
+Test set Fidelity: 0.9454 std: 0.0292
+Saving new best model at 300000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 310.0
+Reward: 2.1586
+Test set Fidelity: 0.9524 std: 0.0248
+Saving new best model at 310000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 320.0
+Reward: 2.3419
+Test set Fidelity: 0.9547 std: 0.0225
+Saving new best model at 320000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 330.0
+Reward: 2.4580
+Test set Fidelity: 0.9554 std: 0.0247
+Saving new best model at 330000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 340.0
+Reward: 2.5379
+Test set Fidelity: 0.9564 std: 0.0252
+Saving new best model at 340000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 350.0
+Reward: 2.6587
+Test set Fidelity: 0.9589 std: 0.0221
+Saving new best model at 350000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 360.0
+Reward: 2.8126
+Test set Fidelity: 0.9618 std: 0.0212
+Saving new best model at 360000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 370.0
+Reward: 2.7483
+Test set Fidelity: 0.9619 std: 0.0226
+Saving new best model at 370000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 380.0
+Reward: 3.4137
+Test set Fidelity: 0.9674 std: 0.0190
+Saving new best model at 380000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 390.0
+Reward: 2.9795
+Test set Fidelity: 0.9642 std: 0.0219
+Timesteps/1000: 400.0
+Reward: 3.9583
+Test set Fidelity: 0.9703 std: 0.0172
+Saving new best model at 400000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 410.0
+Reward: 3.2029
+Test set Fidelity: 0.9670 std: 0.0188
+Timesteps/1000: 420.0
+Reward: 3.6240
+Test set Fidelity: 0.9707 std: 0.0152
+Saving new best model at 420000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 430.0
+Reward: 3.9650
+Test set Fidelity: 0.9710 std: 0.0153
+Saving new best model at 430000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 440.0
+Reward: 4.4995
+Test set Fidelity: 0.9751 std: 0.0126
+Saving new best model at 440000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 450.0
+Reward: 4.7530
+Test set Fidelity: 0.9767 std: 0.0129
+Saving new best model at 450000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 460.0
+Reward: 4.9448
+Test set Fidelity: 0.9766 std: 0.0132
+Timesteps/1000: 470.0
+Reward: 5.5276
+Test set Fidelity: 0.9799 std: 0.0113
+Saving new best model at 470000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 480.0
+Reward: 5.9277
+Test set Fidelity: 0.9777 std: 0.0117
+Timesteps/1000: 490.0
+Reward: 6.8300
+Test set Fidelity: 0.9804 std: 0.0108
+Saving new best model at 490000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 500.0
+Reward: 5.9075
+Test set Fidelity: 0.9782 std: 0.0127
+Timesteps/1000: 510.0
+Reward: 6.6509
+Test set Fidelity: 0.9800 std: 0.0110
+Timesteps/1000: 520.0
+Reward: 5.0849
+Test set Fidelity: 0.9766 std: 0.0132
+Timesteps/1000: 530.0
+Reward: 5.5455
+Test set Fidelity: 0.9775 std: 0.0124
+Timesteps/1000: 540.0
+Reward: 6.6340
+Test set Fidelity: 0.9812 std: 0.0103
+Saving new best model at 540000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 550.0
+Reward: 7.1330
+Test set Fidelity: 0.9825 std: 0.0092
+Saving new best model at 550000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 560.0
+Reward: 6.7496
+Test set Fidelity: 0.9826 std: 0.0100
+Saving new best model at 560000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 570.0
+Reward: 6.9096
+Test set Fidelity: 0.9833 std: 0.0094
+Saving new best model at 570000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 580.0
+Reward: 7.5554
+Test set Fidelity: 0.9836 std: 0.0093
+Saving new best model at 580000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 590.0
+Reward: 7.9549
+Test set Fidelity: 0.9848 std: 0.0088
+Saving new best model at 590000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 600.0
+Reward: 7.5318
+Test set Fidelity: 0.9843 std: 0.0088
+Timesteps/1000: 610.0
+Reward: 7.9863
+Test set Fidelity: 0.9846 std: 0.0086
+Timesteps/1000: 620.0
+Reward: 8.1428
+Test set Fidelity: 0.9845 std: 0.0091
+Timesteps/1000: 630.0
+Reward: 8.7980
+Test set Fidelity: 0.9846 std: 0.0083
+Timesteps/1000: 640.0
+Reward: 11.5877
+Test set Fidelity: 0.9852 std: 0.0071
+Saving new best model at 640000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 650.0
+Reward: 13.2558
+Test set Fidelity: 0.9862 std: 0.0072
+Saving new best model at 650000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 660.0
+Reward: 12.6195
+Test set Fidelity: 0.9874 std: 0.0068
+Saving new best model at 660000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 670.0
+Reward: 10.7025
+Test set Fidelity: 0.9865 std: 0.0064
+Timesteps/1000: 680.0
+Reward: 10.8130
+Test set Fidelity: 0.9868 std: 0.0062
+Timesteps/1000: 690.0
+Reward: 12.3303
+Test set Fidelity: 0.9882 std: 0.0051
+Saving new best model at 690000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 700.0
+Reward: 16.7888
+Test set Fidelity: 0.9889 std: 0.0045
+Saving new best model at 700000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 710.0
+Reward: 13.2946
+Test set Fidelity: 0.9883 std: 0.0051
+Timesteps/1000: 720.0
+Reward: 15.3512
+Test set Fidelity: 0.9888 std: 0.0042
+Timesteps/1000: 730.0
+Reward: 14.9131
+Test set Fidelity: 0.9895 std: 0.0038
+Saving new best model at 730000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 740.0
+Reward: 17.2280
+Test set Fidelity: 0.9898 std: 0.0040
+Saving new best model at 740000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 750.0
+Reward: 16.3296
+Test set Fidelity: 0.9899 std: 0.0041
+Saving new best model at 750000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 760.0
+Reward: 16.9264
+Test set Fidelity: 0.9894 std: 0.0045
+Timesteps/1000: 770.0
+Reward: 17.9013
+Test set Fidelity: 0.9894 std: 0.0045
+Timesteps/1000: 780.0
+Reward: 20.7103
+Test set Fidelity: 0.9899 std: 0.0040
+Saving new best model at 780000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 790.0
+Reward: 20.4244
+Test set Fidelity: 0.9899 std: 0.0039
+Saving new best model at 790000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 800.0
+Reward: 20.0081
+Test set Fidelity: 0.9906 std: 0.0036
+Saving new best model at 800000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 810.0
+Reward: 19.3609
+Test set Fidelity: 0.9905 std: 0.0041
+Timesteps/1000: 820.0
+Reward: 24.4808
+Test set Fidelity: 0.9912 std: 0.0037
+Saving new best model at 820000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 830.0
+Reward: 17.8470
+Test set Fidelity: 0.9907 std: 0.0040
+Timesteps/1000: 840.0
+Reward: 17.9020
+Test set Fidelity: 0.9909 std: 0.0036
+Timesteps/1000: 850.0
+Reward: 17.3614
+Test set Fidelity: 0.9911 std: 0.0033
+Timesteps/1000: 860.0
+Reward: 17.1081
+Test set Fidelity: 0.9909 std: 0.0034
+Timesteps/1000: 870.0
+Reward: 16.8322
+Test set Fidelity: 0.9904 std: 0.0036
+Timesteps/1000: 880.0
+Reward: 16.7533
+Test set Fidelity: 0.9909 std: 0.0034
+Timesteps/1000: 890.0
+Reward: 15.8767
+Test set Fidelity: 0.9906 std: 0.0040
+Timesteps/1000: 900.0
+Reward: 16.7397
+Test set Fidelity: 0.9912 std: 0.0038
+Timesteps/1000: 910.0
+Reward: 17.8743
+Test set Fidelity: 0.9912 std: 0.0035
+Timesteps/1000: 920.0
+Reward: 16.4876
+Test set Fidelity: 0.9914 std: 0.0035
+Saving new best model at 920000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 930.0
+Reward: 16.2486
+Test set Fidelity: 0.9917 std: 0.0034
+Saving new best model at 930000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 940.0
+Reward: 15.2464
+Test set Fidelity: 0.9908 std: 0.0042
+Timesteps/1000: 950.0
+Reward: 16.5883
+Test set Fidelity: 0.9913 std: 0.0037
+Timesteps/1000: 960.0
+Reward: 19.0013
+Test set Fidelity: 0.9906 std: 0.0037
+Timesteps/1000: 970.0
+Reward: 17.8421
+Test set Fidelity: 0.9912 std: 0.0032
+Timesteps/1000: 980.0
+Reward: 17.1928
+Test set Fidelity: 0.9912 std: 0.0032
+Timesteps/1000: 990.0
+Reward: 15.2747
+Test set Fidelity: 0.9906 std: 0.0035
+Timesteps/1000: 1000.0
+Reward: 16.4832
+Test set Fidelity: 0.9908 std: 0.0036
+Timesteps/1000: 1010.0
+Reward: 18.6011
+Test set Fidelity: 0.9910 std: 0.0033
+Timesteps/1000: 1020.0
+Reward: 19.3717
+Test set Fidelity: 0.9909 std: 0.0035
+Timesteps/1000: 1030.0
+Reward: 19.7606
+Test set Fidelity: 0.9913 std: 0.0031
+Timesteps/1000: 1040.0
+Reward: 20.6438
+Test set Fidelity: 0.9913 std: 0.0032
+Timesteps/1000: 1050.0
+Reward: 22.6470
+Test set Fidelity: 0.9914 std: 0.0030
+Timesteps/1000: 1060.0
+Reward: 18.6680
+Test set Fidelity: 0.9913 std: 0.0029
+Timesteps/1000: 1070.0
+Reward: 18.2485
+Test set Fidelity: 0.9911 std: 0.0029
+Timesteps/1000: 1080.0
+Reward: 19.6716
+Test set Fidelity: 0.9912 std: 0.0029
+Timesteps/1000: 1090.0
+Reward: 19.7183
+Test set Fidelity: 0.9909 std: 0.0029
+Timesteps/1000: 1100.0
+Reward: 18.6321
+Test set Fidelity: 0.9914 std: 0.0028
+Timesteps/1000: 1110.0
+Reward: 18.5451
+Test set Fidelity: 0.9911 std: 0.0025
+Timesteps/1000: 1120.0
+Reward: 18.8341
+Test set Fidelity: 0.9904 std: 0.0028
+Timesteps/1000: 1130.0
+Reward: 17.9558
+Test set Fidelity: 0.9907 std: 0.0030
+Timesteps/1000: 1140.0
+Reward: 16.7304
+Test set Fidelity: 0.9906 std: 0.0030
+Timesteps/1000: 1150.0
+Reward: 19.2962
+Test set Fidelity: 0.9909 std: 0.0026
+Timesteps/1000: 1160.0
+Reward: 20.6360
+Test set Fidelity: 0.9916 std: 0.0023
+Timesteps/1000: 1170.0
+Reward: 19.8724
+Test set Fidelity: 0.9918 std: 0.0023
+Saving new best model at 1170000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 1180.0
+Reward: 19.4845
+Test set Fidelity: 0.9914 std: 0.0029
+Timesteps/1000: 1190.0
+Reward: 20.9500
+Test set Fidelity: 0.9908 std: 0.0027
+Timesteps/1000: 1200.0
+Reward: 21.4561
+Test set Fidelity: 0.9909 std: 0.0029
+Timesteps/1000: 1210.0
+Reward: 22.3404
+Test set Fidelity: 0.9900 std: 0.0038
+Timesteps/1000: 1220.0
+Reward: 23.8907
+Test set Fidelity: 0.9908 std: 0.0027
+Timesteps/1000: 1230.0
+Reward: 23.6182
+Test set Fidelity: 0.9906 std: 0.0028
+Timesteps/1000: 1240.0
+Reward: 22.7994
+Test set Fidelity: 0.9907 std: 0.0028
+Timesteps/1000: 1250.0
+Reward: 23.0895
+Test set Fidelity: 0.9913 std: 0.0024
+Timesteps/1000: 1260.0
+Reward: 22.3909
+Test set Fidelity: 0.9905 std: 0.0031
+Timesteps/1000: 1270.0
+Reward: 23.5687
+Test set Fidelity: 0.9909 std: 0.0027
+Timesteps/1000: 1280.0
+Reward: 24.1224
+Test set Fidelity: 0.9913 std: 0.0024
+Timesteps/1000: 1290.0
+Reward: 26.0341
+Test set Fidelity: 0.9911 std: 0.0028
+Timesteps/1000: 1300.0
+Reward: 25.6911
+Test set Fidelity: 0.9907 std: 0.0030
+Timesteps/1000: 1310.0
+Reward: 24.9826
+Test set Fidelity: 0.9909 std: 0.0024
+Timesteps/1000: 1320.0
+Reward: 24.6201
+Test set Fidelity: 0.9905 std: 0.0031
+Timesteps/1000: 1330.0
+Reward: 25.1938
+Test set Fidelity: 0.9906 std: 0.0032
+Timesteps/1000: 1340.0
+Reward: 23.2126
+Test set Fidelity: 0.9908 std: 0.0026
+Timesteps/1000: 1350.0
+Reward: 20.9035
+Test set Fidelity: 0.9906 std: 0.0022
+Timesteps/1000: 1360.0
+Reward: 19.0799
+Test set Fidelity: 0.9905 std: 0.0020
+Timesteps/1000: 1370.0
+Reward: 20.3560
+Test set Fidelity: 0.9898 std: 0.0028
+Timesteps/1000: 1380.0
+Reward: 20.2233
+Test set Fidelity: 0.9897 std: 0.0033
+Timesteps/1000: 1390.0
+Reward: 22.5527
+Test set Fidelity: 0.9896 std: 0.0039
+Timesteps/1000: 1400.0
+Reward: 22.2861
+Test set Fidelity: 0.9895 std: 0.0039
+Timesteps/1000: 1410.0
+Reward: 24.6256
+Test set Fidelity: 0.9898 std: 0.0038
+Timesteps/1000: 1420.0
+Reward: 25.7839
+Test set Fidelity: 0.9894 std: 0.0038
+Timesteps/1000: 1430.0
+Reward: 23.1468
+Test set Fidelity: 0.9897 std: 0.0033
+Timesteps/1000: 1440.0
+Reward: 22.6123
+Test set Fidelity: 0.9895 std: 0.0039
+Timesteps/1000: 1450.0
+Reward: 21.6885
+Test set Fidelity: 0.9890 std: 0.0046
+Timesteps/1000: 1460.0
+Reward: 19.1920
+Test set Fidelity: 0.9891 std: 0.0048
+Timesteps/1000: 1470.0
+Reward: 18.7146
+Test set Fidelity: 0.9895 std: 0.0044
+Timesteps/1000: 1480.0
+Reward: 18.8413
+Test set Fidelity: 0.9892 std: 0.0045
+Timesteps/1000: 1490.0
+Reward: 19.9863
+Test set Fidelity: 0.9890 std: 0.0041
+Timesteps/1000: 1500.0
+Reward: 20.2264
+Test set Fidelity: 0.9891 std: 0.0046
+Timesteps/1000: 1510.0
+Reward: 20.7110
+Test set Fidelity: 0.9896 std: 0.0045
+Timesteps/1000: 1520.0
+Reward: 19.8268
+Test set Fidelity: 0.9890 std: 0.0052
+Timesteps/1000: 1530.0
+Reward: 20.4424
+Test set Fidelity: 0.9894 std: 0.0048
+Timesteps/1000: 1540.0
+Reward: 19.9034
+Test set Fidelity: 0.9891 std: 0.0051
+Timesteps/1000: 1550.0
+Reward: 20.2279
+Test set Fidelity: 0.9896 std: 0.0047
+Timesteps/1000: 1560.0
+Reward: 20.4468
+Test set Fidelity: 0.9895 std: 0.0045
+Timesteps/1000: 1570.0
+Reward: 20.3696
+Test set Fidelity: 0.9893 std: 0.0045
+Timesteps/1000: 1580.0
+Reward: 21.9450
+Test set Fidelity: 0.9888 std: 0.0054
+Timesteps/1000: 1590.0
+Reward: 21.1471
+Test set Fidelity: 0.9886 std: 0.0050
+Timesteps/1000: 1600.0
+Reward: 19.7185
+Test set Fidelity: 0.9881 std: 0.0057
+Timesteps/1000: 1610.0
+Reward: 20.0896
+Test set Fidelity: 0.9883 std: 0.0053
+Timesteps/1000: 1620.0
+Reward: 19.6947
+Test set Fidelity: 0.9882 std: 0.0054
+Timesteps/1000: 1630.0
+Reward: 19.7941
+Test set Fidelity: 0.9883 std: 0.0050
+Timesteps/1000: 1640.0
+Reward: 19.5404
+Test set Fidelity: 0.9884 std: 0.0046
+Timesteps/1000: 1650.0
+Reward: 18.7307
+Test set Fidelity: 0.9887 std: 0.0046
+Timesteps/1000: 1660.0
+Reward: 18.7192
+Test set Fidelity: 0.9890 std: 0.0045
+Timesteps/1000: 1670.0
+Reward: 19.0076
+Test set Fidelity: 0.9897 std: 0.0030
+Timesteps/1000: 1680.0
+Reward: 20.7393
+Test set Fidelity: 0.9898 std: 0.0037
+Timesteps/1000: 1690.0
+Reward: 21.6592
+Test set Fidelity: 0.9897 std: 0.0043
+Timesteps/1000: 1700.0
+Reward: 17.8656
+Test set Fidelity: 0.9902 std: 0.0030
+Timesteps/1000: 1710.0
+Reward: 19.7389
+Test set Fidelity: 0.9902 std: 0.0030
+Timesteps/1000: 1720.0
+Reward: 17.7806
+Test set Fidelity: 0.9894 std: 0.0046
+Timesteps/1000: 1730.0
+Reward: 18.2836
+Test set Fidelity: 0.9896 std: 0.0044
+Timesteps/1000: 1740.0
+Reward: 18.6136
+Test set Fidelity: 0.9901 std: 0.0042
+Timesteps/1000: 1750.0
+Reward: 17.4465
+Test set Fidelity: 0.9901 std: 0.0041
+Timesteps/1000: 1760.0
+Reward: 16.0521
+Test set Fidelity: 0.9902 std: 0.0037
+Timesteps/1000: 1770.0
+Reward: 15.8961
+Test set Fidelity: 0.9901 std: 0.0039
+Timesteps/1000: 1780.0
+Reward: 16.7872
+Test set Fidelity: 0.9905 std: 0.0036
+Timesteps/1000: 1790.0
+Reward: 15.5487
+Test set Fidelity: 0.9902 std: 0.0041
+Timesteps/1000: 1800.0
+Reward: 16.2280
+Test set Fidelity: 0.9905 std: 0.0041
+Timesteps/1000: 1810.0
+Reward: 17.6099
+Test set Fidelity: 0.9902 std: 0.0041
+Timesteps/1000: 1820.0
+Reward: 17.9922
+Test set Fidelity: 0.9897 std: 0.0054
+Timesteps/1000: 1830.0
+Reward: 19.1003
+Test set Fidelity: 0.9898 std: 0.0051
+Timesteps/1000: 1840.0
+Reward: 18.9159
+Test set Fidelity: 0.9903 std: 0.0044
+Timesteps/1000: 1850.0
+Reward: 17.4597
+Test set Fidelity: 0.9904 std: 0.0037
+Timesteps/1000: 1860.0
+Reward: 18.9363
+Test set Fidelity: 0.9907 std: 0.0035
+Timesteps/1000: 1870.0
+Reward: 17.2113
+Test set Fidelity: 0.9910 std: 0.0037
+Timesteps/1000: 1880.0
+Reward: 18.4729
+Test set Fidelity: 0.9911 std: 0.0030
+Timesteps/1000: 1890.0
+Reward: 19.8376
+Test set Fidelity: 0.9911 std: 0.0038
+Timesteps/1000: 1900.0
+Reward: 18.6936
+Test set Fidelity: 0.9914 std: 0.0029
+Timesteps/1000: 1910.0
+Reward: 19.7197
+Test set Fidelity: 0.9913 std: 0.0023
+Timesteps/1000: 1920.0
+Reward: 22.2173
+Test set Fidelity: 0.9919 std: 0.0021
+Saving new best model at 1920000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 1930.0
+Reward: 20.9115
+Test set Fidelity: 0.9921 std: 0.0022
+Saving new best model at 1930000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_50.
+Timesteps/1000: 1940.0
+Reward: 22.2703
+Test set Fidelity: 0.9920 std: 0.0019
+Timesteps/1000: 1950.0
+Reward: 21.0157
+Test set Fidelity: 0.9913 std: 0.0024
+Timesteps/1000: 1960.0
+Reward: 20.0589
+Test set Fidelity: 0.9915 std: 0.0025
+Timesteps/1000: 1970.0
+Reward: 20.4330
+Test set Fidelity: 0.9913 std: 0.0020
+Timesteps/1000: 1980.0
+Reward: 19.6638
+Test set Fidelity: 0.9911 std: 0.0024
+Timesteps/1000: 1990.0
+Reward: 20.9490
+Test set Fidelity: 0.9910 std: 0.0031
+Timesteps/1000: 2000.0
+Reward: 17.5780
+Test set Fidelity: 0.9908 std: 0.0028
+ 100% ━━━━━━━━━━━━━━━━━━━━ 2,000,000/2,000,000  [ 2:54:46 < 0:00:00 , 173 it/s ]
+Timesteps/1000: 0.001
+Reward: 0.4204
+Test set Fidelity: 0.6566 std: 0.0543
+Saving new best model at 1 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 10.0
+Reward: 0.4113
+Test set Fidelity: 0.5925 std: 0.0639
+Timesteps/1000: 20.0
+Reward: 0.4135
+Test set Fidelity: 0.5928 std: 0.0638
+Timesteps/1000: 30.0
+Reward: 0.4114
+Test set Fidelity: 0.5924 std: 0.0638
+Timesteps/1000: 40.0
+Reward: 0.4112
+Test set Fidelity: 0.5924 std: 0.0638
+Timesteps/1000: 50.0
+Reward: 0.4140
+Test set Fidelity: 0.6055 std: 0.0562
+Timesteps/1000: 60.0
+Reward: 0.4149
+Test set Fidelity: 0.6044 std: 0.0580
+Timesteps/1000: 70.0
+Reward: 0.4297
+Test set Fidelity: 0.6497 std: 0.0563
+Timesteps/1000: 80.0
+Reward: 0.4546
+Test set Fidelity: 0.6830 std: 0.0652
+Saving new best model at 80000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 90.0
+Reward: 0.4840
+Test set Fidelity: 0.7130 std: 0.0680
+Saving new best model at 90000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 100.0
+Reward: 0.5070
+Test set Fidelity: 0.7211 std: 0.0789
+Saving new best model at 100000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 110.0
+Reward: 0.5319
+Test set Fidelity: 0.7477 std: 0.0687
+Saving new best model at 110000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 120.0
+Reward: 0.5586
+Test set Fidelity: 0.7618 std: 0.0682
+Saving new best model at 120000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 130.0
+Reward: 0.5860
+Test set Fidelity: 0.7857 std: 0.0552
+Saving new best model at 130000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 140.0
+Reward: 0.5807
+Test set Fidelity: 0.7765 std: 0.0573
+Timesteps/1000: 150.0
+Reward: 0.6797
+Test set Fidelity: 0.8245 std: 0.0338
+Saving new best model at 150000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 160.0
+Reward: 0.7560
+Test set Fidelity: 0.8392 std: 0.0338
+Saving new best model at 160000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 170.0
+Reward: 0.8393
+Test set Fidelity: 0.8506 std: 0.0329
+Saving new best model at 170000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 180.0
+Reward: 0.8569
+Test set Fidelity: 0.8460 std: 0.0445
+Timesteps/1000: 190.0
+Reward: 0.7690
+Test set Fidelity: 0.8365 std: 0.0419
+Timesteps/1000: 200.0
+Reward: 0.8635
+Test set Fidelity: 0.8588 std: 0.0353
+Saving new best model at 200000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 210.0
+Reward: 0.9862
+Test set Fidelity: 0.8737 std: 0.0317
+Saving new best model at 210000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 220.0
+Reward: 1.1107
+Test set Fidelity: 0.8852 std: 0.0244
+Saving new best model at 220000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 230.0
+Reward: 1.3614
+Test set Fidelity: 0.9008 std: 0.0272
+Saving new best model at 230000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 240.0
+Reward: 1.6895
+Test set Fidelity: 0.9161 std: 0.0272
+Saving new best model at 240000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 250.0
+Reward: 1.4802
+Test set Fidelity: 0.9183 std: 0.0208
+Saving new best model at 250000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 260.0
+Reward: 1.7795
+Test set Fidelity: 0.9338 std: 0.0184
+Saving new best model at 260000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 270.0
+Reward: 2.3203
+Test set Fidelity: 0.9462 std: 0.0176
+Saving new best model at 270000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 280.0
+Reward: 2.3726
+Test set Fidelity: 0.9479 std: 0.0161
+Saving new best model at 280000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 290.0
+Reward: 2.6277
+Test set Fidelity: 0.9527 std: 0.0167
+Saving new best model at 290000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 300.0
+Reward: 2.2858
+Test set Fidelity: 0.9439 std: 0.0182
+Timesteps/1000: 310.0
+Reward: 2.3415
+Test set Fidelity: 0.9455 std: 0.0157
+Timesteps/1000: 320.0
+Reward: 2.5471
+Test set Fidelity: 0.9492 std: 0.0144
+Timesteps/1000: 330.0
+Reward: 2.5097
+Test set Fidelity: 0.9456 std: 0.0170
+Timesteps/1000: 340.0
+Reward: 2.9557
+Test set Fidelity: 0.9536 std: 0.0150
+Saving new best model at 340000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 350.0
+Reward: 3.1373
+Test set Fidelity: 0.9605 std: 0.0140
+Saving new best model at 350000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 360.0
+Reward: 3.1557
+Test set Fidelity: 0.9601 std: 0.0134
+Timesteps/1000: 370.0
+Reward: 3.9574
+Test set Fidelity: 0.9699 std: 0.0105
+Saving new best model at 370000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 380.0
+Reward: 3.6753
+Test set Fidelity: 0.9684 std: 0.0110
+Timesteps/1000: 390.0
+Reward: 3.5885
+Test set Fidelity: 0.9699 std: 0.0124
+Timesteps/1000: 400.0
+Reward: 4.0366
+Test set Fidelity: 0.9722 std: 0.0119
+Saving new best model at 400000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 410.0
+Reward: 3.5949
+Test set Fidelity: 0.9686 std: 0.0129
+Timesteps/1000: 420.0
+Reward: 4.1586
+Test set Fidelity: 0.9715 std: 0.0135
+Timesteps/1000: 430.0
+Reward: 4.3537
+Test set Fidelity: 0.9725 std: 0.0136
+Saving new best model at 430000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 440.0
+Reward: 5.1492
+Test set Fidelity: 0.9753 std: 0.0123
+Saving new best model at 440000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 450.0
+Reward: 5.7165
+Test set Fidelity: 0.9772 std: 0.0130
+Saving new best model at 450000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 460.0
+Reward: 5.6225
+Test set Fidelity: 0.9765 std: 0.0145
+Timesteps/1000: 470.0
+Reward: 5.0094
+Test set Fidelity: 0.9737 std: 0.0160
+Timesteps/1000: 480.0
+Reward: 5.6706
+Test set Fidelity: 0.9769 std: 0.0142
+Timesteps/1000: 490.0
+Reward: 5.1739
+Test set Fidelity: 0.9756 std: 0.0154
+Timesteps/1000: 500.0
+Reward: 6.6002
+Test set Fidelity: 0.9798 std: 0.0138
+Saving new best model at 500000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 510.0
+Reward: 6.1908
+Test set Fidelity: 0.9781 std: 0.0157
+Timesteps/1000: 520.0
+Reward: 6.2352
+Test set Fidelity: 0.9789 std: 0.0136
+Timesteps/1000: 530.0
+Reward: 6.7113
+Test set Fidelity: 0.9811 std: 0.0109
+Saving new best model at 530000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 540.0
+Reward: 6.6830
+Test set Fidelity: 0.9807 std: 0.0112
+Timesteps/1000: 550.0
+Reward: 6.5879
+Test set Fidelity: 0.9811 std: 0.0099
+Timesteps/1000: 560.0
+Reward: 6.2148
+Test set Fidelity: 0.9793 std: 0.0103
+Timesteps/1000: 570.0
+Reward: 6.0500
+Test set Fidelity: 0.9776 std: 0.0135
+Timesteps/1000: 580.0
+Reward: 6.4333
+Test set Fidelity: 0.9796 std: 0.0127
+Timesteps/1000: 590.0
+Reward: 7.1162
+Test set Fidelity: 0.9817 std: 0.0112
+Saving new best model at 590000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 600.0
+Reward: 7.5801
+Test set Fidelity: 0.9823 std: 0.0108
+Saving new best model at 600000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 610.0
+Reward: 7.4902
+Test set Fidelity: 0.9822 std: 0.0110
+Timesteps/1000: 620.0
+Reward: 8.8469
+Test set Fidelity: 0.9849 std: 0.0087
+Saving new best model at 620000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 630.0
+Reward: 8.3805
+Test set Fidelity: 0.9847 std: 0.0091
+Timesteps/1000: 640.0
+Reward: 9.1040
+Test set Fidelity: 0.9859 std: 0.0090
+Saving new best model at 640000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 650.0
+Reward: 9.6186
+Test set Fidelity: 0.9855 std: 0.0092
+Timesteps/1000: 660.0
+Reward: 9.6977
+Test set Fidelity: 0.9865 std: 0.0073
+Saving new best model at 660000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 670.0
+Reward: 9.8607
+Test set Fidelity: 0.9864 std: 0.0074
+Timesteps/1000: 680.0
+Reward: 10.3626
+Test set Fidelity: 0.9868 std: 0.0070
+Saving new best model at 680000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 690.0
+Reward: 11.4415
+Test set Fidelity: 0.9878 std: 0.0056
+Saving new best model at 690000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 700.0
+Reward: 11.1059
+Test set Fidelity: 0.9879 std: 0.0055
+Saving new best model at 700000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 710.0
+Reward: 11.5391
+Test set Fidelity: 0.9889 std: 0.0045
+Saving new best model at 710000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 720.0
+Reward: 13.2919
+Test set Fidelity: 0.9908 std: 0.0031
+Saving new best model at 720000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 730.0
+Reward: 12.9639
+Test set Fidelity: 0.9903 std: 0.0040
+Timesteps/1000: 740.0
+Reward: 11.6062
+Test set Fidelity: 0.9887 std: 0.0051
+Timesteps/1000: 750.0
+Reward: 12.3158
+Test set Fidelity: 0.9894 std: 0.0045
+Timesteps/1000: 760.0
+Reward: 13.0223
+Test set Fidelity: 0.9902 std: 0.0036
+Timesteps/1000: 770.0
+Reward: 13.7119
+Test set Fidelity: 0.9910 std: 0.0036
+Saving new best model at 770000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 780.0
+Reward: 13.3602
+Test set Fidelity: 0.9903 std: 0.0045
+Timesteps/1000: 790.0
+Reward: 12.6867
+Test set Fidelity: 0.9899 std: 0.0049
+Timesteps/1000: 800.0
+Reward: 13.0377
+Test set Fidelity: 0.9907 std: 0.0044
+Timesteps/1000: 810.0
+Reward: 13.2381
+Test set Fidelity: 0.9902 std: 0.0049
+Timesteps/1000: 820.0
+Reward: 13.8565
+Test set Fidelity: 0.9906 std: 0.0041
+Timesteps/1000: 830.0
+Reward: 13.6932
+Test set Fidelity: 0.9898 std: 0.0047
+Timesteps/1000: 840.0
+Reward: 14.3487
+Test set Fidelity: 0.9909 std: 0.0039
+Timesteps/1000: 850.0
+Reward: 14.3154
+Test set Fidelity: 0.9905 std: 0.0049
+Timesteps/1000: 860.0
+Reward: 14.0279
+Test set Fidelity: 0.9905 std: 0.0044
+Timesteps/1000: 870.0
+Reward: 13.3409
+Test set Fidelity: 0.9902 std: 0.0053
+Timesteps/1000: 880.0
+Reward: 12.8113
+Test set Fidelity: 0.9897 std: 0.0056
+Timesteps/1000: 890.0
+Reward: 12.9549
+Test set Fidelity: 0.9901 std: 0.0051
+Timesteps/1000: 900.0
+Reward: 13.7268
+Test set Fidelity: 0.9904 std: 0.0051
+Timesteps/1000: 910.0
+Reward: 15.1428
+Test set Fidelity: 0.9911 std: 0.0049
+Saving new best model at 910000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 920.0
+Reward: 14.8178
+Test set Fidelity: 0.9915 std: 0.0042
+Saving new best model at 920000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 930.0
+Reward: 14.7293
+Test set Fidelity: 0.9914 std: 0.0044
+Timesteps/1000: 940.0
+Reward: 15.0006
+Test set Fidelity: 0.9909 std: 0.0048
+Timesteps/1000: 950.0
+Reward: 14.7448
+Test set Fidelity: 0.9907 std: 0.0051
+Timesteps/1000: 960.0
+Reward: 14.4986
+Test set Fidelity: 0.9904 std: 0.0048
+Timesteps/1000: 970.0
+Reward: 14.1114
+Test set Fidelity: 0.9901 std: 0.0048
+Timesteps/1000: 980.0
+Reward: 14.4610
+Test set Fidelity: 0.9902 std: 0.0047
+Timesteps/1000: 990.0
+Reward: 15.1916
+Test set Fidelity: 0.9899 std: 0.0056
+Timesteps/1000: 1000.0
+Reward: 15.0391
+Test set Fidelity: 0.9898 std: 0.0054
+Timesteps/1000: 1010.0
+Reward: 15.2018
+Test set Fidelity: 0.9904 std: 0.0044
+Timesteps/1000: 1020.0
+Reward: 15.9871
+Test set Fidelity: 0.9909 std: 0.0044
+Timesteps/1000: 1030.0
+Reward: 17.4175
+Test set Fidelity: 0.9921 std: 0.0036
+Saving new best model at 1030000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1040.0
+Reward: 16.5271
+Test set Fidelity: 0.9916 std: 0.0039
+Timesteps/1000: 1050.0
+Reward: 16.5354
+Test set Fidelity: 0.9912 std: 0.0037
+Timesteps/1000: 1060.0
+Reward: 16.8437
+Test set Fidelity: 0.9913 std: 0.0037
+Timesteps/1000: 1070.0
+Reward: 17.1959
+Test set Fidelity: 0.9917 std: 0.0032
+Timesteps/1000: 1080.0
+Reward: 18.0665
+Test set Fidelity: 0.9917 std: 0.0036
+Timesteps/1000: 1090.0
+Reward: 18.1326
+Test set Fidelity: 0.9921 std: 0.0029
+Timesteps/1000: 1100.0
+Reward: 17.7646
+Test set Fidelity: 0.9924 std: 0.0026
+Saving new best model at 1100000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1110.0
+Reward: 18.9195
+Test set Fidelity: 0.9923 std: 0.0029
+Timesteps/1000: 1120.0
+Reward: 18.6768
+Test set Fidelity: 0.9920 std: 0.0029
+Timesteps/1000: 1130.0
+Reward: 18.2126
+Test set Fidelity: 0.9921 std: 0.0028
+Timesteps/1000: 1140.0
+Reward: 18.2319
+Test set Fidelity: 0.9919 std: 0.0032
+Timesteps/1000: 1150.0
+Reward: 18.4117
+Test set Fidelity: 0.9918 std: 0.0033
+Timesteps/1000: 1160.0
+Reward: 19.0448
+Test set Fidelity: 0.9919 std: 0.0036
+Timesteps/1000: 1170.0
+Reward: 18.8539
+Test set Fidelity: 0.9921 std: 0.0033
+Timesteps/1000: 1180.0
+Reward: 18.6355
+Test set Fidelity: 0.9920 std: 0.0032
+Timesteps/1000: 1190.0
+Reward: 18.2909
+Test set Fidelity: 0.9917 std: 0.0035
+Timesteps/1000: 1200.0
+Reward: 17.7778
+Test set Fidelity: 0.9913 std: 0.0036
+Timesteps/1000: 1210.0
+Reward: 17.5040
+Test set Fidelity: 0.9915 std: 0.0036
+Timesteps/1000: 1220.0
+Reward: 18.2337
+Test set Fidelity: 0.9917 std: 0.0033
+Timesteps/1000: 1230.0
+Reward: 19.1473
+Test set Fidelity: 0.9915 std: 0.0035
+Timesteps/1000: 1240.0
+Reward: 19.7716
+Test set Fidelity: 0.9915 std: 0.0037
+Timesteps/1000: 1250.0
+Reward: 19.7790
+Test set Fidelity: 0.9917 std: 0.0037
+Timesteps/1000: 1260.0
+Reward: 19.7007
+Test set Fidelity: 0.9913 std: 0.0042
+Timesteps/1000: 1270.0
+Reward: 20.6377
+Test set Fidelity: 0.9917 std: 0.0038
+Timesteps/1000: 1280.0
+Reward: 20.8541
+Test set Fidelity: 0.9916 std: 0.0042
+Timesteps/1000: 1290.0
+Reward: 21.1684
+Test set Fidelity: 0.9922 std: 0.0039
+Timesteps/1000: 1300.0
+Reward: 20.9487
+Test set Fidelity: 0.9925 std: 0.0035
+Saving new best model at 1300000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1310.0
+Reward: 20.8095
+Test set Fidelity: 0.9926 std: 0.0034
+Saving new best model at 1310000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1320.0
+Reward: 21.5543
+Test set Fidelity: 0.9929 std: 0.0036
+Saving new best model at 1320000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1330.0
+Reward: 22.9092
+Test set Fidelity: 0.9931 std: 0.0037
+Saving new best model at 1330000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1340.0
+Reward: 22.7156
+Test set Fidelity: 0.9929 std: 0.0038
+Timesteps/1000: 1350.0
+Reward: 22.4275
+Test set Fidelity: 0.9929 std: 0.0039
+Timesteps/1000: 1360.0
+Reward: 22.5770
+Test set Fidelity: 0.9930 std: 0.0042
+Timesteps/1000: 1370.0
+Reward: 22.2652
+Test set Fidelity: 0.9932 std: 0.0038
+Saving new best model at 1370000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1380.0
+Reward: 21.5651
+Test set Fidelity: 0.9932 std: 0.0042
+Saving new best model at 1380000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1390.0
+Reward: 22.5848
+Test set Fidelity: 0.9931 std: 0.0042
+Timesteps/1000: 1400.0
+Reward: 22.5435
+Test set Fidelity: 0.9933 std: 0.0040
+Saving new best model at 1400000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1410.0
+Reward: 22.6863
+Test set Fidelity: 0.9934 std: 0.0042
+Saving new best model at 1410000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1420.0
+Reward: 22.9691
+Test set Fidelity: 0.9934 std: 0.0039
+Saving new best model at 1420000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1430.0
+Reward: 22.9139
+Test set Fidelity: 0.9934 std: 0.0040
+Saving new best model at 1430000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1440.0
+Reward: 23.2991
+Test set Fidelity: 0.9933 std: 0.0046
+Timesteps/1000: 1450.0
+Reward: 23.4541
+Test set Fidelity: 0.9932 std: 0.0044
+Timesteps/1000: 1460.0
+Reward: 22.8017
+Test set Fidelity: 0.9934 std: 0.0043
+Timesteps/1000: 1470.0
+Reward: 24.4122
+Test set Fidelity: 0.9936 std: 0.0039
+Saving new best model at 1470000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1480.0
+Reward: 24.6393
+Test set Fidelity: 0.9932 std: 0.0053
+Timesteps/1000: 1490.0
+Reward: 23.5562
+Test set Fidelity: 0.9932 std: 0.0048
+Timesteps/1000: 1500.0
+Reward: 23.5888
+Test set Fidelity: 0.9934 std: 0.0043
+Timesteps/1000: 1510.0
+Reward: 23.4126
+Test set Fidelity: 0.9935 std: 0.0041
+Timesteps/1000: 1520.0
+Reward: 24.4887
+Test set Fidelity: 0.9937 std: 0.0041
+Saving new best model at 1520000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1530.0
+Reward: 23.7479
+Test set Fidelity: 0.9939 std: 0.0038
+Saving new best model at 1530000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1540.0
+Reward: 23.0087
+Test set Fidelity: 0.9938 std: 0.0036
+Timesteps/1000: 1550.0
+Reward: 23.9533
+Test set Fidelity: 0.9942 std: 0.0033
+Saving new best model at 1550000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1560.0
+Reward: 23.1409
+Test set Fidelity: 0.9940 std: 0.0035
+Timesteps/1000: 1570.0
+Reward: 23.7374
+Test set Fidelity: 0.9942 std: 0.0030
+Timesteps/1000: 1580.0
+Reward: 23.7836
+Test set Fidelity: 0.9942 std: 0.0029
+Saving new best model at 1580000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1590.0
+Reward: 23.8518
+Test set Fidelity: 0.9942 std: 0.0029
+Saving new best model at 1590000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_75.
+Timesteps/1000: 1600.0
+Reward: 23.3496
+Test set Fidelity: 0.9940 std: 0.0031
+Timesteps/1000: 1610.0
+Reward: 23.8698
+Test set Fidelity: 0.9932 std: 0.0036
+Timesteps/1000: 1620.0
+Reward: 23.9488
+Test set Fidelity: 0.9929 std: 0.0040
+Timesteps/1000: 1630.0
+Reward: 24.2831
+Test set Fidelity: 0.9930 std: 0.0041
+Timesteps/1000: 1640.0
+Reward: 24.8498
+Test set Fidelity: 0.9931 std: 0.0039
+Timesteps/1000: 1650.0
+Reward: 25.0195
+Test set Fidelity: 0.9930 std: 0.0041
+Timesteps/1000: 1660.0
+Reward: 25.0243
+Test set Fidelity: 0.9929 std: 0.0040
+Timesteps/1000: 1670.0
+Reward: 24.4121
+Test set Fidelity: 0.9931 std: 0.0034
+Timesteps/1000: 1680.0
+Reward: 23.8648
+Test set Fidelity: 0.9927 std: 0.0041
+Timesteps/1000: 1690.0
+Reward: 24.2687
+Test set Fidelity: 0.9920 std: 0.0052
+Timesteps/1000: 1700.0
+Reward: 26.1270
+Test set Fidelity: 0.9926 std: 0.0045
+Timesteps/1000: 1710.0
+Reward: 25.5333
+Test set Fidelity: 0.9922 std: 0.0046
+Timesteps/1000: 1720.0
+Reward: 25.6911
+Test set Fidelity: 0.9926 std: 0.0042
+Timesteps/1000: 1730.0
+Reward: 25.3230
+Test set Fidelity: 0.9923 std: 0.0045
+Timesteps/1000: 1740.0
+Reward: 26.3460
+Test set Fidelity: 0.9928 std: 0.0039
+Timesteps/1000: 1750.0
+Reward: 26.3031
+Test set Fidelity: 0.9925 std: 0.0043
+Timesteps/1000: 1760.0
+Reward: 25.0365
+Test set Fidelity: 0.9925 std: 0.0044
+Timesteps/1000: 1770.0
+Reward: 26.9715
+Test set Fidelity: 0.9926 std: 0.0044
+Timesteps/1000: 1780.0
+Reward: 26.1647
+Test set Fidelity: 0.9922 std: 0.0047
+Timesteps/1000: 1790.0
+Reward: 25.2974
+Test set Fidelity: 0.9920 std: 0.0050
+Timesteps/1000: 1800.0
+Reward: 25.6995
+Test set Fidelity: 0.9921 std: 0.0047
+Timesteps/1000: 1810.0
+Reward: 26.0081
+Test set Fidelity: 0.9917 std: 0.0054
+Timesteps/1000: 1820.0
+Reward: 25.5223
+Test set Fidelity: 0.9913 std: 0.0056
+Timesteps/1000: 1830.0
+Reward: 24.8837
+Test set Fidelity: 0.9916 std: 0.0048
+Timesteps/1000: 1840.0
+Reward: 26.3389
+Test set Fidelity: 0.9918 std: 0.0046
+Timesteps/1000: 1850.0
+Reward: 26.7120
+Test set Fidelity: 0.9917 std: 0.0045
+Timesteps/1000: 1860.0
+Reward: 28.7638
+Test set Fidelity: 0.9920 std: 0.0043
+Timesteps/1000: 1870.0
+Reward: 26.9886
+Test set Fidelity: 0.9915 std: 0.0045
+Timesteps/1000: 1880.0
+Reward: 26.3495
+Test set Fidelity: 0.9915 std: 0.0048
+Timesteps/1000: 1890.0
+Reward: 25.2116
+Test set Fidelity: 0.9916 std: 0.0046
+Timesteps/1000: 1900.0
+Reward: 26.5015
+Test set Fidelity: 0.9919 std: 0.0046
+Timesteps/1000: 1910.0
+Reward: 26.9646
+Test set Fidelity: 0.9919 std: 0.0046
+Timesteps/1000: 1920.0
+Reward: 27.5757
+Test set Fidelity: 0.9914 std: 0.0052
+Timesteps/1000: 1930.0
+Reward: 28.1523
+Test set Fidelity: 0.9920 std: 0.0041
+Timesteps/1000: 1940.0
+Reward: 27.2001
+Test set Fidelity: 0.9920 std: 0.0041
+Timesteps/1000: 1950.0
+Reward: 27.4601
+Test set Fidelity: 0.9920 std: 0.0039
+Timesteps/1000: 1960.0
+Reward: 27.5296
+Test set Fidelity: 0.9921 std: 0.0041
+Timesteps/1000: 1970.0
+Reward: 27.6343
+Test set Fidelity: 0.9923 std: 0.0035
+Timesteps/1000: 1980.0
+Reward: 28.2492
+Test set Fidelity: 0.9925 std: 0.0033
+Timesteps/1000: 1990.0
+Reward: 27.8581
+Test set Fidelity: 0.9926 std: 0.0030
+Timesteps/1000: 2000.0
+Reward: 28.4424
+Test set Fidelity: 0.9927 std: 0.0032
+ 100% ━━━━━━━━━━━━━━━━━━━━ 2,000,000/2,000,000  [ 3:00:49 < 0:00:00 , 159 it/s ]
+Timesteps/1000: 0.001
+Reward: 0.3920
+Test set Fidelity: 0.6878 std: 0.0638
+Saving new best model at 1 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 10.0
+Reward: 0.3912
+Test set Fidelity: 0.6483 std: 0.0710
+Timesteps/1000: 20.0
+Reward: 0.3911
+Test set Fidelity: 0.6479 std: 0.0710
+Timesteps/1000: 30.0
+Reward: 0.3886
+Test set Fidelity: 0.6474 std: 0.0710
+Timesteps/1000: 40.0
+Reward: 0.3899
+Test set Fidelity: 0.6478 std: 0.0708
+Timesteps/1000: 50.0
+Reward: 0.3926
+Test set Fidelity: 0.6516 std: 0.0702
+Timesteps/1000: 60.0
+Reward: 0.3955
+Test set Fidelity: 0.6663 std: 0.0666
+Timesteps/1000: 70.0
+Reward: 0.4057
+Test set Fidelity: 0.6962 std: 0.0591
+Saving new best model at 70000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 80.0
+Reward: 0.4107
+Test set Fidelity: 0.6974 std: 0.0669
+Saving new best model at 80000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 90.0
+Reward: 0.4348
+Test set Fidelity: 0.7402 std: 0.0573
+Saving new best model at 90000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 100.0
+Reward: 0.4496
+Test set Fidelity: 0.7532 std: 0.0545
+Saving new best model at 100000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 110.0
+Reward: 0.4911
+Test set Fidelity: 0.7828 std: 0.0510
+Saving new best model at 110000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 120.0
+Reward: 0.5590
+Test set Fidelity: 0.8211 std: 0.0483
+Saving new best model at 120000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 130.0
+Reward: 0.6572
+Test set Fidelity: 0.8402 std: 0.0486
+Saving new best model at 130000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 140.0
+Reward: 0.6786
+Test set Fidelity: 0.8402 std: 0.0508
+Saving new best model at 140000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 150.0
+Reward: 0.5968
+Test set Fidelity: 0.8306 std: 0.0438
+Timesteps/1000: 160.0
+Reward: 0.7006
+Test set Fidelity: 0.8645 std: 0.0361
+Saving new best model at 160000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 170.0
+Reward: 0.6710
+Test set Fidelity: 0.8544 std: 0.0398
+Timesteps/1000: 180.0
+Reward: 0.8074
+Test set Fidelity: 0.8764 std: 0.0393
+Saving new best model at 180000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 190.0
+Reward: 0.8000
+Test set Fidelity: 0.8812 std: 0.0377
+Saving new best model at 190000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 200.0
+Reward: 0.8511
+Test set Fidelity: 0.8872 std: 0.0373
+Saving new best model at 200000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 210.0
+Reward: 0.9875
+Test set Fidelity: 0.9001 std: 0.0347
+Saving new best model at 210000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 220.0
+Reward: 0.9796
+Test set Fidelity: 0.9005 std: 0.0334
+Saving new best model at 220000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 230.0
+Reward: 0.9763
+Test set Fidelity: 0.9006 std: 0.0319
+Saving new best model at 230000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 240.0
+Reward: 1.0847
+Test set Fidelity: 0.9139 std: 0.0270
+Saving new best model at 240000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 250.0
+Reward: 1.3674
+Test set Fidelity: 0.9303 std: 0.0223
+Saving new best model at 250000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 260.0
+Reward: 1.3053
+Test set Fidelity: 0.9278 std: 0.0228
+Timesteps/1000: 270.0
+Reward: 1.6499
+Test set Fidelity: 0.9392 std: 0.0197
+Saving new best model at 270000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 280.0
+Reward: 1.5713
+Test set Fidelity: 0.9356 std: 0.0209
+Timesteps/1000: 290.0
+Reward: 1.7765
+Test set Fidelity: 0.9411 std: 0.0203
+Saving new best model at 290000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 300.0
+Reward: 1.4689
+Test set Fidelity: 0.9323 std: 0.0228
+Timesteps/1000: 310.0
+Reward: 1.7499
+Test set Fidelity: 0.9421 std: 0.0189
+Saving new best model at 310000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 320.0
+Reward: 1.5853
+Test set Fidelity: 0.9377 std: 0.0190
+Timesteps/1000: 330.0
+Reward: 1.9368
+Test set Fidelity: 0.9469 std: 0.0161
+Saving new best model at 330000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 340.0
+Reward: 2.2352
+Test set Fidelity: 0.9533 std: 0.0141
+Saving new best model at 340000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 350.0
+Reward: 2.3233
+Test set Fidelity: 0.9561 std: 0.0146
+Saving new best model at 350000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 360.0
+Reward: 2.5143
+Test set Fidelity: 0.9589 std: 0.0138
+Saving new best model at 360000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 370.0
+Reward: 2.7487
+Test set Fidelity: 0.9615 std: 0.0115
+Saving new best model at 370000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 380.0
+Reward: 2.9351
+Test set Fidelity: 0.9622 std: 0.0116
+Saving new best model at 380000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 390.0
+Reward: 3.2457
+Test set Fidelity: 0.9644 std: 0.0119
+Saving new best model at 390000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 400.0
+Reward: 3.2288
+Test set Fidelity: 0.9642 std: 0.0134
+Timesteps/1000: 410.0
+Reward: 3.5070
+Test set Fidelity: 0.9668 std: 0.0123
+Saving new best model at 410000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 420.0
+Reward: 3.6512
+Test set Fidelity: 0.9685 std: 0.0119
+Saving new best model at 420000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 430.0
+Reward: 4.0943
+Test set Fidelity: 0.9713 std: 0.0115
+Saving new best model at 430000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 440.0
+Reward: 3.7968
+Test set Fidelity: 0.9698 std: 0.0110
+Timesteps/1000: 450.0
+Reward: 4.3127
+Test set Fidelity: 0.9727 std: 0.0100
+Saving new best model at 450000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 460.0
+Reward: 4.3290
+Test set Fidelity: 0.9731 std: 0.0095
+Saving new best model at 460000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 470.0
+Reward: 4.2177
+Test set Fidelity: 0.9735 std: 0.0096
+Saving new best model at 470000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 480.0
+Reward: 4.4125
+Test set Fidelity: 0.9737 std: 0.0093
+Saving new best model at 480000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 490.0
+Reward: 4.5361
+Test set Fidelity: 0.9752 std: 0.0082
+Saving new best model at 490000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 500.0
+Reward: 4.8873
+Test set Fidelity: 0.9766 std: 0.0082
+Saving new best model at 500000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 510.0
+Reward: 5.1013
+Test set Fidelity: 0.9763 std: 0.0082
+Timesteps/1000: 520.0
+Reward: 4.9057
+Test set Fidelity: 0.9764 std: 0.0073
+Timesteps/1000: 530.0
+Reward: 4.9691
+Test set Fidelity: 0.9771 std: 0.0080
+Saving new best model at 530000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 540.0
+Reward: 5.4087
+Test set Fidelity: 0.9789 std: 0.0080
+Saving new best model at 540000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 550.0
+Reward: 5.7436
+Test set Fidelity: 0.9807 std: 0.0071
+Saving new best model at 550000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 560.0
+Reward: 6.2812
+Test set Fidelity: 0.9824 std: 0.0072
+Saving new best model at 560000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 570.0
+Reward: 4.8276
+Test set Fidelity: 0.9780 std: 0.0102
+Timesteps/1000: 580.0
+Reward: 5.5110
+Test set Fidelity: 0.9795 std: 0.0110
+Timesteps/1000: 590.0
+Reward: 5.5110
+Test set Fidelity: 0.9791 std: 0.0115
+Timesteps/1000: 600.0
+Reward: 5.6717
+Test set Fidelity: 0.9792 std: 0.0119
+Timesteps/1000: 610.0
+Reward: 6.3510
+Test set Fidelity: 0.9818 std: 0.0102
+Timesteps/1000: 620.0
+Reward: 6.5956
+Test set Fidelity: 0.9824 std: 0.0102
+Timesteps/1000: 630.0
+Reward: 6.2452
+Test set Fidelity: 0.9819 std: 0.0102
+Timesteps/1000: 640.0
+Reward: 6.7349
+Test set Fidelity: 0.9838 std: 0.0085
+Saving new best model at 640000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 650.0
+Reward: 7.1734
+Test set Fidelity: 0.9843 std: 0.0090
+Saving new best model at 650000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 660.0
+Reward: 7.0909
+Test set Fidelity: 0.9847 std: 0.0083
+Saving new best model at 660000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 670.0
+Reward: 7.9037
+Test set Fidelity: 0.9858 std: 0.0079
+Saving new best model at 670000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 680.0
+Reward: 7.3411
+Test set Fidelity: 0.9852 std: 0.0084
+Timesteps/1000: 690.0
+Reward: 8.1652
+Test set Fidelity: 0.9868 std: 0.0074
+Saving new best model at 690000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 700.0
+Reward: 8.5219
+Test set Fidelity: 0.9871 std: 0.0076
+Saving new best model at 700000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 710.0
+Reward: 8.7869
+Test set Fidelity: 0.9876 std: 0.0066
+Saving new best model at 710000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 720.0
+Reward: 9.6040
+Test set Fidelity: 0.9887 std: 0.0050
+Saving new best model at 720000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 730.0
+Reward: 9.6867
+Test set Fidelity: 0.9893 std: 0.0043
+Saving new best model at 730000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 740.0
+Reward: 10.4399
+Test set Fidelity: 0.9898 std: 0.0041
+Saving new best model at 740000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 750.0
+Reward: 10.7405
+Test set Fidelity: 0.9899 std: 0.0042
+Saving new best model at 750000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 760.0
+Reward: 11.3769
+Test set Fidelity: 0.9900 std: 0.0041
+Saving new best model at 760000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 770.0
+Reward: 10.4660
+Test set Fidelity: 0.9894 std: 0.0042
+Timesteps/1000: 780.0
+Reward: 10.5360
+Test set Fidelity: 0.9894 std: 0.0036
+Timesteps/1000: 790.0
+Reward: 11.2024
+Test set Fidelity: 0.9898 std: 0.0032
+Timesteps/1000: 800.0
+Reward: 12.0584
+Test set Fidelity: 0.9902 std: 0.0030
+Saving new best model at 800000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 810.0
+Reward: 12.7659
+Test set Fidelity: 0.9909 std: 0.0031
+Saving new best model at 810000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 820.0
+Reward: 13.3712
+Test set Fidelity: 0.9914 std: 0.0028
+Saving new best model at 820000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 830.0
+Reward: 12.8899
+Test set Fidelity: 0.9910 std: 0.0031
+Timesteps/1000: 840.0
+Reward: 12.9774
+Test set Fidelity: 0.9910 std: 0.0028
+Timesteps/1000: 850.0
+Reward: 13.8565
+Test set Fidelity: 0.9917 std: 0.0028
+Saving new best model at 850000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 860.0
+Reward: 13.8603
+Test set Fidelity: 0.9914 std: 0.0026
+Timesteps/1000: 870.0
+Reward: 13.5061
+Test set Fidelity: 0.9914 std: 0.0028
+Timesteps/1000: 880.0
+Reward: 13.8824
+Test set Fidelity: 0.9912 std: 0.0028
+Timesteps/1000: 890.0
+Reward: 13.4596
+Test set Fidelity: 0.9909 std: 0.0031
+Timesteps/1000: 900.0
+Reward: 14.8362
+Test set Fidelity: 0.9914 std: 0.0029
+Timesteps/1000: 910.0
+Reward: 15.1839
+Test set Fidelity: 0.9915 std: 0.0026
+Timesteps/1000: 920.0
+Reward: 16.0700
+Test set Fidelity: 0.9917 std: 0.0027
+Timesteps/1000: 930.0
+Reward: 15.6359
+Test set Fidelity: 0.9917 std: 0.0026
+Saving new best model at 930000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 940.0
+Reward: 15.6440
+Test set Fidelity: 0.9923 std: 0.0022
+Saving new best model at 940000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 950.0
+Reward: 16.2302
+Test set Fidelity: 0.9924 std: 0.0022
+Saving new best model at 950000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 960.0
+Reward: 17.1207
+Test set Fidelity: 0.9928 std: 0.0023
+Saving new best model at 960000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 970.0
+Reward: 15.9492
+Test set Fidelity: 0.9926 std: 0.0025
+Timesteps/1000: 980.0
+Reward: 16.7327
+Test set Fidelity: 0.9929 std: 0.0022
+Saving new best model at 980000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 990.0
+Reward: 17.0682
+Test set Fidelity: 0.9930 std: 0.0023
+Saving new best model at 990000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 1000.0
+Reward: 17.8863
+Test set Fidelity: 0.9932 std: 0.0024
+Saving new best model at 1000000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 1010.0
+Reward: 18.6423
+Test set Fidelity: 0.9933 std: 0.0024
+Saving new best model at 1010000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 1020.0
+Reward: 18.9198
+Test set Fidelity: 0.9932 std: 0.0023
+Timesteps/1000: 1030.0
+Reward: 19.4760
+Test set Fidelity: 0.9930 std: 0.0025
+Timesteps/1000: 1040.0
+Reward: 19.0248
+Test set Fidelity: 0.9929 std: 0.0025
+Timesteps/1000: 1050.0
+Reward: 18.7935
+Test set Fidelity: 0.9921 std: 0.0033
+Timesteps/1000: 1060.0
+Reward: 19.6925
+Test set Fidelity: 0.9923 std: 0.0032
+Timesteps/1000: 1070.0
+Reward: 20.3404
+Test set Fidelity: 0.9928 std: 0.0031
+Timesteps/1000: 1080.0
+Reward: 19.6452
+Test set Fidelity: 0.9924 std: 0.0033
+Timesteps/1000: 1090.0
+Reward: 19.5717
+Test set Fidelity: 0.9924 std: 0.0032
+Timesteps/1000: 1100.0
+Reward: 19.8233
+Test set Fidelity: 0.9925 std: 0.0031
+Timesteps/1000: 1110.0
+Reward: 19.7999
+Test set Fidelity: 0.9924 std: 0.0030
+Timesteps/1000: 1120.0
+Reward: 20.3534
+Test set Fidelity: 0.9929 std: 0.0029
+Timesteps/1000: 1130.0
+Reward: 19.4478
+Test set Fidelity: 0.9926 std: 0.0031
+Timesteps/1000: 1140.0
+Reward: 20.2436
+Test set Fidelity: 0.9922 std: 0.0035
+Timesteps/1000: 1150.0
+Reward: 19.7095
+Test set Fidelity: 0.9924 std: 0.0033
+Timesteps/1000: 1160.0
+Reward: 20.3770
+Test set Fidelity: 0.9922 std: 0.0036
+Timesteps/1000: 1170.0
+Reward: 20.3231
+Test set Fidelity: 0.9929 std: 0.0031
+Timesteps/1000: 1180.0
+Reward: 20.7069
+Test set Fidelity: 0.9929 std: 0.0027
+Timesteps/1000: 1190.0
+Reward: 20.2287
+Test set Fidelity: 0.9931 std: 0.0026
+Timesteps/1000: 1200.0
+Reward: 20.2630
+Test set Fidelity: 0.9932 std: 0.0025
+Timesteps/1000: 1210.0
+Reward: 19.6659
+Test set Fidelity: 0.9930 std: 0.0028
+Timesteps/1000: 1220.0
+Reward: 19.1397
+Test set Fidelity: 0.9927 std: 0.0029
+Timesteps/1000: 1230.0
+Reward: 17.9040
+Test set Fidelity: 0.9920 std: 0.0036
+Timesteps/1000: 1240.0
+Reward: 19.2455
+Test set Fidelity: 0.9925 std: 0.0033
+Timesteps/1000: 1250.0
+Reward: 20.7293
+Test set Fidelity: 0.9928 std: 0.0029
+Timesteps/1000: 1260.0
+Reward: 19.7524
+Test set Fidelity: 0.9923 std: 0.0032
+Timesteps/1000: 1270.0
+Reward: 20.7701
+Test set Fidelity: 0.9923 std: 0.0030
+Timesteps/1000: 1280.0
+Reward: 21.1028
+Test set Fidelity: 0.9926 std: 0.0029
+Timesteps/1000: 1290.0
+Reward: 21.1259
+Test set Fidelity: 0.9928 std: 0.0030
+Timesteps/1000: 1300.0
+Reward: 22.1525
+Test set Fidelity: 0.9926 std: 0.0034
+Timesteps/1000: 1310.0
+Reward: 22.0397
+Test set Fidelity: 0.9929 std: 0.0032
+Timesteps/1000: 1320.0
+Reward: 21.9201
+Test set Fidelity: 0.9927 std: 0.0034
+Timesteps/1000: 1330.0
+Reward: 22.0199
+Test set Fidelity: 0.9926 std: 0.0034
+Timesteps/1000: 1340.0
+Reward: 22.0288
+Test set Fidelity: 0.9931 std: 0.0031
+Timesteps/1000: 1350.0
+Reward: 21.6645
+Test set Fidelity: 0.9929 std: 0.0033
+Timesteps/1000: 1360.0
+Reward: 21.1441
+Test set Fidelity: 0.9930 std: 0.0032
+Timesteps/1000: 1370.0
+Reward: 21.7746
+Test set Fidelity: 0.9929 std: 0.0030
+Timesteps/1000: 1380.0
+Reward: 22.5536
+Test set Fidelity: 0.9935 std: 0.0027
+Saving new best model at 1380000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 1390.0
+Reward: 23.0759
+Test set Fidelity: 0.9934 std: 0.0027
+Timesteps/1000: 1400.0
+Reward: 22.8075
+Test set Fidelity: 0.9930 std: 0.0031
+Timesteps/1000: 1410.0
+Reward: 22.9797
+Test set Fidelity: 0.9931 std: 0.0031
+Timesteps/1000: 1420.0
+Reward: 21.8936
+Test set Fidelity: 0.9931 std: 0.0032
+Timesteps/1000: 1430.0
+Reward: 22.0640
+Test set Fidelity: 0.9932 std: 0.0031
+Timesteps/1000: 1440.0
+Reward: 22.0088
+Test set Fidelity: 0.9931 std: 0.0034
+Timesteps/1000: 1450.0
+Reward: 22.5113
+Test set Fidelity: 0.9930 std: 0.0033
+Timesteps/1000: 1460.0
+Reward: 23.1212
+Test set Fidelity: 0.9931 std: 0.0028
+Timesteps/1000: 1470.0
+Reward: 22.7542
+Test set Fidelity: 0.9933 std: 0.0030
+Timesteps/1000: 1480.0
+Reward: 25.8423
+Test set Fidelity: 0.9936 std: 0.0026
+Saving new best model at 1480000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 1490.0
+Reward: 24.0552
+Test set Fidelity: 0.9934 std: 0.0031
+Timesteps/1000: 1500.0
+Reward: 24.9790
+Test set Fidelity: 0.9934 std: 0.0030
+Timesteps/1000: 1510.0
+Reward: 24.7133
+Test set Fidelity: 0.9930 std: 0.0033
+Timesteps/1000: 1520.0
+Reward: 24.9480
+Test set Fidelity: 0.9931 std: 0.0030
+Timesteps/1000: 1530.0
+Reward: 24.7661
+Test set Fidelity: 0.9930 std: 0.0029
+Timesteps/1000: 1540.0
+Reward: 24.2071
+Test set Fidelity: 0.9926 std: 0.0032
+Timesteps/1000: 1550.0
+Reward: 24.0039
+Test set Fidelity: 0.9925 std: 0.0036
+Timesteps/1000: 1560.0
+Reward: 25.1911
+Test set Fidelity: 0.9926 std: 0.0033
+Timesteps/1000: 1570.0
+Reward: 25.4514
+Test set Fidelity: 0.9930 std: 0.0033
+Timesteps/1000: 1580.0
+Reward: 24.1660
+Test set Fidelity: 0.9929 std: 0.0030
+Timesteps/1000: 1590.0
+Reward: 26.0368
+Test set Fidelity: 0.9932 std: 0.0027
+Timesteps/1000: 1600.0
+Reward: 25.9184
+Test set Fidelity: 0.9928 std: 0.0035
+Timesteps/1000: 1610.0
+Reward: 25.4192
+Test set Fidelity: 0.9928 std: 0.0031
+Timesteps/1000: 1620.0
+Reward: 26.6673
+Test set Fidelity: 0.9931 std: 0.0027
+Timesteps/1000: 1630.0
+Reward: 27.3919
+Test set Fidelity: 0.9929 std: 0.0032
+Timesteps/1000: 1640.0
+Reward: 26.6070
+Test set Fidelity: 0.9928 std: 0.0035
+Timesteps/1000: 1650.0
+Reward: 28.1305
+Test set Fidelity: 0.9926 std: 0.0038
+Timesteps/1000: 1660.0
+Reward: 26.6817
+Test set Fidelity: 0.9928 std: 0.0037
+Timesteps/1000: 1670.0
+Reward: 25.0495
+Test set Fidelity: 0.9923 std: 0.0047
+Timesteps/1000: 1680.0
+Reward: 25.6070
+Test set Fidelity: 0.9924 std: 0.0043
+Timesteps/1000: 1690.0
+Reward: 25.8448
+Test set Fidelity: 0.9925 std: 0.0042
+Timesteps/1000: 1700.0
+Reward: 25.6307
+Test set Fidelity: 0.9926 std: 0.0039
+Timesteps/1000: 1710.0
+Reward: 26.4871
+Test set Fidelity: 0.9928 std: 0.0037
+Timesteps/1000: 1720.0
+Reward: 25.7846
+Test set Fidelity: 0.9933 std: 0.0028
+Timesteps/1000: 1730.0
+Reward: 27.2528
+Test set Fidelity: 0.9931 std: 0.0029
+Timesteps/1000: 1740.0
+Reward: 28.0320
+Test set Fidelity: 0.9934 std: 0.0027
+Timesteps/1000: 1750.0
+Reward: 28.7873
+Test set Fidelity: 0.9934 std: 0.0024
+Timesteps/1000: 1760.0
+Reward: 28.4680
+Test set Fidelity: 0.9931 std: 0.0027
+Timesteps/1000: 1770.0
+Reward: 29.0718
+Test set Fidelity: 0.9932 std: 0.0026
+Timesteps/1000: 1780.0
+Reward: 29.3999
+Test set Fidelity: 0.9932 std: 0.0025
+Timesteps/1000: 1790.0
+Reward: 27.1242
+Test set Fidelity: 0.9932 std: 0.0030
+Timesteps/1000: 1800.0
+Reward: 27.3987
+Test set Fidelity: 0.9933 std: 0.0028
+Timesteps/1000: 1810.0
+Reward: 27.7462
+Test set Fidelity: 0.9930 std: 0.0029
+Timesteps/1000: 1820.0
+Reward: 29.9549
+Test set Fidelity: 0.9930 std: 0.0027
+Timesteps/1000: 1830.0
+Reward: 28.8374
+Test set Fidelity: 0.9933 std: 0.0026
+Timesteps/1000: 1840.0
+Reward: 29.1414
+Test set Fidelity: 0.9933 std: 0.0025
+Timesteps/1000: 1850.0
+Reward: 28.4769
+Test set Fidelity: 0.9932 std: 0.0026
+Timesteps/1000: 1860.0
+Reward: 29.4036
+Test set Fidelity: 0.9932 std: 0.0026
+Timesteps/1000: 1870.0
+Reward: 28.9100
+Test set Fidelity: 0.9931 std: 0.0025
+Timesteps/1000: 1880.0
+Reward: 29.1816
+Test set Fidelity: 0.9933 std: 0.0027
+Timesteps/1000: 1890.0
+Reward: 28.5236
+Test set Fidelity: 0.9932 std: 0.0027
+Timesteps/1000: 1900.0
+Reward: 28.5982
+Test set Fidelity: 0.9934 std: 0.0026
+Timesteps/1000: 1910.0
+Reward: 26.4461
+Test set Fidelity: 0.9931 std: 0.0029
+Timesteps/1000: 1920.0
+Reward: 28.0902
+Test set Fidelity: 0.9933 std: 0.0028
+Timesteps/1000: 1930.0
+Reward: 29.1180
+Test set Fidelity: 0.9934 std: 0.0029
+Timesteps/1000: 1940.0
+Reward: 29.5428
+Test set Fidelity: 0.9937 std: 0.0027
+Saving new best model at 1940000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 1950.0
+Reward: 29.9141
+Test set Fidelity: 0.9937 std: 0.0029
+Saving new best model at 1950000 timesteps.
+Saving new best model in simulation/experiments/test_size//model_100.
+Timesteps/1000: 1960.0
+Reward: 30.1518
+Test set Fidelity: 0.9936 std: 0.0031
+Timesteps/1000: 1970.0
+Reward: 28.8488
+Test set Fidelity: 0.9932 std: 0.0034
+Timesteps/1000: 1980.0
+Reward: 29.0086
+Test set Fidelity: 0.9934 std: 0.0031
+Timesteps/1000: 1990.0
+Reward: 29.0282
+Test set Fidelity: 0.9935 std: 0.0031
+Timesteps/1000: 2000.0
+Reward: 30.0813
+Test set Fidelity: 0.9934 std: 0.0030
+ 100% ━━━━━━━━━━━━━━━━━━━━ 2,000,000/2,000,000  [ 3:04:31 < 0:00:00 , 133 it/s ]
