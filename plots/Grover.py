@@ -8,10 +8,10 @@ import json
 import numpy as np
 
 exp_folder = "simulation/experiments/3q_multiple/"
-model_file = exp_folder + "model_8.zip"
+model_file = exp_folder + "model_long_train.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-img_name = "_8"
+img_name = "_long"
 lambda_rb = 0.0388
 
 circuit = grover()
