@@ -7,10 +7,11 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_large/"
-model_file = exp_folder + "model.zip"
+exp_folder = "simulation/experiments/3q_multiple/"
+model_file = exp_folder + "model_8.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
+img_name = "_8"
 lambda_rb = 0.0388
 
 circuit = grover()
@@ -117,8 +118,8 @@ r3 = [x + bar_width for x in r2]
 
 fig=plt.figure(figsize=(12, 9))
 ax=fig.add_subplot(111)
-ax.bar(r1, values1, width=bar_width, label='Ground truth noise', color='#e60049')
-ax.bar(r2, values2, width=bar_width, label='RL (standard)', color='#0bb4ff')
+ax.bar(r1, values1, width=bar_width, label='Ground truth', color='#e60049')
+ax.bar(r2, values2, width=bar_width, label='RL', color='#0bb4ff')
 ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 # if test_only_depol_model:
 #     ax.bar(r4, values4, width=bar_width, label='RL (only dep)', color='orange')
@@ -127,7 +128,7 @@ plt.xlabel('State')
 plt.ylabel('Probability')
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
 plt.legend(loc = "upper left", ncol=1)
-plt.savefig(exp_folder + "images/Grover_shots.pdf")
+plt.savefig(exp_folder + "images/Grover_shots"+img_name+".pdf")
 plt.close()
 
 # Heatmaps
@@ -145,4 +146,4 @@ axs[0].set_title('MSE Truth-RL')
 cax2 = axs[1].imshow(squared_error_rb, cmap='viridis')
 fig.colorbar(cax2, ax=axs[1])
 axs[1].set_title('MSE Truth-RB')
-plt.savefig(exp_folder + "images/Grover_heatmap.pdf")
+plt.savefig(exp_folder + "images/Grover_heatmap"+img_name+".pdf")
