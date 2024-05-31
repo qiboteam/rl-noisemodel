@@ -2,7 +2,7 @@ from rlnoise.neural_network import CNNFeaturesExtractor
 from rlnoise.callback import CustomCallback
 from stable_baselines3 import PPO
 from rlnoise.gym_env import QuantumCircuit
-from rlnoise.utils import compute_fidelity, mse
+from rlnoise.utils import compute_fidelity, mse, trace_distance
 import numpy as np
 from qibo import Circuit
 import json
@@ -130,18 +130,22 @@ class Agent(object):
         dms = []
         avg_fidelity = 0.
         avg_mse = 0.
+        avg_trace = 0. 
         for i, c in enumerate(circuits):
             noisy_circuit = self.apply(c)    
             dm_noise = noisy_circuit().state()
             dms.append(dm_noise)
             fidelity = compute_fidelity(labels[i], dm_noise)
+            trace_d = trace_distance(labels[i], dm_noise)
             mse_ = mse(labels[i], dm_noise)
             result = np.array([(
                 fidelity,
                 mse_,
+                trace_d,
             )],
                 dtype=[ ('fidelity','<f4'),
                         ('mse','<f4'),
+                        ('trace_distance','<f4'),
                     ])
             final_result.append(result)
             avg_fidelity += fidelity

@@ -12,4 +12,3 @@ for size in size_list:
     agent = Agent(config_file = config_file, env = env)
     agent.callback.save_path = f"{exp_folder}/model_{size}"
     agent.train(n_steps = 2000000)
-
