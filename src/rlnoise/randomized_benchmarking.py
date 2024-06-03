@@ -2,30 +2,37 @@ from rlnoise.dataset import Dataset
 from rlnoise.circuit_representation import CircuitRepresentation
 from rlnoise.noise_model import CustomNoiseModel
 import numpy as np
+import json
 from qibo import Circuit
 from qibo import gates
-from qibo.backends import NumpyBackend
+from qibo.backends import NumpyBackend, GlobalBackend
 from qibo.noise import NoiseModel, DepolarizingError
 from scipy.optimize import curve_fit
 from rlnoise.utils import compute_fidelity, mse, mms
 
-def rb_dataset_generator(config_file):
+def rb_dataset_generator(config_file, backend=None):
     """Generate a dataset of circuits for randomized benchmarking."""
     dataset = Dataset(config_file)
-    dataset.generate_rb_dataset()
+    dataset.generate_rb_dataset(backend)
     
-def run_rb(rb_dataset, config):
+def run_rb(rb_dataset, config, backend=None):
     """Run randomized benchmarking on the circuits in the dataset.
     Return a dictionary with the optimal parameters for the RB model: a, l, b.
     where the model is a * l**depth + b.
     """
     dataset = np.load(rb_dataset, allow_pickle=True)
     circuits = dataset["circuits"]
-    circuits = preprocess_circuits(circuits, config)
+    circuits = preprocess_circuits(circuits, config, backend=backend)
+    if backend is not None and backend.name == "QuantumSpain":
+        with open(config) as f:
+            config = json.load(f)
+        nshots = config["chip_conf"]["nshots"]
+    else:
+        nshots = None
 
-    return randomized_benchmarking(circuits)
+    return randomized_benchmarking(circuits, nshots, backend)
 
-def preprocess_circuits(circuits, config, evaluate=False):
+def preprocess_circuits(circuits, config, evaluate=False, backend=None):
     """Preprocess the circuits for randomized benchmarking.
     Apply noise model and fill the circuit with identity gates where no gate is present."""
     rep = CircuitRepresentation(config)
@@ -43,16 +50,19 @@ def preprocess_circuits(circuits, config, evaluate=False):
             inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
             c = fill_identity(c)
             if not evaluate:
-                c = noise.apply(c)
+                if backend is None or backend.name != "QuantumSpain":
+                    c = noise.apply(c)
                 c.add(inverse_unitary)
                 for i in range(nqubits):
                     c.add(gates.M(i))
             final_circuits[depth].append(c)
     return final_circuits
 
-def randomized_benchmarking(circuits, nshots=1000, verbose=False):
+def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
     """Run randomized benchmarking on the circuits."""
-    backend = NumpyBackend()
+    if backend is None:
+        backend = GlobalBackend()
+    backend = GlobalBackend()
     nqubits = list(circuits.values())[0][0].nqubits
     probs = { d: [] for d in circuits.keys() }
     init_state = f"{0:0{nqubits}b}"
@@ -61,10 +71,15 @@ def randomized_benchmarking(circuits, nshots=1000, verbose=False):
     for depth, circs in circuits.items():
         if verbose:
             print(f'> Looping over circuits of depth: {depth}')
-        for c in circs:
-            result = backend.execute_circuit(c, nshots=nshots)
-            freq = result.frequencies()
-            
+
+        if backend is not None and backend.name == "QuantumSpain":
+            results = backend.execute_circuit(circs, nshots=nshots)
+        else:
+            results = [backend.execute_circuit(circ, nshots=nshots) for circ in circs]
+
+        freq_list = [result.frequencies() for result in results] 
+        
+        for freq in freq_list:            
             if init_state not in freq:
                 probs[depth].append(0)
             else:
