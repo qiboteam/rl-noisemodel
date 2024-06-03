@@ -9,10 +9,10 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 
 exp_folder = "simulation/experiments/3q_multiple/"
-model_file = exp_folder + "model_long_train.zip"
+model_file = exp_folder + "model_7.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-img_name = "_long"
+img_name = "_7"
 lambda_rb = 0.00688
 
 circuit = qft()

@@ -7,11 +7,11 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_multiple/"
-model_file = exp_folder + "model_long_train.zip"
+exp_folder = "simulation/experiments/3q_multiple_low/"
+model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-img_name = "_long"
+img_name = "_"
 lambda_rb = 0.0388
 
 circuit = grover()
