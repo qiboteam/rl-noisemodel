@@ -67,6 +67,7 @@ class QuantumCircuit(gymnasium.Env):
     dataset_file: Path = None
     circuits: np.ndarray = None
     labels = None
+    reduced_size: int = None
     val_split = None
     kernel_size: int = None
     action_space_max_value: float = None
@@ -98,6 +99,9 @@ class QuantumCircuit(gymnasium.Env):
 
         if self.circuits is None:
             self.circuits, self.labels = load_dataset(self.dataset_file)
+            if self.reduced_size is not None:
+                self.circuits = self.circuits[:self.reduced_size]
+                self.labels = self.labels[:self.reduced_size]
         
         if not self.kernel_size % 2 == 1:
             raise ValueError("Kernel_size must be an odd number.")
