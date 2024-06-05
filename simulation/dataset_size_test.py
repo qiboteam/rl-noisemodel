@@ -9,7 +9,7 @@ dataset_file = exp_folder + "dataset.npz"
 eval_dataset_file = exp_folder + "eval_dataset.npz"
 
 result = []
-size_list = [10, 20, 50, 75, 100, 150]#, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000
+size_list = [10, 20, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000]
 for size in size_list:
     env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
     model_file_path = f"{exp_folder}/model_{size}"

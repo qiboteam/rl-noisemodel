@@ -8,11 +8,11 @@ import numpy as np
 from qibo.noise import NoiseModel, DepolarizingError
 import json
 
-exp_folder = "simulation/experiments/3q_multiple/"
-model_file = exp_folder + "model_7.zip"
+exp_folder = "simulation/experiments/3q_high/"
+model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-img_name = "_7"
+img_name = ""
 lambda_rb = 0.00688
 
 circuit = qft()

@@ -4,7 +4,7 @@ import qibo
 
 qibo.set_backend("qibojit",platform="numba")
 
-exp_folder = "simulation/experiments/3q_multiple_low/"
+exp_folder = "simulation/experiments/1q/"
 
 exp_folder = "hardware/experiments/"
 
@@ -14,4 +14,4 @@ dataset_file = exp_folder + "dataset.npz"
 env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 
 agent = Agent(config_file = config_file, env = env)
-agent.train(n_steps = 2000000)
+agent.train(n_steps = 100000)

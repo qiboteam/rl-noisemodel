@@ -4,7 +4,7 @@ import qibo
 
 qibo.set_backend("qibojit",platform="numba")
 
-exp_folder = "simulation/experiments/3q_multiple_low/"
+exp_folder = "simulation/experiments/1q/"
 
 #exp_folder = "hardware/experiments/"
 
