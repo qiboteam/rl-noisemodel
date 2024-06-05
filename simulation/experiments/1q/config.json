@@ -1,0 +1,62 @@
+{
+  "dataset": {
+    "n_circuits": 100,
+    "eval_size": 100,
+    "eval_depth": 15,
+    "moments": 10,
+    "qubits": 1,
+    "distributed_clifford": false,
+    "clifford": true,
+    "mixed": false
+  },
+  "gym_env": {
+    "kernel_size": 3,
+    "action_penalty": 0.0,
+    "action_space_max_value": 0.06,
+    "enable_only_depolarizing": false,
+    "val_split": 0.2
+  },
+  "reward": {
+    "metric": "trace",
+    "function": "inverted_squared",
+    "alpha": 20
+  },
+  "noise": {
+    "primitive_gates": ["rz", "rx"],
+    "channels": ["DepolarizingChannel", "ResetChannel"],
+    "dep_lambda": 0.02,
+    "p0": 0.03, 
+    "epsilon_x": 0.04,
+    "epsilon_z": 0.02,
+    "x_coherent_on_gate": ["rx"],
+    "z_coherent_on_gate": ["rz"],
+    "damping_on_gate": ["rx"],
+    "depol_on_gate": ["rz"]
+  },
+  "agent": {
+    "policy": "MlpPolicy",
+    "features_dim": 32,
+    "nn_update_steps": 2000,
+    "batch_size": 400,
+    "filter_size": 1,
+    "conv_layers": 1,
+    "n_filters": 16
+  },
+  "callback": {
+    "save_best_model": true,
+    "plot_results": true,
+    "model_name": "model",
+    "result_folder": "simulation/experiments/1q",
+    "check_freq": 5000,
+    "verbose": true
+  },
+  "rb":{
+    "dataset": "simulation/experiments/1q/rb_dataset.npz",
+    "start": 3,
+    "stop": 31,
+    "step": 3,
+    "n_circ": 50
+  }
+}
+
+
