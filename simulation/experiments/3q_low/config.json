@@ -45,13 +45,13 @@
   "callback": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "model",
-    "result_folder": "simulation/experiments/3q_multiple_low",
+    "model_name": "model_6",
+    "result_folder": "simulation/experiments/3q_low",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_multiple_low/rb_dataset.npz",
+    "dataset": "simulation/experiments/3q_low/rb_dataset.npz",
     "start": 5,
     "stop": 51,
     "step": 5,

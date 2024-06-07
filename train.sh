@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=rl-train
-#SBATCH --output=train.out
+#SBATCH --job-name=rl-train_1q_5
+#SBATCH --output=train_1q_5.out
 #SBATCH --mail-user=simone.bordoni@uniroma1.it
 #SBATCH --mail-type=ALL
 
