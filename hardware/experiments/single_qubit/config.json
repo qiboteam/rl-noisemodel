@@ -4,18 +4,18 @@
     "qubit_map": [0,1,2,3,4],
     "username": "alejandro.sopena",
     "api_key": "23287d7c-cd0c-4dfd-90d3-9fb506c11dee",
-    "nshots": 10,
+    "nshots": 1000,
     "likelihood": true,
     "readout_mitigation": true
   },
   "dataset": {
-    "n_circuits": 6,
-    "eval_size": 2,
+    "n_circuits": 50,
+    "eval_size": 20,
     "eval_depth": 15,
     "moments": 7,
     "qubits": 1,
     "enhanced": true,
-    "clifford": true,
+    "clifford": true, 
     "mixed": true
   },
   "gym_env": {
@@ -58,9 +58,9 @@
   },
   "rb":{
     "dataset": "hardware/experiments/rb_dataset.npz",
-    "start": 3,
-    "stop": 31,
-    "step": 3,
+    "start": 5,
+    "stop": 51,
+    "step": 5,
     "n_circ": 3
   }
 }
