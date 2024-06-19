@@ -7,12 +7,12 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_multiple_low/"
+exp_folder = "simulation/experiments/3q_low/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
 img_name = "_"
-lambda_rb = 0.0388
+lambda_rb = 0.0156
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
@@ -116,7 +116,7 @@ r3 = [x + bar_width for x in r2]
 #     values4 = list(rl_dep_shots.values())
 #     r4 = [x + bar_width for x in r3]
 
-fig=plt.figure(figsize=(12, 9))
+fig=plt.figure(figsize=(12, 7))
 ax=fig.add_subplot(111)
 ax.bar(r1, values1, width=bar_width, label='Ground truth', color='#e60049')
 ax.bar(r2, values2, width=bar_width, label='RL', color='#0bb4ff')
@@ -127,7 +127,7 @@ ax.bar(r3, values3, width=bar_width, label='RB', color='green')
 plt.xlabel('State')
 plt.ylabel('Probability')
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
-plt.legend(loc = "upper left", ncol=1)
+#plt.legend(loc = "upper left", ncol=1)
 plt.savefig(exp_folder + "images/Grover_shots"+img_name+".pdf")
 plt.close()
 

@@ -36,8 +36,8 @@
   "agent": {
     "policy": "MlpPolicy",
     "features_dim": 32,
-    "nn_update_steps": 2000,
-    "batch_size": 400,
+    "nn_update_steps": 1000,
+    "batch_size": 200,
     "filter_size": 1,
     "conv_layers": 1,
     "n_filters": 16
@@ -45,9 +45,9 @@
   "callback": {
     "save_best_model": true,
     "plot_results": true,
-    "model_name": "model_5",
+    "model_name": "model_1",
     "result_folder": "simulation/experiments/1q",
-    "check_freq": 5000,
+    "check_freq": 2000,
     "verbose": true
   },
   "rb":{

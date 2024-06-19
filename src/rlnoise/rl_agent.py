@@ -97,25 +97,32 @@ class Agent(object):
                 print(f'> Looping over circuits of depth: {depth}')
             fidelity = []
             mse_ = []
+            trace_distance_ = []
             for i, c in enumerate(circs):
                 noisy_circuit = self.apply(c)    
                 dm_noise = noisy_circuit().state()
                 fidelity.append(compute_fidelity(labels[label_index][i], dm_noise))
                 mse_.append(mse(labels[label_index][i], dm_noise))
+                trace_distance_.append(trace_distance(labels[label_index][i], dm_noise))
             fidelity = np.array(fidelity)
             mse_ = np.array(mse_)
+            trace_distance_ = np.array(trace_distance_)
             result = np.array([(
                 depth,
                 fidelity.mean(),
                 fidelity.std(),
                 mse_.mean(),
                 mse_.std(),
+                trace_distance_.mean(),
+                trace_distance_.std(),
                 )],
                 dtype=[('depth','<f4'),
                         ('fidelity','<f4'),
                         ('fidelity_std','<f4'),
                         ('mse','<f4'),
                         ('mse_std','<f4'),
+                        ('trace','<f4'),
+                        ('trace_std','<f4'),
                     ])
             final_result.append(result)
         
@@ -152,6 +159,7 @@ class Agent(object):
             avg_mse += mse_
         if verbose:
             print("Avg fidelity: ", avg_fidelity/len(circuits))
+            print("STD fidelity: ", np.std(np.array([f["fidelity"] for f in final_result])))
             print("Avg mse: ", avg_mse/len(circuits))
         return np.asarray(final_result), dms
             

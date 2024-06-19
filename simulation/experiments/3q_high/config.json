@@ -46,12 +46,12 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "simulation/experiments/3q_multiple",
+    "result_folder": "simulation/experiments/3q_high",
     "check_freq": 10000,
     "verbose": true
   },
   "rb":{
-    "dataset": "simulation/experiments/3q_multiple/rb_dataset.npz",
+    "dataset": "simulation/experiments/3q_high/rb_dataset.npz",
     "start": 3,
     "stop": 31,
     "step": 3,

@@ -7,7 +7,7 @@ from qibo import gates
 from qibo.backends import NumpyBackend
 from qibo.noise import NoiseModel, DepolarizingError
 from scipy.optimize import curve_fit
-from rlnoise.utils import compute_fidelity, mse, mms
+from rlnoise.utils import compute_fidelity, mse, mms, trace_distance
 
 def rb_dataset_generator(config_file):
     """Generate a dataset of circuits for randomized benchmarking."""
@@ -125,23 +125,29 @@ def rb_evaluation(lambda_rb, rb_dataset, config, verbose=False):
             print(f'> Looping over circuits of depth: {depth}')
         fidelity = []
         mse_ = []
+        trace_distance_ = []
         fidelity_no_noise = []
         mse_no_noise = []
+        trace_distance_no_noise = []
         fidelity_mms = []
         mse_mms = []
+        trace_distance_mms = []
         for i, c in enumerate(circs):
             dm_no_noise = c().state()
             # MMS
             fidelity_mms.append(compute_fidelity(labels[label_index][i], mms_))
             mse_mms.append(mse(labels[label_index][i], mms_))
+            trace_distance_mms.append(trace_distance(labels[label_index][i], mms_))
             # No noise
             fidelity_no_noise.append(compute_fidelity(labels[label_index][i], dm_no_noise))
             mse_no_noise.append(mse(labels[label_index][i], dm_no_noise))
+            trace_distance_no_noise.append(trace_distance(labels[label_index][i], dm_no_noise))
             # RB noise
             noisy_circuit = depol_noise.apply(c)    
             dm_noise = noisy_circuit().state()
             fidelity.append(compute_fidelity(labels[label_index][i], dm_noise))
             mse_.append(mse(labels[label_index][i], dm_noise))
+            trace_distance_.append(trace_distance(labels[label_index][i], dm_noise))
 
         fidelity_no_noise = np.array(fidelity_no_noise)
         mse_no_noise = np.array(mse_no_noise)
@@ -149,6 +155,9 @@ def rb_evaluation(lambda_rb, rb_dataset, config, verbose=False):
         mse_ = np.array(mse_)
         fidelity_mms = np.array(fidelity_mms)
         mse_mms = np.array(mse_mms)
+        trace_distance_ = np.array(trace_distance_)
+        trace_distance_no_noise = np.array(trace_distance_no_noise)
+        trace_distance_mms = np.array(trace_distance_mms)
         result = np.array([(
             depth,
             fidelity.mean(),
@@ -162,7 +171,13 @@ def rb_evaluation(lambda_rb, rb_dataset, config, verbose=False):
             fidelity_mms.mean(),
             fidelity_mms.std(),
             mse_mms.mean(),
-            mse_mms.std()
+            mse_mms.std(),
+            trace_distance_.mean(),
+            trace_distance_.std(),
+            trace_distance_no_noise.mean(),
+            trace_distance_no_noise.std(),
+            trace_distance_mms.mean(),
+            trace_distance_mms.std()
             )],
             dtype=[ ('depth','<f4'),
                     ('fidelity','<f4'),
@@ -176,7 +191,13 @@ def rb_evaluation(lambda_rb, rb_dataset, config, verbose=False):
                     ('fidelity_mms','<f4'),
                     ('fidelity_mms_std','<f4'),
                     ('mse_mms','<f4'),
-                    ('mse_mms_std','<f4')
+                    ('mse_mms_std','<f4'),
+                    ('trace','<f4'),
+                    ('trace_std','<f4'),
+                    ('trace_no_noise','<f4'),
+                    ('trace_no_noise_std','<f4'),
+                    ('trace_mms','<f4'),
+                    ('trace_mms_std','<f4')
                 ])
         final_result.append(result)
     
