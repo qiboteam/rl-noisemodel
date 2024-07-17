@@ -6,19 +6,18 @@ from rlnoise.utils_hardware import QuantumSpain
 import json
 import qibo
 
-qibo.set_backend("qibojit",platform="numba")
+#qibo.set_backend("qibojit",platform="numba")
 
-exp_folder = "simulation/experiments/1q/"
+#exp_folder = "simulation/experiments/1q/"
 
-#exp_folder = "hardware/experiments/"
+exp_folder = "hardware/experiments/single_qubit/"
 
-config_file = exp_folder + "config.json"
+config_file = exp_folder + "config_qibolab.json"
 rb_dataset = exp_folder + "rb_dataset.npz"
 result_file_rb = exp_folder + "rb_result.npz"
 result_file_rl = exp_folder + "rl_result.npz"
 model_file_path = exp_folder + "model.zip"
 dataset_file = exp_folder + "dataset.npz"
-config_file = exp_folder + "config.json"
 
 with open(config_file) as f:
     config = json.load(f)

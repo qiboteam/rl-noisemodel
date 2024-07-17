@@ -83,8 +83,8 @@ class QuantumSpain(NumpyBackend):
         return result_list
     
 class Qibolab_qrc(QibolabBackend):
-    def __init__(self, qubit_map=None):
-        super().__init__()
+    def __init__(self, platform, qubit_map=None):
+        super().__init__(platform=platform)
         self.qubit_map = qubit_map
 
     def transpile_circ(self, circuit, qubit_map=None):
@@ -92,7 +92,7 @@ class Qibolab_qrc(QibolabBackend):
             qubit_map = list(range(circuit.nqubits))
         self.qubit_map = qubit_map
         from qibo.transpiler.unitary_decompositions import u3_decomposition
-        new_c = Circuit(self.nqubits, density_matrix=True)
+        new_c = Circuit(self.platform.nqubits, density_matrix=True)
         for gate in circuit.queue:
             qubits = [self.qubit_map[j] for j in gate.qubits]
             if isinstance(gate, gates.M):
@@ -104,8 +104,7 @@ class Qibolab_qrc(QibolabBackend):
             else:
                 matrix = gate.matrix()
                 theta, phi, lamb = u3_decomposition(matrix)
-                new_c.add([gates.RZ(*tuple(qubits), lamb), gates.RX(*tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), theta+np.pi), gates.RX(
-                    *tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), phi+np.pi)])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
+                new_c.add([gates.I(*tuple(qubits))])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
         return new_c
 
     def execute_circuit(self, circuits, nshots=1000):

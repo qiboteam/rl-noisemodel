@@ -2,13 +2,13 @@ from rlnoise.dataset import Dataset
 import json
 import qibo
 
-qibo.set_backend("qibojit",platform="numba")
+qibo.set_backend("numpy")
 
-exp_folder = "simulation/experiments/1q/"
+#exp_folder = "simulation/experiments/1q/"
 
-#exp_folder = "hardware/experiments/"
+exp_folder = "hardware/experiments/single_qubit/"
 
-config_file = exp_folder + "config.json"
+config_file = exp_folder + "config_qibolab.json"
 save_path = exp_folder + "dataset"
 eval_path = exp_folder + "eval_dataset"
 

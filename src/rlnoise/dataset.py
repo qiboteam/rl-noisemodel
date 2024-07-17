@@ -70,7 +70,7 @@ class Dataset(object):
             self.n_gates = len
             circuits = np.asarray([self.generate_random_circuit() for _ in range(rb_options["n_circ"])])
             circ_rep = [self.rep.circuit_to_array(c)for c in circuits]
-            if backend is None or backend.name != "QuantumSpain" or backend.name != "qibolab":
+            if backend is None or (backend.name != "QuantumSpain" and backend.name != "qibolab"):
                 noisy_circuits = [self.noise_model.apply(c) for c in circuits]
                 dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(rb_options["n_circ"])])
             else:         

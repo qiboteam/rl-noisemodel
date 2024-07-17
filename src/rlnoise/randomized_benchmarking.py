@@ -50,7 +50,7 @@ def preprocess_circuits(circuits, config, evaluate=False, backend=None):
             inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
             c = fill_identity(c)
             if not evaluate:
-                if backend is None or backend.name != "QuantumSpain" or backend.name != "qibolab":
+                if backend is None or (backend.name != "QuantumSpain" and backend.name != "qibolab"):
                     c = noise.apply(c)
                 c.add(inverse_unitary)
                 for i in range(nqubits):

@@ -1,6 +1,6 @@
 { "chip_conf": {
     "backend": "qibolab",
-    "platform": 16,
+    "platform": "dummy",
     "qubit_map": [0,1,2,3,4],
     "nshots": 1000,
     "likelihood": true,
@@ -13,6 +13,7 @@
     "moments": 7,
     "qubits": 1,
     "enhanced": true,
+    "distributed_clifford": false,
     "clifford": true, 
     "mixed": true
   },
@@ -44,18 +45,21 @@
     "policy": "MlpPolicy",
     "features_dim": 32,
     "nn_update_steps": 1000,
-    "batch_size": 64
+    "batch_size": 64,
+    "filter_size": 1,
+    "conv_layers": 1,
+    "n_filters": 16
   },
   "callback": {
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "hardware/experiments/",
+    "result_folder": "hardware/experiments/single_qubit/",
     "check_freq": 5000,
     "verbose": true
   },
   "rb":{
-    "dataset": "hardware/experiments/rb_dataset.npz",
+    "dataset": "hardware/experiments/single_qubit/rb_dataset.npz",
     "start": 5,
     "stop": 51,
     "step": 5,
