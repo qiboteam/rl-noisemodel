@@ -23,7 +23,7 @@ def run_rb(rb_dataset, config, backend=None):
     dataset = np.load(rb_dataset, allow_pickle=True)
     circuits = dataset["circuits"]
     circuits = preprocess_circuits(circuits, config, backend=backend)
-    if backend is not None and backend.name == "QuantumSpain":
+    if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
         with open(config) as f:
             config = json.load(f)
         nshots = config["chip_conf"]["nshots"]
@@ -50,7 +50,7 @@ def preprocess_circuits(circuits, config, evaluate=False, backend=None):
             inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
             c = fill_identity(c)
             if not evaluate:
-                if backend is None or backend.name != "QuantumSpain":
+                if backend is None or backend.name != "QuantumSpain" or backend.name != "qibolab":
                     c = noise.apply(c)
                 c.add(inverse_unitary)
                 for i in range(nqubits):
@@ -72,7 +72,7 @@ def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
         if verbose:
             print(f'> Looping over circuits of depth: {depth}')
 
-        if backend is not None and backend.name == "QuantumSpain":
+        if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
             results = backend.execute_circuit(circs, nshots=nshots)
         else:
             results = [backend.execute_circuit(circ, nshots=nshots) for circ in circs]

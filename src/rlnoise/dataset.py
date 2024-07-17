@@ -70,7 +70,7 @@ class Dataset(object):
             self.n_gates = len
             circuits = np.asarray([self.generate_random_circuit() for _ in range(rb_options["n_circ"])])
             circ_rep = [self.rep.circuit_to_array(c)for c in circuits]
-            if backend is None or backend.name != "QuantumSpain":
+            if backend is None or backend.name != "QuantumSpain" or backend.name != "qibolab":
                 noisy_circuits = [self.noise_model.apply(c) for c in circuits]
                 dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(rb_options["n_circ"])])
             else:         
@@ -87,7 +87,7 @@ class Dataset(object):
             circuits_list.append(circ_rep)
         circuits_list  = np.asarray(circuits_list, dtype=object)
         
-        if backend is not None and backend.name == "QuantumSpain":
+        if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
             np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels, cal_mat = cal_mat)
         else:
             np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)
@@ -97,7 +97,7 @@ class Dataset(object):
         self.n_gates = self.eval_depth
         circuits = [self.generate_random_circuit() for _ in range(self.eval_size)]
         circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in circuits], dtype=object)
-        if backend is not None and backend.name == "QuantumSpain":
+        if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
             nshots = self.config["chip_conf"]["nshots"]
             likelihood = self.config["chip_conf"]["likelihood"]
             readout_mitigation = self.config["chip_conf"]["readout_mitigation"]

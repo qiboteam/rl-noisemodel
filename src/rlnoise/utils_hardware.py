@@ -7,6 +7,7 @@ from qibo.models import Circuit
 from qibo.hamiltonians import Hamiltonian
 from qiboconnection import API
 from qibo.result import MeasurementOutcomes
+from qibolab.backends import QibolabBackend
 from collections import Counter
 from itertools import chain, product
 from functools import reduce
@@ -80,7 +81,42 @@ class QuantumSpain(NumpyBackend):
         # if len(result_list) == 1:
         #     return result_list[0]
         return result_list
+    
+class Qibolab_qrc(QibolabBackend):
+    def __init__(self, qubit_map=None):
+        super().__init__()
+        self.qubit_map = qubit_map
 
+    def transpile_circ(self, circuit, qubit_map=None):
+        if qubit_map == None:
+            qubit_map = list(range(circuit.nqubits))
+        self.qubit_map = qubit_map
+        from qibo.transpiler.unitary_decompositions import u3_decomposition
+        new_c = Circuit(self.nqubits, density_matrix=True)
+        for gate in circuit.queue:
+            qubits = [self.qubit_map[j] for j in gate.qubits]
+            if isinstance(gate, gates.M):
+                new_gate = gates.M(*tuple(qubits), **gate.init_kwargs)
+                new_gate.result = gate.result
+                new_c.add(new_gate)
+            elif isinstance(gate, gates.I) or len(gate.qubits) == 2:
+                new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
+            else:
+                matrix = gate.matrix()
+                theta, phi, lamb = u3_decomposition(matrix)
+                new_c.add([gates.RZ(*tuple(qubits), lamb), gates.RX(*tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), theta+np.pi), gates.RX(
+                    *tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), phi+np.pi)])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
+        return new_c
+
+    def execute_circuit(self, circuits, nshots=1000):
+        if isinstance(circuits, list) is False:
+            circuits = [circuits]
+        for k in range(len(circuits)):
+            circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
+        print(nshots)
+        results = self.execute_circuits(circuits, nshots=nshots)
+        return results
+    
 
 def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None):
     """Computes the calibration matrix for readout mitigation.
@@ -117,7 +153,7 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
         if noise_model is not None:
             circuit = noise_model.apply(circuit)
         cal_circs.append(circuit)
-    if backend is not None and backend.name == "QuantumSpain":
+    if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
         results = backend.execute_circuit(cal_circs, nshots=nshots)
     else:
         results = [backend.execute_circuit(
@@ -196,7 +232,7 @@ class StateTomography:
     def run_circuits(self):
         dims = np.shape(self.tomo_circuits)
         circs = list(chain.from_iterable(self.tomo_circuits))
-        if self.backend is not None and self.backend.name == "QuantumSpain":
+        if self.backend is not None and (self.backend.name == "QuantumSpain" or self.backend.name == "qibolab"):
             results = self.backend.execute_circuit(circs, nshots=self.nshots)
         else:
             results = [self.backend.execute_circuit(
@@ -236,7 +272,7 @@ class StateTomography:
                     term = term@symbols.Z(q).full_matrix(self.nqubits)
             obs = Hamiltonian(self.nqubits, term, self.backend)
 
-            if noise is not None and self.backend.name != "QuantumSpain":
+            if noise is not None and self.backend.name != "QuantumSpain" and self.backend.name != "qibolab":
                 circ = noise.apply(circ)
 
             freqs = self.freqs[k]
