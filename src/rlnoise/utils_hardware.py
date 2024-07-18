@@ -104,7 +104,8 @@ class Qibolab_qrc(QibolabBackend):
             else:
                 matrix = gate.matrix()
                 theta, phi, lamb = u3_decomposition(matrix)
-                new_c.add([gates.I(*tuple(qubits))])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
+                new_c.add([gates.RZ(*tuple(qubits), lamb), gates.RX(*tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), theta+np.pi), gates.RX(
+                    *tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), phi+np.pi)])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
         return new_c
 
     def execute_circuit(self, circuits, nshots=1000):
