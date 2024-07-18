@@ -6,6 +6,7 @@ from rlnoise.utils import compute_fidelity, mse, trace_distance
 import numpy as np
 from qibo import Circuit
 import json
+from qibo.backends import GlobalBackend
 
 class Agent(object):
     '''Agent class that uses the PPO algorithm from stable_baselines3 to train a policy.
@@ -123,6 +124,7 @@ class Agent(object):
     
     def apply_eval_dataset(self, dataset, verbose = True):
         '''Apply the policy to a dataset of circuits used for testing and return the fidelity, trace distance and the dms.'''
+        backend = GlobalBackend()
         dataset = np.load(dataset, allow_pickle=True)
         circuits = dataset["circuits"]
         labels = dataset["labels"]
@@ -133,7 +135,7 @@ class Agent(object):
         avg_trace = 0. 
         for i, c in enumerate(circuits):
             noisy_circuit = self.apply(c)    
-            dm_noise = noisy_circuit().state()
+            dm_noise = backend.execute_circuit(noisy_circuit).state()
             dms.append(dm_noise)
             fidelity = compute_fidelity(labels[i], dm_noise)
             trace_d = trace_distance(labels[i], dm_noise)
