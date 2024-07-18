@@ -10,7 +10,7 @@ from qibolab.backends import QibolabBackend
 from collections import Counter
 from itertools import chain, product
 from functools import reduce
-
+from qibo.config import log
 
 def expectation_from_samples(obs, freq, qubit_map=None):
     obs = obs.matrix
@@ -110,7 +110,11 @@ class Qibolab_qrc(QibolabBackend):
             circuits = [circuits]
         for k in range(len(circuits)):
             circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
-        results = self.execute_circuits(circuits, nshots=nshots)
+        log.info(nshots)
+        results = []
+        for circuit in circuits:
+            results.append(self.execute_circuit(circuit, nshots=nshots))
+        #results = self.execute_circuits(circuits, nshots=nshots)
         return results
     
 
@@ -164,6 +168,7 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
             f = freq[key] / nshots
             column[int(key, 2)] = f
         matrix[:, i] = column
+    log.info(matrix)
     return np.linalg.inv(matrix)
 
 

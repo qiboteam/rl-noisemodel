@@ -2,7 +2,7 @@ from rlnoise.randomized_benchmarking import rb_dataset_generator
 import json
 import qibo
 
-#qibo.set_backend("qibojit",platform="numba")
+qibo.set_backend("qibojit",platform="numba")
 
 exp_folder = "simulation/experiments/1q/"
 

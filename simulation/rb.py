@@ -6,7 +6,7 @@ from rlnoise.utils_hardware import QuantumSpain
 import json
 import qibo
 
-#qibo.set_backend("qibojit",platform="numba")
+qibo.set_backend("qibojit",platform="numba")
 
 #exp_folder = "simulation/experiments/1q/"
 

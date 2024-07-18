@@ -2,7 +2,7 @@ from rlnoise.dataset import Dataset
 import json
 import qibo
 
-qibo.set_backend("numpy")
+qibo.set_backend("qibojit",platform="numba")
 
 #exp_folder = "simulation/experiments/1q/"
 
