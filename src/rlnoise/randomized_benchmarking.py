@@ -62,7 +62,6 @@ def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=True):
     """Run randomized benchmarking on the circuits."""
     if backend is None:
         backend = GlobalBackend()
-    backend = GlobalBackend()
     nqubits = list(circuits.values())[0][0].nqubits
     probs = { d: [] for d in circuits.keys() }
     init_state = f"{0:0{nqubits}b}"
@@ -71,7 +70,6 @@ def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=True):
     for depth, circs in circuits.items():
         if verbose:
             print(f'> Looping over circuits of depth: {depth}')
-
         if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
             results = backend.execute_circuit_(circs, nshots=nshots)
         else:

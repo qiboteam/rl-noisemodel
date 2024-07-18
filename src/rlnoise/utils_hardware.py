@@ -98,6 +98,8 @@ class Qibolab_qrc(QibolabBackend):
                 new_gate = gates.M(*tuple(qubits), **gate.init_kwargs)
                 new_gate.result = gate.result
                 new_c.add(new_gate)
+            elif isinstance(gate, gates.Unitary):
+                new_c.add(gates.Unitary(gate.matrix(),*tuple(qubits)))
             else:
                 new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
         from qibo.transpiler.unroller import Unroller, NativeGates
