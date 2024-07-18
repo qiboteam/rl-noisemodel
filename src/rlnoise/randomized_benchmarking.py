@@ -73,7 +73,7 @@ def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
             print(f'> Looping over circuits of depth: {depth}')
 
         if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
-            results = backend.execute_circuit(circs, nshots=nshots)
+            results = backend.execute_circuit_(circs, nshots=nshots)
         else:
             results = [backend.execute_circuit(circ, nshots=nshots) for circ in circs]
 

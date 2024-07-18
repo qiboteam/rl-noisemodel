@@ -4,7 +4,7 @@
     "qubit_map": [1,0,2,3,4],
     "nshots": 1000,
     "likelihood": true,
-    "readout_mitigation": true
+    "readout_mitigation": false
   },
   "dataset": {
     "n_circuits": 50,

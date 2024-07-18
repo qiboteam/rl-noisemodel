@@ -16,7 +16,8 @@ if "chip_conf" in config.keys():
     chip_conf = config["chip_conf"]
     if chip_conf["backend"] == "qibolab":
         from rlnoise.utils_hardware import Qibolab_qrc
-        backend = Qibolab_qrc(platform=chip_conf["platform"])
+        backend = Qibolab_qrc(platform=chip_conf["platform"], qubit_map=chip_conf["qubit_map"])
+        
     elif chip_conf["backend"] == "QuantumSpain":
         from rlnoise.utils_hardware import QuantumSpain
         from qiboconnection.connection import ConnectionConfiguration

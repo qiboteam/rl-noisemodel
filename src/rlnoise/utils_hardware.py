@@ -60,7 +60,7 @@ class QuantumSpain(NumpyBackend):
                     *tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), phi+np.pi)])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
         return new_c
 
-    def execute_circuit(self, circuits, nshots=1000):
+    def execute_circuit_(self, circuits, nshots=1000):
         if isinstance(circuits, list) is False:
             circuits = [circuits]
         for k in range(len(circuits)):
@@ -91,7 +91,6 @@ class Qibolab_qrc(QibolabBackend):
         if qubit_map == None:
             qubit_map = list(range(circuit.nqubits))
         self.qubit_map = qubit_map
-        from qibo.transpiler.unitary_decompositions import u3_decomposition
         new_c = Circuit(self.platform.nqubits, density_matrix=True)
         for gate in circuit.queue:
             qubits = [self.qubit_map[j] for j in gate.qubits]
@@ -101,14 +100,16 @@ class Qibolab_qrc(QibolabBackend):
                 new_c.add(new_gate)
             else:
                 new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
-        return new_c
+        from qibo.transpiler.unroller import Unroller, NativeGates
+        translator = Unroller(NativeGates.default())
+        transpiled_c = translator(new_c)
+        return transpiled_c
 
-    def execute_circuit(self, circuits, nshots=1000):
+    def execute_circuit_(self, circuits, nshots=1000):
         if isinstance(circuits, list) is False:
             circuits = [circuits]
         for k in range(len(circuits)):
             circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
-        print(nshots)
         results = self.execute_circuits(circuits, nshots=nshots)
         return results
     
@@ -149,7 +150,7 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
             circuit = noise_model.apply(circuit)
         cal_circs.append(circuit)
     if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
-        results = backend.execute_circuit(cal_circs, nshots=nshots)
+        results = backend.execute_circuit_(cal_circs, nshots=nshots)
     else:
         results = [backend.execute_circuit(
             cal_circ, nshots=nshots) for cal_circ in cal_circs]
@@ -228,7 +229,7 @@ class StateTomography:
         dims = np.shape(self.tomo_circuits)
         circs = list(chain.from_iterable(self.tomo_circuits))
         if self.backend is not None and (self.backend.name == "QuantumSpain" or self.backend.name == "qibolab"):
-            results = self.backend.execute_circuit(circs, nshots=self.nshots)
+            results = self.backend.execute_circuit_(circs, nshots=self.nshots)
         else:
             results = [self.backend.execute_circuit(
                 circ, nshots=self.nshots) for circ in circs]
