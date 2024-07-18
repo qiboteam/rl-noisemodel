@@ -76,22 +76,20 @@ def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=True):
             results = [backend.execute_circuit(circ, nshots=nshots) for circ in circs]
 
         freq_list = [result.frequencies() for result in results] 
-        
         for freq in freq_list:            
             if init_state not in freq:
                 probs[depth].append(0)
             else:
                 probs[depth].append(freq[init_state]/nshots)
-
     avg_probs = [ (d, np.mean(p)) for d,p in probs.items() ]
     std_probs = [ (d, np.std(p)) for d,p in probs.items() ]
     avg_probs = sorted(avg_probs, key=lambda x: x[0])
     std_probs = sorted(std_probs, key=lambda x: x[0])
-    model = lambda depth,a,l,b: a * np.power(l,depth) + b
+    model = lambda depth,a,l: a * np.power(l,depth)
     depths, survival_probs = zip(*avg_probs)
     _, err = zip(*std_probs)
-    optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
-    optimal_params = { 'a': optimal_params[0], 'l': optimal_params[1], 'b': optimal_params[2], "model": "a * l**depth + b" }
+    optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5])
+    optimal_params = { 'a': optimal_params[0], 'l': optimal_params[1], 'b': 0, "model": "a * l**depth + b" }
     return optimal_params
 
 
