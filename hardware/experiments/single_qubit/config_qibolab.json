@@ -1,9 +1,9 @@
 { "chip_conf": {
     "backend": "qibolab",
-    "platform": "iqm5q",
-    "qubit_map": [0,1,2,3,4],
-    "nshots": 10,
-    "likelihood": true,
+    "platform": "qw11q",
+    "qubit_map": [14],
+    "nshots": 1000,
+    "likelihood": false,
     "readout_mitigation": false
   },
   "dataset": {

@@ -113,10 +113,10 @@ class Qibolab_qrc(QibolabBackend):
         for k in range(len(circuits)):
             circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
         log.info(nshots)
-        results = []
-        for circuit in circuits:
-            results.append(self.execute_circuit(circuit, nshots=nshots))
-        #results = self.execute_circuits(circuits, nshots=nshots)
+        # results = []
+        # for circuit in circuits:
+        #     results.append(self.execute_circuit(circuit, nshots=nshots))
+        results = self.execute_circuits(circuits, nshots=nshots)
         return results
     
 
