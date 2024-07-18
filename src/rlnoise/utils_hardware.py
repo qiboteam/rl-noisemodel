@@ -5,7 +5,6 @@ from qibo import gates, symbols
 from qibo.backends import construct_backend, GlobalBackend, NumpyBackend
 from qibo.models import Circuit
 from qibo.hamiltonians import Hamiltonian
-from qiboconnection import API
 from qibo.result import MeasurementOutcomes
 from collections import Counter
 from itertools import chain, product
@@ -31,6 +30,7 @@ def expectation_from_samples(obs, freq, qubit_map=None):
 class QuantumSpain(NumpyBackend):
     def __init__(self, configuration, device_id, nqubits, qubit_map=None):
         super().__init__()
+        from qiboconnection import API
         self.name = "QuantumSpain"
         self.platform = API(configuration=configuration)
         #self.platform.select_device_id(device_id=device_id)
