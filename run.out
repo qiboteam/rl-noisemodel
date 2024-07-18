@@ -1,18 +1,29 @@
-[Qibo 0.2.7|INFO|2024-07-18 17:13:47]: Using qibojit (numba) backend on /CPU:0
-[Qibo 0.2.7|INFO|2024-07-18 17:13:48]: Loading platform /nfs/tools/qibolab_platforms_qrc/iqm5q
+[Qibo 0.2.7|INFO|2024-07-18 17:21:47]: Using qibojit (numba) backend on /CPU:0
+[Qibo 0.2.7|INFO|2024-07-18 17:21:48]: Loading platform /nfs/tools/qibolab_platforms_qrc/iqm5q
 /nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/randomized_benchmarking.py:95: OptimizeWarning: Covariance of the parameters could not be estimated
   optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
 Running randomized benchmarking...
+> Looping over circuits of depth: 5
+> Looping over circuits of depth: 10
+> Looping over circuits of depth: 15
+> Looping over circuits of depth: 20
+> Looping over circuits of depth: 25
+> Looping over circuits of depth: 30
+> Looping over circuits of depth: 35
+> Looping over circuits of depth: 40
+> Looping over circuits of depth: 45
+> Looping over circuits of depth: 50
 RB Model:
 {'a': -9.550415111954853e-08, 'l': 0.37737448687173875, 'b': 1.0000000000736582, 'model': 'a * l**depth + b'}
 Decay constant:  0.6226255131282612
 Evaluating RB model...
-Traceback (most recent call last):
-  File "/nfs/users/simone.bordoni/rl-noisemodel/./simulation/rb.py", line 47, in <module>
-    env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
-  File "<string>", line 11, in __init__
-  File "/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/gym_env.py", line 101, in __post_init__
-    self.circuits, self.labels = load_dataset(self.dataset_file)
-  File "/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/dataset.py", line 19, in load_dataset
-    raise FileNotFoundError(f"File {filename} not found.")
-FileNotFoundError: File hardware/experiments/single_qubit/dataset.npz not found.
+[[( 5., 0.5975336 , 0.13319264, 0.11004627, 0.0187883 , 0.9253496 , 0.04628666, 0.02399188, 0.02351968, 0.5942809 , 0.13333333, 0.11166666, 0.01885618)]
+ [(10., 0.6322928 , 0.09576432, 0.11165559, 0.01027342, 0.87839806, 0.05726748, 0.04746764, 0.02671091, 0.63227063, 0.09576611, 0.11166666, 0.01027402)]
+ [(15., 0.5881919 , 0.1247219 , 0.11333324, 0.01649915, 0.9288929 , 0.03700333, 0.02388687, 0.01665682, 0.5881917 , 0.12472191, 0.11333334, 0.01649916)]
+ [(20., 0.71291363, 0.15705983, 0.09      , 0.02857738, 0.87839806, 0.05726748, 0.02580098, 0.00770019, 0.71291363, 0.15705983, 0.09      , 0.02857738)]
+ [(25., 0.65485835, 0.11263014, 0.10666667, 0.01433721, 0.9300968 , 0.04256328, 0.01661828, 0.01032905, 0.65485835, 0.11263014, 0.10666667, 0.01433721)]
+ [(30., 0.65485835, 0.11263014, 0.10666667, 0.01433721, 0.90958214, 0.01355121, 0.02687559, 0.00870583, 0.6548584 , 0.11263014, 0.10666667, 0.01433721)]
+ [(35., 0.7269463 , 0.17840604, 0.08333334, 0.03965126, 0.8117314 , 0.09637527, 0.05246764, 0.01545304, 0.7269463 , 0.17840604, 0.08333334, 0.03965126)]
+ [(40., 0.5745356 , 0.10540926, 0.11666667, 0.01178511, 0.9275075 , 0.04450726, 0.0279129 , 0.02012172, 0.5745356 , 0.10540926, 0.11666667, 0.01178511)]
+ [(45., 0.6821367 , 0.14198433, 0.09833334, 0.02494438, 0.7962251 , 0.081824  , 0.07522081, 0.03260899, 0.6821367 , 0.14198433, 0.09833334, 0.02494438)]
+ [(50., 0.7247219 , 0.16176133, 0.08666667, 0.02896358, 0.89676344, 0.07771941, 0.01328494, 0.01181948, 0.7247219 , 0.16176133, 0.08666667, 0.02896358)]]

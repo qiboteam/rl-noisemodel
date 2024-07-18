@@ -24,7 +24,7 @@ def load_dataset(filename):
     return circuits, labels
 
 class Dataset(object):
-    def __init__(self, config_file, evaluation=False):
+    def __init__(self, config_file, evaluation=False, only_rb=False):
         '''
         Generate dataset for the training of RL-algorithm.
         '''
@@ -45,29 +45,31 @@ class Dataset(object):
         mixed = dataset_options['mixed']
         self.rep = CircuitRepresentation(config_file)
         self.noise_model = CustomNoiseModel(config_file)
-        if enhanced_dataset and not mixed:
-            print("Generating distributed clifford dataset.")
-            self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
-        elif not mixed:
-            print("Generating random dataset.")
-            self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
-        elif mixed:
-            print("Generating mixed dataset.")
-            self.circuits = [self.generate_random_circuit() for _ in range(int(self.n_circuits/2))]
-            self.circuits += [self.generate_clifford_circuit() for _ in range(int(self.n_circuits/2))]
-            random.shuffle(self.circuits)
-        else:
-            raise ValueError("Unknown dataset type.")
-        self.noisy_circuits = [self.noise_model.apply(c) for c in self.circuits]
-        self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
-        self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
+        if not only_rb:
+            if enhanced_dataset and not mixed:
+                print("Generating distributed clifford dataset.")
+                self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
+            elif not mixed:
+                print("Generating random dataset.")
+                self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
+            elif mixed:
+                print("Generating mixed dataset.")
+                self.circuits = [self.generate_random_circuit() for _ in range(int(self.n_circuits/2))]
+                self.circuits += [self.generate_clifford_circuit() for _ in range(int(self.n_circuits/2))]
+                random.shuffle(self.circuits)
+            else:
+                raise ValueError("Unknown dataset type.")
+            self.noisy_circuits = [self.noise_model.apply(c) for c in self.circuits]
+            self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
+            self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
 
     def generate_rb_dataset(self, backend=None):
         rb_options = self.config["rb"]
         circuits_list = []
         labels = []
-        for len in range(rb_options["start"], rb_options["stop"], rb_options["step"]):
-            self.n_gates = len
+        for lengh in range(rb_options["start"], rb_options["stop"], rb_options["step"]):
+            self.n_gates = lengh
+            print("generating circuits of len:", lengh)
             circuits = np.asarray([self.generate_random_circuit() for _ in range(rb_options["n_circ"])])
             circ_rep = [self.rep.circuit_to_array(c)for c in circuits]
             if backend is None or (backend.name != "QuantumSpain" and backend.name != "qibolab"):

@@ -58,7 +58,7 @@ def preprocess_circuits(circuits, config, evaluate=False, backend=None):
             final_circuits[depth].append(c)
     return final_circuits
 
-def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
+def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=True):
     """Run randomized benchmarking on the circuits."""
     if backend is None:
         backend = GlobalBackend()
