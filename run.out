@@ -1,10 +1,18 @@
+[Qibo 0.2.7|INFO|2024-07-18 17:13:47]: Using qibojit (numba) backend on /CPU:0
+[Qibo 0.2.7|INFO|2024-07-18 17:13:48]: Loading platform /nfs/tools/qibolab_platforms_qrc/iqm5q
+/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/randomized_benchmarking.py:95: OptimizeWarning: Covariance of the parameters could not be estimated
+  optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
+Running randomized benchmarking...
+RB Model:
+{'a': -9.550415111954853e-08, 'l': 0.37737448687173875, 'b': 1.0000000000736582, 'model': 'a * l**depth + b'}
+Decay constant:  0.6226255131282612
+Evaluating RB model...
 Traceback (most recent call last):
-  File "/nfs/users/simone.bordoni/rl-noisemodel/./simulation/rb.py", line 1, in <module>
-    from rlnoise.randomized_benchmarking import run_rb, rb_evaluation
-  File "/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/randomized_benchmarking.py", line 1, in <module>
-    from rlnoise.dataset import Dataset
-  File "/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/dataset.py", line 11, in <module>
-    from rlnoise.utils_hardware import state_tomography
-  File "/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/utils_hardware.py", line 8, in <module>
-    from qiboconnection import API
-ModuleNotFoundError: No module named 'qiboconnection'
+  File "/nfs/users/simone.bordoni/rl-noisemodel/./simulation/rb.py", line 47, in <module>
+    env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
+  File "<string>", line 11, in __init__
+  File "/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/gym_env.py", line 101, in __post_init__
+    self.circuits, self.labels = load_dataset(self.dataset_file)
+  File "/nfs/users/simone.bordoni/rl-noisemodel/src/rlnoise/dataset.py", line 19, in load_dataset
+    raise FileNotFoundError(f"File {filename} not found.")
+FileNotFoundError: File hardware/experiments/single_qubit/dataset.npz not found.
