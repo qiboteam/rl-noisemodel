@@ -5,7 +5,6 @@ from qibo import gates, symbols
 from qibo.backends import construct_backend, GlobalBackend, NumpyBackend
 from qibo.models import Circuit
 from qibo.hamiltonians import Hamiltonian
-from qiboconnection import API
 from qibo.result import MeasurementOutcomes
 from qibolab.backends import QibolabBackend
 from collections import Counter
@@ -31,6 +30,7 @@ def expectation_from_samples(obs, freq, qubit_map=None):
 
 class QuantumSpain(NumpyBackend):
     def __init__(self, configuration, device_id, nqubits, qubit_map=None):
+        from qiboconnection import API
         super().__init__()
         self.name = "QuantumSpain"
         self.platform = API(configuration=configuration)
@@ -99,13 +99,8 @@ class Qibolab_qrc(QibolabBackend):
                 new_gate = gates.M(*tuple(qubits), **gate.init_kwargs)
                 new_gate.result = gate.result
                 new_c.add(new_gate)
-            elif isinstance(gate, gates.I) or len(gate.qubits) == 2:
-                new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
             else:
-                matrix = gate.matrix()
-                theta, phi, lamb = u3_decomposition(matrix)
-                new_c.add([gates.RZ(*tuple(qubits), lamb), gates.RX(*tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), theta+np.pi), gates.RX(
-                    *tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), phi+np.pi)])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
+                new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
         return new_c
 
     def execute_circuit(self, circuits, nshots=1000):
