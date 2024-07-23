@@ -2,20 +2,20 @@
     "backend": "qibolab",
     "platform": "qw11q",
     "qubit_map": [14],
-    "nshots": 1000,
+    "nshots": 2000,
     "likelihood": false,
     "readout_mitigation": false
   },
   "dataset": {
     "n_circuits": 50,
-    "eval_size": 20,
-    "eval_depth": 15,
+    "eval_size": 30,
+    "eval_depth": 10,
     "moments": 7,
     "qubits": 1,
-    "enhanced": true,
+    "enhanced": false,
     "distributed_clifford": false,
     "clifford": true, 
-    "mixed": true
+    "mixed": false
   },
   "gym_env": {
     "kernel_size": 3,
@@ -54,16 +54,16 @@
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "hardware/experiments/single_qubit/",
+    "result_folder": "hardware/experiments/qw11q/",
     "check_freq": 5000,
     "verbose": true
   },
   "rb":{
-    "dataset": "hardware/experiments/single_qubit/rb_dataset.npz",
-    "start": 5,
-    "stop": 51,
-    "step": 5,
-    "n_circ": 3
+    "dataset": "hardware/experiments/qw11q/rb_dataset.npz",
+    "start": 3,
+    "stop": 31,
+    "step": 3,
+    "n_circ": 5
   }
 }
 
