@@ -12,7 +12,7 @@ from rlnoise.utils import compute_fidelity, mse, mms
 
 def rb_dataset_generator(config_file, backend=None):
     """Generate a dataset of circuits for randomized benchmarking."""
-    dataset = Dataset(config_file)
+    dataset = Dataset(config_file, only_rb=True)
     dataset.generate_rb_dataset(backend)
     
 def run_rb(rb_dataset, config, backend=None):

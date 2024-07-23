@@ -67,9 +67,10 @@ class Dataset(object):
         rb_options = self.config["rb"]
         circuits_list = []
         labels = []
+        self.clifford = True
         for lengh in range(rb_options["start"], rb_options["stop"], rb_options["step"]):
             self.n_gates = lengh
-            print("generating circuits of len:", lengh)
+            print("Generating circuits of len:", lengh)
             circuits = np.asarray([self.generate_random_circuit() for _ in range(rb_options["n_circ"])])
             circ_rep = [self.rep.circuit_to_array(c)for c in circuits]
             if backend is None or (backend.name != "QuantumSpain" and backend.name != "qibolab"):
