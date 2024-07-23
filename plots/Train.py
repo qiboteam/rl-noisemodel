@@ -3,9 +3,9 @@ import numpy as np
 import scienceplots
 plt.style.use('science')
 
-exp_folder = "simulation/experiments/3q_large/"
+exp_folder = "hardware/experiments/qw11q/"
 results_path = exp_folder + "model_train_result.npz"
-steps = 500
+steps = 100
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
