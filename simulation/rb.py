@@ -11,13 +11,15 @@ qibo.set_backend("qibojit",platform="numba")
 #exp_folder = "simulation/experiments/1q/"
 
 exp_folder = "hardware/experiments/qw11q/"
+no_rl = False
 
 config_file = exp_folder + "config_qibolab.json"
 rb_dataset = exp_folder + "rb_dataset.npz"
 result_file_rb = exp_folder + "rb_result.npz"
-# result_file_rl = exp_folder + "rl_result.npz"
-# model_file_path = exp_folder + "model.zip"
-# dataset_file = exp_folder + "dataset.npz"
+if not no_rl:
+    result_file_rl = exp_folder + "rl_result.npz"
+    model_file_path = exp_folder + "model.zip"
+    dataset_file = exp_folder + "dataset.npz"
 
 with open(config_file) as f:
     config = json.load(f)
@@ -45,10 +47,11 @@ print(result)
 
 np.savez(result_file_rb, result=result)
 
-# env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
+if not no_rl:
+    env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 
-# agent = Agent(config_file = config_file, env = env, model_file_path = model_file_path)
-# result = agent.apply_rb_dataset(rb_dataset)
+    agent = Agent(config_file = config_file, env = env, model_file_path = model_file_path)
+    result = agent.apply_rb_dataset(rb_dataset)
 
-# np.savez(result_file_rl, result=result)
+    np.savez(result_file_rl, result=result)
 

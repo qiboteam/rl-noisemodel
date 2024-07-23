@@ -1,99 +1,161 @@
-[Qibo 0.2.7|INFO|2024-07-23 19:12:04]: Using qibojit (numba) backend on /CPU:0
+[Qibo 0.2.7|INFO|2024-07-23 19:17:06]: Using qibojit (numba) backend on /CPU:0
 /nfs/users/simone.bordoni/rl/lib/python3.10/site-packages/stable_baselines3/ppo/ppo.py:148: UserWarning: You have specified a mini-batch size of 64, but because the `RolloutBuffer` is of size `n_steps * n_envs = 1000`, after every 15 untruncated mini-batches, there will be a truncated mini-batch of size 40
 We recommend using a `batch_size` that is a factor of `n_steps * n_envs`.
 Info: (n_steps=1000 and n_envs=1)
   warnings.warn(
 Timesteps/1000: 0.001
-Reward: -0.5867
-Test set Fidelity: 0.8611 std: 0.0501
+Reward: -0.5757
+Test set Fidelity: 0.8680 std: 0.0489
 Saving new best model at 1 timesteps.
 Saving new best model in hardware/experiments/qw11q//model.
 Timesteps/1000: 5.0
-Reward: -0.4148
-Test set Fidelity: 0.9032 std: 0.0432
-Saving new best model at 5000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: -0.5141
+Test set Fidelity: 0.8617 std: 0.0530
 Timesteps/1000: 10.0
-Reward: -0.3760
-Test set Fidelity: 0.8950 std: 0.0368
+Reward: -0.2025
+Test set Fidelity: 0.9114 std: 0.0382
+Saving new best model at 10000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
 Timesteps/1000: 15.0
-Reward: -0.1944
-Test set Fidelity: 0.9194 std: 0.0306
+Reward: -0.0939
+Test set Fidelity: 0.9177 std: 0.0308
 Saving new best model at 15000 timesteps.
 Saving new best model in hardware/experiments/qw11q//model.
 Timesteps/1000: 20.0
-Reward: 0.0329
-Test set Fidelity: 0.9338 std: 0.0255
+Reward: 0.2341
+Test set Fidelity: 0.9545 std: 0.0234
 Saving new best model at 20000 timesteps.
 Saving new best model in hardware/experiments/qw11q//model.
 Timesteps/1000: 25.0
-Reward: 0.1690
-Test set Fidelity: 0.9404 std: 0.0195
-Saving new best model at 25000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.3051
+Test set Fidelity: 0.9541 std: 0.0195
 Timesteps/1000: 30.0
-Reward: 0.3177
-Test set Fidelity: 0.9554 std: 0.0138
-Saving new best model at 30000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.2569
+Test set Fidelity: 0.9477 std: 0.0200
 Timesteps/1000: 35.0
-Reward: 0.4000
-Test set Fidelity: 0.9608 std: 0.0153
+Reward: 0.6765
+Test set Fidelity: 0.9704 std: 0.0152
 Saving new best model at 35000 timesteps.
 Saving new best model in hardware/experiments/qw11q//model.
 Timesteps/1000: 40.0
-Reward: 0.4071
-Test set Fidelity: 0.9618 std: 0.0144
-Saving new best model at 40000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.6338
+Test set Fidelity: 0.9683 std: 0.0158
 Timesteps/1000: 45.0
-Reward: 0.7586
-Test set Fidelity: 0.9754 std: 0.0116
-Saving new best model at 45000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.6550
+Test set Fidelity: 0.9694 std: 0.0153
 Timesteps/1000: 50.0
-Reward: 1.0145
-Test set Fidelity: 0.9814 std: 0.0096
-Saving new best model at 50000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.6513
+Test set Fidelity: 0.9695 std: 0.0157
 Timesteps/1000: 55.0
-Reward: 1.1612
-Test set Fidelity: 0.9822 std: 0.0098
-Saving new best model at 55000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.5749
+Test set Fidelity: 0.9650 std: 0.0158
 Timesteps/1000: 60.0
-Reward: 1.2291
-Test set Fidelity: 0.9840 std: 0.0099
+Reward: 0.8325
+Test set Fidelity: 0.9749 std: 0.0133
 Saving new best model at 60000 timesteps.
 Saving new best model in hardware/experiments/qw11q//model.
 Timesteps/1000: 65.0
-Reward: 1.1931
-Test set Fidelity: 0.9838 std: 0.0100
+Reward: 0.6576
+Test set Fidelity: 0.9688 std: 0.0140
 Timesteps/1000: 70.0
-Reward: 1.1474
-Test set Fidelity: 0.9831 std: 0.0099
+Reward: 0.7238
+Test set Fidelity: 0.9732 std: 0.0132
 Timesteps/1000: 75.0
-Reward: 1.2965
-Test set Fidelity: 0.9857 std: 0.0092
-Saving new best model at 75000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.6886
+Test set Fidelity: 0.9716 std: 0.0141
 Timesteps/1000: 80.0
-Reward: 1.2026
-Test set Fidelity: 0.9840 std: 0.0092
+Reward: 0.5939
+Test set Fidelity: 0.9667 std: 0.0151
 Timesteps/1000: 85.0
-Reward: 1.2092
-Test set Fidelity: 0.9837 std: 0.0096
+Reward: 0.5719
+Test set Fidelity: 0.9642 std: 0.0157
 Timesteps/1000: 90.0
-Reward: 1.3837
-Test set Fidelity: 0.9854 std: 0.0096
+Reward: 1.0194
+Test set Fidelity: 0.9794 std: 0.0140
+Saving new best model at 90000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
 Timesteps/1000: 95.0
-Reward: 1.4959
-Test set Fidelity: 0.9865 std: 0.0094
-Saving new best model at 95000 timesteps.
-Saving new best model in hardware/experiments/qw11q//model.
+Reward: 0.9472
+Test set Fidelity: 0.9781 std: 0.0147
 Timesteps/1000: 100.0
-Reward: 1.7013
-Test set Fidelity: 0.9880 std: 0.0087
-Saving new best model at 100000 timesteps.
+Reward: 0.9454
+Test set Fidelity: 0.9779 std: 0.0134
+Timesteps/1000: 105.0
+Reward: 0.7230
+Test set Fidelity: 0.9704 std: 0.0148
+Timesteps/1000: 110.0
+Reward: 0.7890
+Test set Fidelity: 0.9737 std: 0.0121
+Timesteps/1000: 115.0
+Reward: 0.8351
+Test set Fidelity: 0.9752 std: 0.0120
+Timesteps/1000: 120.0
+Reward: 0.9259
+Test set Fidelity: 0.9772 std: 0.0121
+Timesteps/1000: 125.0
+Reward: 1.1061
+Test set Fidelity: 0.9800 std: 0.0119
+Saving new best model at 125000 timesteps.
 Saving new best model in hardware/experiments/qw11q//model.
- 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 100,000/100,000  [ 0:03:48 < 0:00:00 , 430 it/s ]
+Timesteps/1000: 130.0
+Reward: 1.1917
+Test set Fidelity: 0.9803 std: 0.0126
+Saving new best model at 130000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+Timesteps/1000: 135.0
+Reward: 1.0029
+Test set Fidelity: 0.9774 std: 0.0124
+Timesteps/1000: 140.0
+Reward: 1.3996
+Test set Fidelity: 0.9844 std: 0.0109
+Saving new best model at 140000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+Timesteps/1000: 145.0
+Reward: 1.4189
+Test set Fidelity: 0.9841 std: 0.0110
+Timesteps/1000: 150.0
+Reward: 1.3794
+Test set Fidelity: 0.9829 std: 0.0124
+Timesteps/1000: 155.0
+Reward: 1.2048
+Test set Fidelity: 0.9818 std: 0.0122
+Timesteps/1000: 160.0
+Reward: 1.3453
+Test set Fidelity: 0.9843 std: 0.0108
+Timesteps/1000: 165.0
+Reward: 1.2571
+Test set Fidelity: 0.9832 std: 0.0111
+Timesteps/1000: 170.0
+Reward: 1.3626
+Test set Fidelity: 0.9849 std: 0.0112
+Saving new best model at 170000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+Timesteps/1000: 175.0
+Reward: 1.4774
+Test set Fidelity: 0.9860 std: 0.0113
+Saving new best model at 175000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+Timesteps/1000: 180.0
+Reward: 1.4818
+Test set Fidelity: 0.9864 std: 0.0116
+Saving new best model at 180000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+Timesteps/1000: 185.0
+Reward: 1.4495
+Test set Fidelity: 0.9859 std: 0.0118
+Timesteps/1000: 190.0
+Reward: 1.7103
+Test set Fidelity: 0.9877 std: 0.0120
+Saving new best model at 190000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+Timesteps/1000: 195.0
+Reward: 1.7409
+Test set Fidelity: 0.9880 std: 0.0112
+Saving new best model at 195000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+Timesteps/1000: 200.0
+Reward: 1.8882
+Test set Fidelity: 0.9891 std: 0.0116
+Saving new best model at 200000 timesteps.
+Saving new best model in hardware/experiments/qw11q//model.
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 200,000/200,000  [ 0:07:30 < 0:00:00 , 419 it/s ]
