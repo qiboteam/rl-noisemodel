@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=run_rl
-#SBATCH --output=run.out
+#SBATCH --output=rb.out
 #SBATCH --partition qw11q
 
-python ./simulation/rb_dataset_generator.py
+#python circuit_test.py
+python ./simulation/rb.py

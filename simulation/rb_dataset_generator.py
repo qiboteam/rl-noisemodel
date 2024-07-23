@@ -4,7 +4,7 @@ import qibo
 
 qibo.set_backend("qibojit",platform="numba")
 
-exp_folder = "hardware/experiments/single_qubit/"
+exp_folder = "hardware/experiments/qw11q/"
 
 config_file = exp_folder + "config_qibolab.json"
 
@@ -24,4 +24,4 @@ if "chip_conf" in config.keys():
 else:
     backend = None
     
-rb_dataset_generator(config_file,backend)
+rb_dataset_generator(config_file, backend)

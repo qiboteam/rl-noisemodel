@@ -65,7 +65,6 @@ class QuantumSpain(NumpyBackend):
             circuits = [circuits]
         for k in range(len(circuits)):
             circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
-        print(nshots)
         results = self.platform.execute_and_return_results(
             circuits, device_id=self.device_id, nshots=nshots, interval=10)[0]
         result_list = []

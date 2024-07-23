@@ -4,9 +4,7 @@ import qibo
 
 qibo.set_backend("qibojit",platform="numba")
 
-#exp_folder = "simulation/experiments/1q/"
-
-exp_folder = "hardware/experiments/single_qubit/"
+exp_folder = "hardware/experiments/qw11q/"
 
 config_file = exp_folder + "config_qibolab.json"
 save_path = exp_folder + "dataset"
