@@ -5,7 +5,7 @@ import scienceplots
 plt.style.use('science')
 
 mse_plot = True
-exp_folder = "simulation/experiments/1q/"
+exp_folder = "hardware/experiments/qw11q/"
 rb_result = exp_folder + "rb_result.npz"
 rl_result = exp_folder + "rl_result.npz"
 
