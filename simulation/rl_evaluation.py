@@ -7,7 +7,7 @@ qibo.set_backend("qibojit",platform="numba")
 
 #exp_folder = "simulation/experiments/3q_large/"
 
-exp_folder = "hardware/experiments/single_qubit/"
+exp_folder = "hardware/experiments/qw11q/"
 
 config_file = exp_folder + "config_qibolab.json"
 model_file_path = exp_folder + "model.zip"
