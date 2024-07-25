@@ -1,14 +1,18 @@
 import numpy as np
+import qibo
 from rlnoise.rl_agent import Agent
 from rlnoise.gym_env import QuantumCircuit
 
-exp_folder = "simulation/experiments/3q_large/"
+qibo.set_backend("qibojit",platform="numba")
 
-config_file = exp_folder + "config.json"
+#exp_folder = "simulation/experiments/3q_large/"
+
+exp_folder = "hardware/experiments/qw11q/"
+
+config_file = exp_folder + "config_qibolab.json"
 model_file_path = exp_folder + "model.zip"
 dataset_file = exp_folder + "dataset.npz"
 eval_dataset_file = exp_folder + "eval_dataset.npz"
-config_file = exp_folder + "config.json"
 result_file_rl = exp_folder + "evaluation_result.npz"
 
 

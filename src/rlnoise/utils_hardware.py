@@ -6,10 +6,11 @@ from qibo.backends import construct_backend, GlobalBackend, NumpyBackend
 from qibo.models import Circuit
 from qibo.hamiltonians import Hamiltonian
 from qibo.result import MeasurementOutcomes
+from qibolab.backends import QibolabBackend
 from collections import Counter
 from itertools import chain, product
 from functools import reduce
-
+from qibo.config import log
 
 def expectation_from_samples(obs, freq, qubit_map=None):
     obs = obs.matrix
@@ -29,6 +30,7 @@ def expectation_from_samples(obs, freq, qubit_map=None):
 
 class QuantumSpain(NumpyBackend):
     def __init__(self, configuration, device_id, nqubits, qubit_map=None):
+        from qiboconnection import API
         super().__init__()
         from qiboconnection import API
         self.name = "QuantumSpain"
@@ -59,12 +61,11 @@ class QuantumSpain(NumpyBackend):
                     *tuple(qubits), np.pi/2), gates.RZ(*tuple(qubits), phi+np.pi)])  # gates.U3(*tuple(qubits), *u3_decomposition(matrix)))
         return new_c
 
-    def execute_circuit(self, circuits, nshots=1000):
+    def execute_circuit_(self, circuits, nshots=1000):
         if isinstance(circuits, list) is False:
             circuits = [circuits]
         for k in range(len(circuits)):
             circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
-        print(nshots)
         results = self.platform.execute_and_return_results(
             circuits, device_id=self.device_id, nshots=nshots, interval=10)[0]
         result_list = []
@@ -80,7 +81,44 @@ class QuantumSpain(NumpyBackend):
         # if len(result_list) == 1:
         #     return result_list[0]
         return result_list
+    
+class Qibolab_qrc(QibolabBackend):
+    def __init__(self, platform, qubit_map=None):
+        super().__init__(platform=platform)
+        self.qubit_map = qubit_map
 
+    def transpile_circ(self, circuit, qubit_map=None):
+        if qubit_map == None:
+            qubit_map = list(range(circuit.nqubits))
+        self.qubit_map = qubit_map
+        new_c = Circuit(self.platform.nqubits, density_matrix=True)
+        for gate in circuit.queue:
+            qubits = [self.qubit_map[j] for j in gate.qubits]
+            if isinstance(gate, gates.M):
+                new_gate = gates.M(*tuple(qubits), **gate.init_kwargs)
+                new_gate.result = gate.result
+                new_c.add(new_gate)
+            elif isinstance(gate, gates.Unitary):
+                new_c.add(gates.Unitary(gate.matrix(),*tuple(qubits)))
+            else:
+                new_c.add(gate.__class__(*tuple(qubits), **gate.init_kwargs))
+        from qibo.transpiler.unroller import Unroller, NativeGates
+        translator = Unroller(NativeGates.default())
+        transpiled_c = translator(new_c)
+        return transpiled_c
+
+    def execute_circuit_(self, circuits, nshots=1000):
+        if isinstance(circuits, list) is False:
+            circuits = [circuits]
+        for k in range(len(circuits)):
+            circuits[k] = self.transpile_circ(circuits[k], self.qubit_map)
+        log.info(nshots)
+        # results = []
+        # for circuit in circuits:
+        #     results.append(self.execute_circuit(circuit, nshots=nshots))
+        results = self.execute_circuits(circuits, nshots=nshots)
+        return results
+    
 
 def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=None):
     """Computes the calibration matrix for readout mitigation.
@@ -117,8 +155,8 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
         if noise_model is not None:
             circuit = noise_model.apply(circuit)
         cal_circs.append(circuit)
-    if backend is not None and backend.name == "QuantumSpain":
-        results = backend.execute_circuit(cal_circs, nshots=nshots)
+    if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
+        results = backend.execute_circuit_(cal_circs, nshots=nshots)
     else:
         results = [backend.execute_circuit(
             cal_circ, nshots=nshots) for cal_circ in cal_circs]
@@ -132,6 +170,7 @@ def calibration_matrix(nqubits, noise_model=None, nshots: int = 1000, backend=No
             f = freq[key] / nshots
             column[int(key, 2)] = f
         matrix[:, i] = column
+    log.info(matrix)
     return np.linalg.inv(matrix)
 
 
@@ -196,8 +235,8 @@ class StateTomography:
     def run_circuits(self):
         dims = np.shape(self.tomo_circuits)
         circs = list(chain.from_iterable(self.tomo_circuits))
-        if self.backend is not None and self.backend.name == "QuantumSpain":
-            results = self.backend.execute_circuit(circs, nshots=self.nshots)
+        if self.backend is not None and (self.backend.name == "QuantumSpain" or self.backend.name == "qibolab"):
+            results = self.backend.execute_circuit_(circs, nshots=self.nshots)
         else:
             results = [self.backend.execute_circuit(
                 circ, nshots=self.nshots) for circ in circs]
@@ -236,7 +275,7 @@ class StateTomography:
                     term = term@symbols.Z(q).full_matrix(self.nqubits)
             obs = Hamiltonian(self.nqubits, term, self.backend)
 
-            if noise is not None and self.backend.name != "QuantumSpain":
+            if noise is not None and self.backend.name != "QuantumSpain" and self.backend.name != "qibolab":
                 circ = noise.apply(circ)
 
             freqs = self.freqs[k]

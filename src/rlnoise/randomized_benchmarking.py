@@ -12,7 +12,7 @@ from rlnoise.utils import compute_fidelity, mse, mms
 
 def rb_dataset_generator(config_file, backend=None):
     """Generate a dataset of circuits for randomized benchmarking."""
-    dataset = Dataset(config_file)
+    dataset = Dataset(config_file, only_rb=True)
     dataset.generate_rb_dataset(backend)
     
 def run_rb(rb_dataset, config, backend=None):
@@ -23,7 +23,7 @@ def run_rb(rb_dataset, config, backend=None):
     dataset = np.load(rb_dataset, allow_pickle=True)
     circuits = dataset["circuits"]
     circuits = preprocess_circuits(circuits, config, backend=backend)
-    if backend is not None and backend.name == "QuantumSpain":
+    if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
         with open(config) as f:
             config = json.load(f)
         nshots = config["chip_conf"]["nshots"]
@@ -50,7 +50,7 @@ def preprocess_circuits(circuits, config, evaluate=False, backend=None):
             inverse_unitary = gates.Unitary(c.invert().unitary(), *range(nqubits))
             c = fill_identity(c)
             if not evaluate:
-                if backend is None or backend.name != "QuantumSpain":
+                if backend is None or (backend.name != "QuantumSpain" and backend.name != "qibolab"):
                     c = noise.apply(c)
                 c.add(inverse_unitary)
                 for i in range(nqubits):
@@ -58,11 +58,10 @@ def preprocess_circuits(circuits, config, evaluate=False, backend=None):
             final_circuits[depth].append(c)
     return final_circuits
 
-def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
+def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=True):
     """Run randomized benchmarking on the circuits."""
     if backend is None:
         backend = GlobalBackend()
-    backend = GlobalBackend()
     nqubits = list(circuits.values())[0][0].nqubits
     probs = { d: [] for d in circuits.keys() }
     init_state = f"{0:0{nqubits}b}"
@@ -71,29 +70,26 @@ def randomized_benchmarking(circuits, nshots=1000, backend=None, verbose=False):
     for depth, circs in circuits.items():
         if verbose:
             print(f'> Looping over circuits of depth: {depth}')
-
-        if backend is not None and backend.name == "QuantumSpain":
-            results = backend.execute_circuit(circs, nshots=nshots)
+        if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
+            results = backend.execute_circuit_(circs, nshots=nshots)
         else:
             results = [backend.execute_circuit(circ, nshots=nshots) for circ in circs]
 
         freq_list = [result.frequencies() for result in results] 
-        
         for freq in freq_list:            
             if init_state not in freq:
                 probs[depth].append(0)
             else:
                 probs[depth].append(freq[init_state]/nshots)
-
     avg_probs = [ (d, np.mean(p)) for d,p in probs.items() ]
     std_probs = [ (d, np.std(p)) for d,p in probs.items() ]
     avg_probs = sorted(avg_probs, key=lambda x: x[0])
     std_probs = sorted(std_probs, key=lambda x: x[0])
-    model = lambda depth,a,l,b: a * np.power(l,depth) + b
+    model = lambda depth,a,l: a * np.power(l,depth)
     depths, survival_probs = zip(*avg_probs)
     _, err = zip(*std_probs)
-    optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5,0])
-    optimal_params = { 'a': optimal_params[0], 'l': optimal_params[1], 'b': optimal_params[2], "model": "a * l**depth + b" }
+    optimal_params, _ = curve_fit(model, depths, survival_probs, maxfev = 2000, p0=[1,0.5])
+    optimal_params = { 'a': optimal_params[0], 'l': optimal_params[1], 'b': 0, "model": "a * l**depth + b" }
     return optimal_params
 
 

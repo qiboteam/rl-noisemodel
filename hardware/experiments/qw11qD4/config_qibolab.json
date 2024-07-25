@@ -1,27 +1,26 @@
 { "chip_conf": {
-    "device_id": 16,
-    "nqubits": 5,
-    "qubit_map": [0,1,2,3,4],
-    "username": "alejandro.sopena",
-    "api_key": "23287d7c-cd0c-4dfd-90d3-9fb506c11dee",
-    "nshots": 10,
-    "likelihood": true,
-    "readout_mitigation": true
+    "backend": "qibolab",
+    "platform": "qw11q",
+    "qubit_map": [14],
+    "nshots": 4000,
+    "likelihood": false,
+    "readout_mitigation": false
   },
   "dataset": {
-    "n_circuits": 6,
-    "eval_size": 2,
-    "eval_depth": 15,
-    "moments": 7,
+    "n_circuits": 60,
+    "eval_size": 20,
+    "eval_depth": 10,
+    "moments": 10,
     "qubits": 1,
-    "enhanced": true,
-    "clifford": true,
-    "mixed": true
+    "enhanced": false,
+    "distributed_clifford": false,
+    "clifford": true, 
+    "mixed": false
   },
   "gym_env": {
     "kernel_size": 3,
     "action_penalty": 0.0,
-    "action_space_max_value": 0.08,
+    "action_space_max_value": 0.008,
     "enable_only_depolarizing": false,
     "val_split": 0.2
   },
@@ -46,22 +45,25 @@
     "policy": "MlpPolicy",
     "features_dim": 32,
     "nn_update_steps": 1000,
-    "batch_size": 64
+    "batch_size": 64,
+    "filter_size": 1,
+    "conv_layers": 1,
+    "n_filters": 16
   },
   "callback": {
     "save_best_model": true,
     "plot_results": true,
     "model_name": "model",
-    "result_folder": "hardware/experiments/",
+    "result_folder": "hardware/experiments/qw11qD4/",
     "check_freq": 5000,
     "verbose": true
   },
   "rb":{
-    "dataset": "hardware/experiments/rb_dataset.npz",
-    "start": 3,
-    "stop": 31,
-    "step": 3,
-    "n_circ": 3
+    "dataset": "hardware/experiments/qw11qD4/rb_dataset.npz",
+    "start": 5,
+    "stop": 51,
+    "step": 5,
+    "n_circ": 10
   }
 }
 
