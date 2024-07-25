@@ -5,7 +5,7 @@ import scienceplots
 plt.style.use('science')
 
 mse_plot = True
-exp_folder = "hardware/experiments/qw11q/"
+exp_folder = "hardware/experiments/qw11qD4/"
 rb_result = exp_folder + "rb_result.npz"
 rl_result = exp_folder + "rl_result.npz"
 
@@ -34,6 +34,8 @@ with open(rl_result, "rb") as f:
     fidelity['std_model'] = rl_result['fidelity_std'].flatten()
     mse['model'] = rl_result['mse'].flatten()
     mse['std_model'] = rl_result['mse_std'].flatten()
+
+print(rb_result)
 
 SMALL_SIZE = 22
 MEDIUM_SIZE = 26
