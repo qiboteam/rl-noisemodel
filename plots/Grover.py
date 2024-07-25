@@ -7,12 +7,11 @@ from qibo.noise import NoiseModel, DepolarizingError
 import json
 import numpy as np
 
-exp_folder = "simulation/experiments/3q_multiple_low/"
+exp_folder = "experiments/simulation/3q_low/"
 model_file = exp_folder + "model.zip"
 config_file = exp_folder + "config.json"
 dataset_file = exp_folder + "dataset.npz"
-img_name = "_"
-lambda_rb = 0.0388
+lambda_rb = 0.0156
 
 circuit = grover()
 noise_model = CustomNoiseModel(config_file=config_file)
@@ -105,30 +104,17 @@ r1 = range(len(keys))
 r2 = [x + bar_width for x in r1]
 r3 = [x + bar_width for x in r2]
 
-# if test_only_depol_model is True:
-#     rl_noise_only_dep = RL_NoiseModel(agent = agent_depol, circuit_representation =  CircuitRepresentation(config_depol_agent))
-#     rl_dep_noisy_circuit = rl_noise_only_dep.apply(final_circuit)
-#     print("RL depol agent", compute_fidelity(noisy_circuit().state(), rl_dep_noisy_circuit().state()))
-#     rl_dep_noisy_circuit2 = copy_circ(rl_dep_noisy_circuit)
-#     rl_dep_noisy_circuit2.add(gates.M(0,1,2))
-#     rl_dep_shots = rl_dep_noisy_circuit2.execute(nshots=10000)
-#     rl_dep_shots = dict(sorted(dict(rl_dep_shots.frequencies()).items()))
-#     values4 = list(rl_dep_shots.values())
-#     r4 = [x + bar_width for x in r3]
-
-fig=plt.figure(figsize=(12, 9))
+fig=plt.figure(figsize=(12, 7))
 ax=fig.add_subplot(111)
 ax.bar(r1, values1, width=bar_width, label='Ground truth', color='#e60049')
 ax.bar(r2, values2, width=bar_width, label='RL', color='#0bb4ff')
 ax.bar(r3, values3, width=bar_width, label='RB', color='green')
-# if test_only_depol_model:
-#     ax.bar(r4, values4, width=bar_width, label='RL (only dep)', color='orange')
 
 plt.xlabel('State')
 plt.ylabel('Probability')
 plt.xticks([r + bar_width for r in range(len(keys))], keys)
-plt.legend(loc = "upper left", ncol=1)
-plt.savefig(exp_folder + "images/Grover_shots"+img_name+".pdf")
+#plt.legend(loc = "upper left", ncol=1)
+plt.savefig(exp_folder + "images/Grover_shots.pdf")
 plt.close()
 
 # Heatmaps
@@ -146,4 +132,4 @@ axs[0].set_title('MSE Truth-RL')
 cax2 = axs[1].imshow(squared_error_rb, cmap='viridis')
 fig.colorbar(cax2, ax=axs[1])
 axs[1].set_title('MSE Truth-RB')
-plt.savefig(exp_folder + "images/Grover_heatmap"+img_name+".pdf")
+plt.savefig(exp_folder + "images/Grover_heatmap.pdf")

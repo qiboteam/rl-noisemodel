@@ -34,13 +34,13 @@ setup(
         "matplotlib",
         "numpy",
         "gymnasium",
-        "qibo==0.2.7",
+        "qibo>=0.2.7",
         "qibojit",
         "stable_baselines3==2.0.0",
         "tqdm",
         "rich",
         "gym",
-        "shimmy==0.2.1"
+        "shimmy>=0.2.1"
        
     ],
     extras_require={
