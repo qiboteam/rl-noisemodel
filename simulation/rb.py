@@ -10,16 +10,17 @@ qibo.set_backend("qibojit",platform="numba")
 
 #exp_folder = "simulation/experiments/1q/"
 
-exp_folder = "hardware/experiments/qw11q/"
+exp_folder = "hardware/experiments/qw11qB5/"
 no_rl = False
+no_hardware = True
 
 config_file = exp_folder + "config_qibolab.json"
 rb_dataset = exp_folder + "rb_dataset.npz"
 result_file_rb = exp_folder + "rb_result.npz"
-if not no_rl:
-    result_file_rl = exp_folder + "rl_result.npz"
-    model_file_path = exp_folder + "model.zip"
-    dataset_file = exp_folder + "dataset.npz"
+
+result_file_rl = exp_folder + "rl_result.npz"
+model_file_path = exp_folder + "model.zip"
+dataset_file = exp_folder + "dataset.npz"
 
 with open(config_file) as f:
     config = json.load(f)
@@ -36,16 +37,17 @@ if "chip_conf" in config.keys():
 else:
     backend = None
 
-optimal_params = run_rb(rb_dataset, config_file, backend)
-print("RB Model:")
-print(optimal_params)
-decay_constant = 1 - optimal_params["l"]    
-print("Decay constant: ", decay_constant)
+if not no_hardware:
+    optimal_params = run_rb(rb_dataset, config_file, backend)
+    print("RB Model:")
+    print(optimal_params)
+    decay_constant = 1 - optimal_params["l"]    
+    print("Decay constant: ", decay_constant)
 
-result = rb_evaluation(decay_constant, rb_dataset, config_file)
-print(result)
+    result = rb_evaluation(decay_constant, rb_dataset, config_file)
+    print(result)
 
-np.savez(result_file_rb, result=result)
+    np.savez(result_file_rb, result=result)
 
 if not no_rl:
     env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)

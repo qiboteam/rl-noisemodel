@@ -1,0 +1,70 @@
+{ "chip_conf": {
+    "backend": "qibolab",
+    "platform": "qw11q",
+    "qubit_map": [10],
+    "nshots": 4000,
+    "likelihood": false,
+    "readout_mitigation": false
+  },
+  "dataset": {
+    "n_circuits": 60,
+    "eval_size": 20,
+    "eval_depth": 10,
+    "moments": 10,
+    "qubits": 1,
+    "enhanced": false,
+    "distributed_clifford": false,
+    "clifford": true, 
+    "mixed": false
+  },
+  "gym_env": {
+    "kernel_size": 3,
+    "action_penalty": 0.0,
+    "action_space_max_value": 0.03,
+    "enable_only_depolarizing": false,
+    "val_split": 0.2
+  },
+  "reward": {
+    "metric": "mse",
+    "function": "log",
+    "alpha": 100
+  },
+  "noise": {
+    "primitive_gates": ["rz", "rx"],
+    "channels": ["DepolarizingChannel", "ResetChannel"],
+    "dep_lambda": 0.02,
+    "p0": 0.03, 
+    "epsilon_x": 0.04,
+    "epsilon_z": 0.03,
+    "x_coherent_on_gate": ["rx"],
+    "z_coherent_on_gate": ["rz"],
+    "damping_on_gate": ["rx"],
+    "depol_on_gate": ["rz"]
+  },
+  "agent": {
+    "policy": "MlpPolicy",
+    "features_dim": 32,
+    "nn_update_steps": 1000,
+    "batch_size": 64,
+    "filter_size": 1,
+    "conv_layers": 1,
+    "n_filters": 16
+  },
+  "callback": {
+    "save_best_model": true,
+    "plot_results": true,
+    "model_name": "model",
+    "result_folder": "hardware/experiments/qw11qB5/",
+    "check_freq": 5000,
+    "verbose": true
+  },
+  "rb":{
+    "dataset": "hardware/experiments/qw11qB5/rb_dataset.npz",
+    "start": 5,
+    "stop": 51,
+    "step": 5,
+    "n_circ": 10
+  }
+}
+
+

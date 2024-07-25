@@ -4,7 +4,7 @@ import qibo
 
 qibo.set_backend("qibojit",platform="numba")
 
-exp_folder = "hardware/experiments/qw11q/"
+exp_folder = "hardware/experiments/qw11qB5/"
 
 config_file = exp_folder + "config_qibolab.json"
 
