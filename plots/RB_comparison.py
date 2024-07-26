@@ -5,8 +5,8 @@ import scienceplots
 
 plt.style.use('science')
 
-logscale = True
-exp_folder = "experiments/hardware/qw11qD4/"
+logscale = False
+exp_folder = "experiments/simulation/1q/"
 rb_result = exp_folder + "rb_result.npz"
 rl_result = exp_folder + "rl_result.npz"
 

@@ -28,7 +28,7 @@ def run_rb(rb_dataset, config, backend=None):
             config = json.load(f)
         nshots = config["chip_conf"]["nshots"]
     else:
-        nshots = None
+        nshots = 1000
 
     return randomized_benchmarking(circuits, nshots, backend)
 
