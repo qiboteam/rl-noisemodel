@@ -300,3 +300,4 @@ def estimate_hardware_noise(dms_rl, dms_true, lam = 0.004, readout_f = 0.96, nsh
                 dms_true, dms_rl, epsilon, i, j)
             
     delta_D = np.sum(np.abs(partial_derivatives_dms_true * delta_dms_true))
+    return delta_D

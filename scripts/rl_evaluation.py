@@ -5,9 +5,9 @@ from rlnoise.gym_env import QuantumCircuit
 
 qibo.set_backend("qibojit",platform="numba")
 
-estimate_hardware_noise = False
+estimate_dm_noise = True
 
-exp_folder = "experiments/simulation/1q/"
+exp_folder = "experiments/hardware/qw11qD4/"
 
 config_file = exp_folder + "config.json"
 model_file_path = exp_folder + "model.zip"
@@ -21,10 +21,14 @@ env = QuantumCircuit(dataset_file = dataset_file, config_file = config_file)
 agent = Agent(config_file = config_file, env = env, model_file_path = model_file_path)
 result, dms_rl = agent.apply_eval_dataset(eval_dataset_file)
 
-if estimate_hardware_noise:
+if estimate_dm_noise:
     from rlnoise.utils import estimate_hardware_noise
-    dataset = np.load(dataset_file, allow_pickle=True)
-    dms_true = dataset['dms']
-    estimate_hardware_noise(dms_rl, dms_true)
+    dataset = np.load(eval_dataset_file, allow_pickle=True)
+    dms_true = dataset['labels']
+    tot_error = 0.
+    for i in range(len(dms_true)):
+        dm_rl, dm_true = dms_rl[i], dms_true[i]
+        tot_error += estimate_hardware_noise(dms_rl=dm_rl, dms_true=dm_true)
+    print("Avg Eroor: ", tot_error/len(dms_true))
 
 np.savez(result_file_rl, result=result, dms=dms_rl)
