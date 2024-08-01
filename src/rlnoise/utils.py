@@ -233,3 +233,7 @@ def qft():
     circuit.add(gates.RX(0, -np.pi/4))
     
     return circuit
+
+def estimate_hardware_noise(dms_rl, dms_true):
+    """Estimate the hardware noise due to measurements and shot noise from the density matrices obtained with the model."""
+    return NotImplementedError
