@@ -43,8 +43,5 @@ setup(
         "shimmy>=0.2.1"
        
     ],
-    extras_require={
-        'hardware':  ["qiboconnection @ git+ssh://git@github.com/AlejandroSopena/qiboconnection.git@qibo_0.2.8"],
-    },
     python_requires=">3.10.10"
 )

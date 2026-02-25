@@ -1,166 +1,347 @@
-import numpy as np
-import copy
-import json
+"""Gymnasium environment for quantum circuit noise modeling."""
+
 import random
-from pathlib import Path
-from dataclasses import dataclass
-from rlnoise.dataset import load_dataset
-from rlnoise.circuit_representation import CircuitRepresentation
-from rlnoise.utils import mse, trace_distance, compute_fidelity, mae
+from typing import Optional, Tuple
+import numpy as np
 import gymnasium
 from gymnasium import spaces
-from qibo import gates
 
-def gate_action_index(gate):
-    if gate == 'epsilon_x':
-        return 0
-    if gate == 'epsilon_z':
-        return 1
-    if gate == gates.ResetChannel:
-        return 2
-    if gate == gates.DepolarizingChannel:
-        return 3
+from rlnoise.config import GymEnvConfig, RewardConfig
+from rlnoise.dataset import CircuitDataset
+from rlnoise.circuit_encoder import CircuitEncoder
+from rlnoise.reward import RewardFunction
 
-class DensityMatrixReward(object):
+
+class QuantumCircuitEnv(gymnasium.Env):
+    """Gymnasium environment for learning quantum noise models.
+    
+    The agent observes a sliding window of the circuit and applies noise
+    actions (depolarizing, damping, coherent errors) at each position.
+    The goal is to match the actual noisy circuit behavior.
+    
+    **Observation Space:**
+    - Box(encoding_dim, n_qubits, kernel_size) - Sliding window view of circuit
+    
+    **Action Space:**
+    - Box(n_qubits, 4) - Noise parameters for each qubit:
+        - [0]: epsilon_x (coherent X error)
+        - [1]: epsilon_z (coherent Z error)
+        - [2]: reset/damping probability
+        - [3]: depolarizing lambda
+    
+    **Reward:**
+    - Computed only at terminal state
+    - Based on fidelity between predicted and target density matrices
+    
+    Args:
+        dataset: CircuitDataset with circuits and labels
+        encoder: CircuitEncoder for circuit representation
+        env_config: GymEnvConfig for environment parameters
+        reward_config: RewardConfig for reward function
+        primitive_gates: List of primitive gate names
+    
+    Example:
+        >>> dataset = CircuitDataset.load("training_data.npz")
+        >>> encoder = CircuitEncoder(primitive_gates=["rx", "rz"])
+        >>> env_config = GymEnvConfig(kernel_size=3)
+        >>> reward_config = RewardConfig(metric="trace", alpha=20.0)
+        >>> env = QuantumCircuitEnv(dataset, encoder, env_config, reward_config)
+        >>> obs, info = env.reset()
+        >>> action = env.action_space.sample()
+        >>> obs, reward, terminated, truncated, info = env.step(action)
     """
-    This class is used to define the reward function for the quantum circuit environment.
-    It is possible to customize the reward function by passing a different metric function.
-    It is also possible to use a different customized metric function.
-    """
-    def __init__(self, metric, function, alpha):
-        if metric == "mse":
-            self.metric = mse
-        elif metric == "fidelity":
-            self.metric = compute_fidelity
-        elif metric == "trace":
-            self.metric = trace_distance
-        elif metric == "mae":
-            self.metric = mae
-        else:
-            raise ValueError("Invalid metric function.")
-
-        if function == "log":
-            self.function = lambda x: -np.log(alpha * x + 1e-15)
-        elif function == "linear":
-            self.function = lambda x: alpha * x
-        elif function == "inverted":
-            self.function = lambda x: 1./(alpha * x + 1e-15)
-        elif function == "inverted_squared":
-            self.function = lambda x: 1./(alpha * x**2 + 1e-15)
-        else:
-            raise ValueError("Invalid function.")
-        
-
-    def __call__(self, circuit, target, final):
-        if final:
-            circuit_dm = np.array(circuit().state())
-            return self.function(self.metric(circuit_dm, target))
-        return 0.
-
-@dataclass
-class QuantumCircuit(gymnasium.Env):
-    '''
-    Args: 
-        config_file: path to the configuration file.
-    '''
-    config_file: Path 
-    dataset_file: Path = None
-    circuits: np.ndarray = None
-    labels = None
-    reduced_size: int = None
-    val_split = None
-    kernel_size: int = None
-    action_space_max_value: float = None
-    only_depol: bool = None
-    encoding_dim: int = 8
-    rep = None
-    circuit_number = None
-    circuit_lenght = None
-    padded_circuit = None
-
-    def __post_init__(self):
+    
+    metadata = {"render_modes": []}
+    
+    def __init__(
+        self,
+        dataset: CircuitDataset,
+        encoder: CircuitEncoder,
+        env_config: GymEnvConfig,
+        reward_config: RewardConfig,
+        primitive_gates: list,
+    ):
         super().__init__()
-        with open(self.config_file) as f:
-            config = json.load(f)
-        gym_env_params = config["gym_env"]
-        reward_params = config["reward"]
-        self.kernel_size = gym_env_params['kernel_size']
-        self.only_depol = gym_env_params['enable_only_depolarizing']
-        if self.val_split is None:
-            self.val_split = gym_env_params['val_split']
-
-        self.rep = CircuitRepresentation(self.config_file)
-
-        # Define the reward function
-        reward_matric = reward_params["metric"]
-        reward_func = reward_params["function"]
-        reward_alpha = reward_params["alpha"]
-        self.reward = DensityMatrixReward(metric=reward_matric, function=reward_func, alpha=reward_alpha)
-
-        if self.circuits is None:
-            self.circuits, self.labels = load_dataset(self.dataset_file)
-            if self.reduced_size is not None:
-                self.circuits = self.circuits[:self.reduced_size]
-                self.labels = self.labels[:self.reduced_size]
         
-        if not self.kernel_size % 2 == 1:
-            raise ValueError("Kernel_size must be an odd number.")
+        # Store configuration
+        self.dataset = dataset
+        self.encoder = encoder
+        self.env_config = env_config
+        self.reward_config = reward_config
+        self.primitive_gates = primitive_gates
         
-        self.position = None
-        self.n_circ = len(self.circuits)
-        self.n_circ_train = int((1 - self.val_split) * self.n_circ)
-        self.n_qubits = self.circuits[0].shape[1]
+        # Initialize reward function
+        self.reward_fn = RewardFunction(reward_config)
+        
+        # Dataset properties
+        self.n_circuits = len(dataset)
+        self.n_circuits_train = int((1 - env_config.val_split) * self.n_circuits)
+        
+        # Get circuit properties from first circuit
+        example_circuit = dataset.circuits[0]
+        self.n_qubits = example_circuit.shape[1]
+        self.encoding_dim = example_circuit.shape[2]
+        
+        # Environment parameters
+        self.kernel_size = env_config.kernel_size
+        self.action_max = env_config.action_space_max_value
+        self.only_depol = env_config.enable_only_depolarizing
+        
+        # Validate kernel size
+        if self.kernel_size % 2 == 0:
+            raise ValueError("kernel_size must be odd")
+        
+        # Define observation space (sliding window)
         self.observation_space = spaces.Box(
-            low = 0,
-            high = 1,
-            shape = (self.encoding_dim, self.n_qubits, self.kernel_size),
-            dtype = np.float32
-            )
-        self.action_space = spaces.Box( 
-            low=0, 
-            high=1, 
-            shape=(self.n_qubits, 4),    
+            low=0.0,
+            high=1.0,
+            shape=(self.encoding_dim, self.n_qubits, self.kernel_size),
+            dtype=np.float32,
+        )
+        
+        # Define action space (noise parameters for each qubit)
+        # [epsilon_x, epsilon_z, reset_prob, depol_lambda] for each qubit
+        self.action_space = spaces.Box(
+            low=0.0,
+            high=1.0,
+            shape=(self.n_qubits, 4),
+            dtype=np.float32,
+        )
+        
+        # State variables (set in reset())
+        self.current_circuit_idx = None
+        self.current_circuit = None
+        self.target_dm = None
+        self.position = None
+        self.circuit_length = None
+        self.padded_circuit = None
+    
+    def _pad_circuit(self, circuit: np.ndarray) -> np.ndarray:
+        """Add padding to circuit for sliding window.
+        
+        Args:
+            circuit: Circuit array of shape (n_moments, n_qubits, encoding_dim)
+            
+        Returns:
+            Padded circuit array
+        """
+        # Transpose to (encoding_dim, n_qubits, n_moments)
+        circuit_t = circuit.transpose(2, 1, 0)
+        
+        # Add padding on the time axis
+        pad_size = self.kernel_size // 2
+        padding = np.zeros(
+            (self.encoding_dim, self.n_qubits, pad_size),
             dtype=np.float32
-            )
+        )
         
-    def init_state(self, i=None):
-        if i is None:
-                i = random.randint(0, self.n_circ_train)
-        self.circuit_number = i
-        self.circuit_lenght = self.circuits[i].shape[0]
-        state = copy.deepcopy(self.circuits[i])
-        state = state.transpose(2,1,0) 
-        padding = np.zeros((self.encoding_dim, self.n_qubits, int(self.kernel_size/2)), dtype=np.float32)
-        self.padded_circuit = np.concatenate((padding, state, padding), axis=2)
-        if self.labels is None:
-            return state, None
-        return state, self.labels[i]
+        padded = np.concatenate([padding, circuit_t, padding], axis=2)
+        return padded
     
-    def _get_obs(self):
-        r = int(self.kernel_size/2)
-        self.padded_circuit[:,:,r:-r] = self.current_state
-        return np.asarray(self.padded_circuit[:,:,self.position:self.position+self.kernel_size], dtype=np.float32)
+    def _get_observation(self) -> np.ndarray:
+        """Get current observation (sliding window).
         
-    def reset(self, i=None, seed=None):
-        self.position = 0
-        self.current_state, self.current_target = self.init_state(i)
-        return self._get_obs(), None
+        Returns:
+            Observation array
+        """
+        # Update padded circuit with current state
+        pad_size = self.kernel_size // 2
+        self.padded_circuit[:, :, pad_size:-pad_size] = self.current_circuit
+        
+        # Extract window at current position
+        window = self.padded_circuit[
+            :, :, self.position : self.position + self.kernel_size
+        ]
+        
+        return window.astype(np.float32)
     
-    def step(self, action, reward = True):
+    def _apply_action(self, action: np.ndarray):
+        """Apply noise action to current circuit position.
+        
+        Args:
+            action: Action array of shape (n_qubits, 4)
+        """
+        # Scale action by maximum value
+        scaled_action = action * self.action_max
+        
+        # If only depolarizing, zero out other actions
         if self.only_depol:
-            action[:, :3] = np.zeros((self.n_qubits, 3))
-        self.current_state = self.rep.make_action(action, self.current_state, self.position)
-        if self.position >= self.circuit_lenght - 1:
-            terminated = True
+            scaled_action[:, :3] = 0.0
+        
+        # Apply action to circuit at current position
+        # Action indices: 0=epsilon_x, 1=epsilon_z, 2=reset, 3=depol
+        for qubit in range(self.n_qubits):
+            # epsilon_x (index 0 -> encoding index 7)
+            self.current_circuit[self.position, qubit, 7] = scaled_action[qubit, 0]
+            
+            # epsilon_z (index 1 -> encoding index 6)
+            self.current_circuit[self.position, qubit, 6] = scaled_action[qubit, 1]
+            
+            # reset channel (index 2 -> encoding index 5)
+            self.current_circuit[self.position, qubit, 5] = scaled_action[qubit, 2]
+            
+            # depolarizing (index 3 -> encoding index 4)
+            self.current_circuit[self.position, qubit, 4] = scaled_action[qubit, 3]
+    
+    def _get_current_circuit(self):
+        """Get current circuit as Qibo circuit object."""
+        return self.encoder.array_to_circuit(self.current_circuit)
+    
+    def _compute_reward(self, is_terminal: bool) -> float:
+        """Compute reward for current state.
+        
+        Args:
+            is_terminal: Whether this is the terminal state
+            
+        Returns:
+            Reward value
+        """
+        if not is_terminal:
+            return 0.0
+        
+        # Get density matrix from current circuit
+        circuit = self._get_current_circuit()
+        predicted_dm = circuit().state()
+        
+        # Compute reward
+        reward = self.reward_fn(predicted_dm, self.target_dm, is_terminal=True)
+        
+        return reward
+    
+    def reset(
+        self,
+        seed: Optional[int] = None,
+        options: Optional[dict] = None,
+    ) -> Tuple[np.ndarray, dict]:
+        """Reset environment to initial state.
+        
+        Args:
+            seed: Random seed
+            options: Optional dict with 'circuit_idx' to select specific circuit
+            
+        Returns:
+            (observation, info)
+        """
+        super().reset(seed=seed)
+        
+        # Select circuit
+        if options is not None and "circuit_idx" in options:
+            self.current_circuit_idx = options["circuit_idx"]
         else:
+            # Random training circuit
+            self.current_circuit_idx = random.randint(0, self.n_circuits_train - 1)
+        
+        # Load circuit and target
+        self.current_circuit = self.dataset.circuits[self.current_circuit_idx].copy()
+        self.target_dm = self.dataset.labels[self.current_circuit_idx]
+        
+        # Initialize state
+        self.circuit_length = self.current_circuit.shape[0]
+        self.position = 0
+        
+        # Create padded version for sliding window
+        self.padded_circuit = self._pad_circuit(self.current_circuit)
+        
+        # Get initial observation
+        obs = self._get_observation()
+        
+        info = {
+            "circuit_idx": self.current_circuit_idx,
+            "circuit_length": self.circuit_length,
+        }
+        
+        return obs, info
+    
+    def step(
+        self, action: np.ndarray
+    ) -> Tuple[np.ndarray, float, bool, bool, dict]:
+        """Take a step in the environment.
+        
+        Args:
+            action: Action array of shape (n_qubits, 4)
+            
+        Returns:
+            (observation, reward, terminated, truncated, info)
+        """
+        # Apply action at current position
+        self._apply_action(action)
+        
+        # Check if we're at the end
+        terminated = self.position >= self.circuit_length - 1
+        
+        # Compute reward (only at terminal state)
+        reward = self._compute_reward(is_terminal=terminated)
+        
+        # Move to next position if not terminated
+        if not terminated:
             self.position += 1
-            terminated = False
-        if reward:
-            reward = self.reward(self.get_qibo_circuit(), self.current_target, terminated)
-        else:
-            reward = 0.
-        # Observation, Reward, Terminated, Truncated (always False), Info (Dict)
-        return self._get_obs(), reward, terminated, False, {}
+        
+        # Get next observation
+        obs = self._get_observation()
+        
+        # No truncation in this environment
+        truncated = False
+        
+        info = {
+            "position": self.position,
+            "circuit_length": self.circuit_length,
+        }
+        
+        return obs, reward, terminated, truncated, info
+    
+    def render(self):
+        """Render environment (not implemented)."""
+        pass
+    
+    def get_validation_circuit(self, val_idx: int = 0) -> int:
+        """Get index of a validation circuit.
+        
+        Args:
+            val_idx: Index within validation set
+            
+        Returns:
+            Circuit index in full dataset
+        """
+        if val_idx >= self.n_circuits - self.n_circuits_train:
+            raise ValueError(f"Validation index {val_idx} out of range")
+        
+        return self.n_circuits_train + val_idx
+    
+    @property
+    def n_validation_circuits(self) -> int:
+        """Number of validation circuits."""
+        return self.n_circuits - self.n_circuits_train
 
-    def get_qibo_circuit(self):
-        return self.rep.rep_to_circuit(self.current_state.transpose(2,1,0))
+
+def create_quantum_circuit_env(
+    dataset: CircuitDataset,
+    primitive_gates: list,
+    env_config: Optional[GymEnvConfig] = None,
+    reward_config: Optional[RewardConfig] = None,
+) -> QuantumCircuitEnv:
+    """Create a QuantumCircuitEnv with default configurations.
+    
+    Args:
+        dataset: Dataset of circuits
+        primitive_gates: List of primitive gate names
+        env_config: Environment configuration (uses defaults if None)
+        reward_config: Reward configuration (uses defaults if None)
+        
+    Returns:
+        Configured environment
+    """
+    if env_config is None:
+        env_config = GymEnvConfig()
+    
+    if reward_config is None:
+        reward_config = RewardConfig()
+    
+    encoder = CircuitEncoder(primitive_gates)
+    
+    return QuantumCircuitEnv(
+        dataset=dataset,
+        encoder=encoder,
+        env_config=env_config,
+        reward_config=reward_config,
+        primitive_gates=primitive_gates,
+    )

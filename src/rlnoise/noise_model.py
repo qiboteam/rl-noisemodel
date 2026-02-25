@@ -1,107 +1,153 @@
-import json
-from typing import List
-from dataclasses import dataclass
-from qibo.noise import DepolarizingError, NoiseModel, ResetError
+"""Noise model implementation for quantum circuits."""
+
+from typing import List, Optional
 from qibo import gates
 from qibo.models import Circuit
+from qibo.noise import NoiseModel, DepolarizingError, ResetError
 
-def string_to_gate(gate_string):   
-    gate_str_low=gate_string.lower()
-    if gate_str_low == 'none':
-        return None
-    elif gate_str_low == 'rx':
-        gate=gates.RX
-    elif gate_str_low == 'rz':
-        gate=gates.RZ
-    elif gate_str_low == 'cz':
-        gate=gates.CZ
-    else:
-        raise ValueError(f'Unrecognised gate {gate_str_low} in string_to_gate()')
-    return gate
+from rlnoise.config import NoiseConfig
 
-@dataclass
-class CustomNoiseModel(object):
+
+class QuantumNoiseModel:
+    """Apply noise to quantum circuits based on configuration.
+    
+    This class provides a flexible way to add various types of noise
+    to quantum circuits, including:
+    - Depolarizing noise
+    - Reset/damping errors
+    - Coherent X and Z errors
+    
+    Args:
+        config: NoiseConfig object specifying noise parameters
     """
-    Define a custom noise model for the generation of the datasets.
-    """
-    config_file: str
-    primitive_gates: List = None
-    lam: float = None
-    p0: float = None
-    epsilon_x: float = None
-    epsilon_z: float = None
-    x_coherent_on_gate: List = None
-    z_coherent_on_gate: List = None
-    damping_on_gate: List = None
-    depol_on_gate: List = None
-
-    def __post_init__(self):
-        with open(self.config_file) as f:
-            self.noise_params = json.load(f)['noise']
-        self.primitive_gates = self.noise_params['primitive_gates']
-        self.lam = self.noise_params['dep_lambda']
-        self.p0 = self.noise_params['p0']
-        self.epsilon_x = self.noise_params['epsilon_x']
-        self.epsilon_z = self.noise_params['epsilon_z']
-        self.x_coherent_on_gate = self.noise_params['x_coherent_on_gate']
-        self.z_coherent_on_gate = self.noise_params['z_coherent_on_gate']
-        self.damping_on_gate = self.noise_params['damping_on_gate']
-        self.depol_on_gate = self.noise_params['depol_on_gate']
+    
+    def __init__(self, config: NoiseConfig):
+        self.config = config
+        self._validate_config()
         
-       
-    def apply(self, circuit):
-        self.check_gates_compatibility()
-        nqubits = circuit.nqubits
-        apply_noise = False
-        simple_noise = NoiseModel()
-        for damping_gate in self.damping_on_gate :
-            target_gate = string_to_gate(damping_gate)
-            if target_gate is not None:
-                simple_noise.add(ResetError(p0=self.p0, p1=0), target_gate)
-                apply_noise = True
-        for depol_gate in self.depol_on_gate:
-            target_gate=string_to_gate(depol_gate)
-            if target_gate is not None:
-                simple_noise.add(DepolarizingError(self.lam),target_gate )
-                apply_noise=True
-                
-        simple_noisy_circuit = simple_noise.apply(circuit) if apply_noise else circuit
-        noisy_circuit=Circuit(nqubits, density_matrix=True)
-        for gate in simple_noisy_circuit.queue:
+    def _validate_config(self):
+        """Validate that noise configuration is compatible with primitive gates."""
+        primitive_gate_set = set(self.config.primitive_gates + ["none"])
+        
+        for gate_list in [
+            self.config.x_coherent_on_gate,
+            self.config.z_coherent_on_gate,
+            self.config.damping_on_gate,
+            self.config.depol_on_gate,
+        ]:
+            for gate in gate_list:
+                if gate.lower() not in primitive_gate_set:
+                    raise ValueError(
+                        f"Gate '{gate}' specified in noise config but not in primitive_gates"
+                    )
+    
+    @staticmethod
+    def _string_to_gate(gate_string: str) -> Optional[type]:
+        """Convert gate string to Qibo gate class.
+        
+        Args:
+            gate_string: Name of the gate (case-insensitive)
+            
+        Returns:
+            Qibo gate class or None
+            
+        Raises:
+            ValueError: If gate name is not recognized
+        """
+        gate_map = {
+            "none": None,
+            "rx": gates.RX,
+            "rz": gates.RZ,
+            "cz": gates.CZ,
+            "cnot": gates.CNOT,
+        }
+        
+        gate_str_lower = gate_string.lower()
+        if gate_str_lower not in gate_map:
+            raise ValueError(f"Unrecognized gate: {gate_string}")
+        
+        return gate_map[gate_str_lower]
+    
+    def _apply_standard_noise(self, circuit: Circuit) -> Circuit:
+        """Apply standard depolarizing and reset noise using Qibo's NoiseModel.
+        
+        Args:
+            circuit: Input quantum circuit
+            
+        Returns:
+            Circuit with standard noise applied
+        """
+        noise_model = NoiseModel()
+        noise_applied = False
+        
+        # Add reset/damping errors
+        for gate_name in self.config.damping_on_gate:
+            gate_class = self._string_to_gate(gate_name)
+            if gate_class is not None:
+                noise_model.add(ResetError(p0=self.config.p0, p1=0), gate_class)
+                noise_applied = True
+        
+        # Add depolarizing errors
+        for gate_name in self.config.depol_on_gate:
+            gate_class = self._string_to_gate(gate_name)
+            if gate_class is not None:
+                noise_model.add(DepolarizingError(self.config.dep_lambda), gate_class)
+                noise_applied = True
+        
+        return noise_model.apply(circuit) if noise_applied else circuit
+    
+    def _add_coherent_errors(self, circuit: Circuit, noisy_circuit: Circuit):
+        """Add coherent X and Z rotation errors to gates.
+        
+        Args:
+            circuit: Original circuit (unused but kept for clarity)
+            noisy_circuit: Circuit to add coherent errors to (modified in place)
+        """
+        gates_to_process = list(noisy_circuit.queue)
+        
+        for gate in gates_to_process:
+            # Add coherent X errors
+            if self.config.x_coherent_on_gate:
+                for target_gate_name in self.config.x_coherent_on_gate:
+                    if type(gate) == self._string_to_gate(target_gate_name):
+                        if "theta" in gate.init_kwargs:
+                            qubit = gate.qubits[0]
+                            theta = self.config.epsilon_x * gate.init_kwargs["theta"]
+                            noisy_circuit.add(gates.RX(qubit, theta=theta))
+            
+            # Add coherent Z errors
+            if self.config.z_coherent_on_gate:
+                for target_gate_name in self.config.z_coherent_on_gate:
+                    if type(gate) == self._string_to_gate(target_gate_name):
+                        if "theta" in gate.init_kwargs:
+                            qubit = gate.qubits[0]
+                            theta = self.config.epsilon_z * gate.init_kwargs["theta"]
+                            noisy_circuit.add(gates.RZ(qubit, theta=theta))
+    
+    def apply(self, circuit: Circuit) -> Circuit:
+        """Apply complete noise model to a quantum circuit.
+        
+        This method applies both standard noise (depolarizing, reset) and
+        coherent errors according to the configuration.
+        
+        Args:
+            circuit: Input quantum circuit
+            
+        Returns:
+            New circuit with noise applied
+        """
+        # First apply standard noise using Qibo's NoiseModel
+        intermediate_circuit = self._apply_standard_noise(circuit)
+        
+        # Create new circuit to add coherent errors
+        noisy_circuit = Circuit(circuit.nqubits, density_matrix=True)
+        
+        # Copy all gates from intermediate circuit
+        for gate in intermediate_circuit.queue:
             noisy_circuit.add(gate)
-            if self.x_coherent_on_gate is not None:
-                for x_coherent_on_gate in self.x_coherent_on_gate:
-                    if type(gate) == string_to_gate(x_coherent_on_gate):   
-                        qubit=gate.qubits[0]                    
-                        theta=self.epsilon_x*gate.init_kwargs['theta']
-                        noisy_circuit.add(gates.RX(q=qubit, theta=theta))
-            if self.z_coherent_on_gate is not None:
-                for z_coherent_on_gate in self.z_coherent_on_gate:
-                    if type(gate) == string_to_gate(z_coherent_on_gate):
-                        qubit=gate.qubits[0]
-                        theta=self.epsilon_z*gate.init_kwargs['theta']
-                        noisy_circuit.add(gates.RZ(q=qubit, theta=theta))
+        
+        # Add coherent errors
+        self._add_coherent_errors(circuit, noisy_circuit)
+        
         return noisy_circuit
 
-    def check_gates_compatibility(self):
-        primitive_gate_list = [
-            string_to_gate(gate_str) for gate_str in self.primitive_gates
-        ]
-        primitive_gate_list.append(None)
-        for epsilon_z_gate in self.z_coherent_on_gate:
-            gate=string_to_gate(epsilon_z_gate)
-            if (gate not in primitive_gate_list):
-                raise('Error: Attaching epsilon_z channel to gate not present in PrimitiveGates')
-        for epsilon_x_gate in self.z_coherent_on_gate:
-            gate=string_to_gate(epsilon_x_gate)
-            if (gate not in primitive_gate_list):
-                raise('Error: Attaching epsilon_x channel to gate not present in PrimitiveGates')
-        for damp_gate_str in self.damping_on_gate:
-            damp_gate=string_to_gate(damp_gate_str)
-            if (damp_gate not in primitive_gate_list):
-                raise f'Error: Attaching Damping channel to gate {damp_gate_str} that is not one of the primitive gate'
-        for depol_gate_str in self.depol_on_gate:
-            depol_gate=string_to_gate(depol_gate_str)
-            if (depol_gate not in primitive_gate_list):
-                raise f'Error: Attaching Depolarizing channel to gate {depol_gate_str} that is not one of the primitive gate'          
-         

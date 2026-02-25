@@ -1,224 +1,304 @@
-import random
-import json
+"""Dataset generation for quantum circuit noise modeling."""
+
 import os
-import copy
+from pathlib import Path
+from typing import List, Optional, Tuple
 import numpy as np
-from qibo import gates
-from qibo.quantum_info.random_ensembles import random_clifford
 from qibo.models import Circuit
-from rlnoise.noise_model import CustomNoiseModel
-from rlnoise.circuit_representation import CircuitRepresentation
-from rlnoise.utils_hardware import state_tomography
 
-def load_dataset(filename):
-    '''Load a dataset from a npz file.
-    Returns the circuits and labels.
-    '''
+from rlnoise.config import DatasetConfig, NoiseConfig, ExperimentConfig
+from rlnoise.circuit_generator import CircuitGenerator
+from rlnoise.circuit_encoder import CircuitEncoder
+from rlnoise.noise_model import QuantumNoiseModel
 
-    if not os.path.exists(filename):
-        raise FileNotFoundError(f"File {filename} not found.")
+
+class CircuitDataset:
+    """Container for quantum circuit dataset with labels.
     
-    tmp = np.load(filename, allow_pickle=True)
-    circuits = copy.deepcopy(tmp['circuits'])
-    labels = copy.deepcopy(tmp['labels'])
-    return circuits, labels
-
-class Dataset(object):
-    def __init__(self, config_file, evaluation=False, only_rb=False):
-        '''
-        Generate dataset for the training of RL-algorithm.
-        '''
-        super(Dataset, self).__init__()
-        with open(config_file) as f:
-            config = json.load(f)
+    Attributes:
+        circuits: Array of circuit encodings, shape (n_circuits, n_moments, n_qubits, encoding_dim)
+        labels: Array of density matrices from noisy circuits, shape (n_circuits, 2^n_qubits, 2^n_qubits)
+        config: Dataset configuration used to generate the data
+    """
+    
+    def __init__(
+        self,
+        circuits: np.ndarray,
+        labels: np.ndarray,
+        config: Optional[DatasetConfig] = None,
+    ):
+        self.circuits = circuits
+        self.labels = labels
         self.config = config
-        
-        self.primitive_gates = config['noise']['primitive_gates']
-        dataset_options = config['dataset']
-        self.n_gates = dataset_options['moments']
-        self.n_qubits = dataset_options['qubits']
-        self.n_circuits = dataset_options['n_circuits']
-        self.clifford = dataset_options['clifford']
-        self.eval_size = dataset_options['eval_size']
-        self.eval_depth = dataset_options['eval_depth']
-        enhanced_dataset = dataset_options['distributed_clifford']
-        mixed = dataset_options['mixed']
-        self.rep = CircuitRepresentation(config_file)
-        self.noise_model = CustomNoiseModel(config_file)
-        if not only_rb:
-            if enhanced_dataset and not mixed:
-                print("Generating distributed clifford dataset.")
-                self.circuits = [self.generate_clifford_circuit() for _ in range(self.n_circuits)]
-            elif not mixed:
-                print("Generating random dataset.")
-                self.circuits = [self.generate_random_circuit() for _ in range(self.n_circuits)]
-            elif mixed:
-                print("Generating mixed dataset.")
-                self.circuits = [self.generate_random_circuit() for _ in range(int(self.n_circuits/2))]
-                self.circuits += [self.generate_clifford_circuit() for _ in range(int(self.n_circuits/2))]
-                random.shuffle(self.circuits)
-            else:
-                raise ValueError("Unknown dataset type.")
-            self.noisy_circuits = [self.noise_model.apply(c) for c in self.circuits]
-            self.dm_labels = np.asarray([self.noisy_circuits[i]().state() for i in range(self.n_circuits)])
-            self.circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in self.circuits], dtype=object)
-
-    def generate_rb_dataset(self, backend=None):
-        rb_options = self.config["rb"]
-        circuits_list = []
-        labels = []
-        self.clifford = True
-        for lengh in range(rb_options["start"], rb_options["stop"], rb_options["step"]):
-            self.n_gates = lengh
-            print("Generating circuits of len:", lengh)
-            circuits = np.asarray([self.generate_random_circuit() for _ in range(rb_options["n_circ"])])
-            circ_rep = [self.rep.circuit_to_array(c)for c in circuits]
-            if backend is None or (backend.name != "QuantumSpain" and backend.name != "qibolab"):
-                noisy_circuits = [self.noise_model.apply(c) for c in circuits]
-                dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(rb_options["n_circ"])])
-            else:         
-                nshots = self.config["chip_conf"]["nshots"]
-                likelihood = self.config["chip_conf"]["likelihood"]
-                readout_mitigation = self.config["chip_conf"]["readout_mitigation"]
-                result = state_tomography(circuits, nshots, likelihood, backend)
-                if readout_mitigation:
-                    dm_labels = np.asarray([result[i][3] for i in range(rb_options["n_circ"])])
-                else:
-                    dm_labels = np.asarray([result[i][2] for i in range(rb_options["n_circ"])])
-                cal_mat = result[0][4]
-            labels.append(dm_labels)     
-            circuits_list.append(circ_rep)
-        circuits_list  = np.asarray(circuits_list, dtype=object)
-        
-        if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
-            np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels, cal_mat = cal_mat)
-        else:
-            np.savez(rb_options["dataset"], circuits = circuits_list, labels = labels)
-
-    def generate_eval_dataset(self, save_path, backend=None):
-        '''Generate a dataset for evaluation of the RL-model'''
-        self.n_gates = self.eval_depth
-        circuits = [self.generate_random_circuit() for _ in range(self.eval_size)]
-        circ_rep = np.asarray([self.rep.circuit_to_array(c)for c in circuits], dtype=object)
-        if backend is not None and (backend.name == "QuantumSpain" or backend.name == "qibolab"):
-            nshots = self.config["chip_conf"]["nshots"]
-            likelihood = self.config["chip_conf"]["likelihood"]
-            readout_mitigation = self.config["chip_conf"]["readout_mitigation"]
-            result = state_tomography(circuits, nshots, likelihood, backend)
-            if readout_mitigation:
-                dm_labels = np.asarray([result[i][3] for i in range(self.eval_size)])
-            else:
-                dm_labels = np.asarray([result[i][2] for i in range(self.eval_size)])
-            cal_mat = result[0][4]
-            np.savez(save_path, circuits = circ_rep, labels = dm_labels, cal_mat = cal_mat)
-        else:
-            noisy_circuits = [self.noise_model.apply(c) for c in circuits]
-            dm_labels = np.asarray([noisy_circuits[i]().state() for i in range(self.eval_size)])
-            np.savez(save_path, circuits = circ_rep, labels = dm_labels)
-        
-
-    def generate_clifford_circuit(self):
-        '''Generate a random Clifford circuit'''
-        circuit = random_clifford(self.n_qubits, return_circuit=True, density_matrix=True)
-        new_circuit = Circuit(self.n_qubits, density_matrix=True)
-        for gate in circuit.queue:
-            if gate.name in self.primitive_gates:
-                new_circuit.add(gate)
-            elif gate.name == "cx":
-                new_circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
-                new_circuit.add(gates.RX(gate.qubits[1], np.pi/2))
-                new_circuit.add(gates.CZ(gate.qubits[0], gate.qubits[1]))
-                new_circuit.add(gates.RZ(gate.qubits[1], np.pi/2))
-                new_circuit.add(gates.RX(gate.qubits[1], np.pi/2))
-            elif gate.name == "h":
-                new_circuit.add(gates.RZ(gate.qubits[0], np.pi/2))
-                new_circuit.add(gates.RX(gate.qubits[0], np.pi/2))
-            elif gate.name == "z":
-                new_circuit.add(gates.RZ(gate.qubits[0], np.pi))
-            elif gate.name == "y":
-                new_circuit.add(gates.RZ(gate.qubits[0], np.pi))
-                new_circuit.add(gates.RX(gate.qubits[0], np.pi))
-            elif gate.name == "x":
-                new_circuit.add(gates.RX(gate.qubits[0], np.pi))
-            elif gate.name == "s":
-                new_circuit.add(gates.RZ(gate.qubits[0], np.pi/2))
-            else:
-                raise ValueError(f"Unknown gate {gate.name}")
-        return new_circuit
-
-    def generate_smaller_circuits(self):
-        """Generate a circuit with a smaller number of qubits to improve generalization properties."""
-        qubits_subset = random.sample(range(self.n_qubits), random.randint(1, self.n_qubits-1))
-        circuit = Circuit(self.n_qubits, density_matrix=True)
-        while len(circuit.queue.moments) < self.n_gates:
-            q0 = random.choice(qubits_subset)
-            gate = random.choice(self.primitive_gates)
-            if gate == 'cz':
-                q1 = random.choice(
-                    list(set(range(self.n_qubits)) - {q0})
-                )       
-                circuit.add(gates.CZ(q1,q0))
-            elif gate == 'rx':
-                theta = (
-                    random.choice([0, 0.25, 0.5, 0.75])
-                    if self.clifford
-                    else np.random.random()
-                )
-                theta *= 2 * np.pi
-                circuit.add(gates.RX(q0, theta=theta))
-            elif gate == 'rz':
-                theta = (
-                    random.choice([0, 0.25, 0.5, 0.75])
-                    if self.clifford
-                    else np.random.random()
-                )
-                theta *= 2 * np.pi
-                circuit.add(gates.RZ(q0, theta=theta))
-            else:
-                raise ValueError(f"Gate {gate} not present in the primitive gates.")
-        return circuit
-
-    def generate_random_circuit(self):
-        """Generate a random circuit."""
-        if self.n_qubits < 2 and "cz" in self.primitive_gates:
-            raise ValueError("Impossible to use CZ on single qubit circuits.")
-        circuit = Circuit(self.n_qubits, density_matrix=True)
-        while len(circuit.queue.moments) < self.n_gates:
-            q0 = random.choice(range(self.n_qubits))
-            gate = random.choice(self.primitive_gates)
-            if gate == 'cz':
-                q1 = random.choice(
-                    list(set(range(self.n_qubits)) - {q0})
-                )       
-                circuit.add(gates.CZ(q1,q0))
-            elif gate == 'rx':
-                theta = (
-                    random.choice([0, 0.25, 0.5, 0.75])
-                    if self.clifford
-                    else np.random.random()
-                )
-                theta *= 2 * np.pi
-                circuit.add(gates.RX(q0, theta=theta))
-            elif gate == 'rz':
-                theta = (
-                    random.choice([0, 0.25, 0.5, 0.75])
-                    if self.clifford
-                    else np.random.random()
-                )
-                theta *= 2 * np.pi
-                circuit.add(gates.RZ(q0, theta=theta))
-            else:
-                raise ValueError(f"Gate {gate} not present in the primitive gates.")
-        return circuit
     
-    def save(self, filename):
-        '''Save the dataset to a npz file'''
+    def __len__(self) -> int:
+        """Return number of circuits in dataset."""
+        return len(self.circuits)
+    
+    def __getitem__(self, idx: int) -> Tuple[np.ndarray, np.ndarray]:
+        """Get a single circuit and label by index."""
+        return self.circuits[idx], self.labels[idx]
+    
+    def save(self, filepath: str):
+        """Save dataset to disk in .npz format.
         
-        directory = os.path.dirname(filename)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        Args:
+            filepath: Path to save file (without extension)
+        """
+        # Create directory if it doesn't exist
+        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+        
+        # Add .npz extension if not present
+        if not filepath.endswith('.npz'):
+            filepath = filepath + '.npz'
+        
+        np.savez(
+            filepath,
+            circuits=self.circuits,
+            labels=self.labels,
+            allow_pickle=True
+        )
+    
+    @classmethod
+    def load(cls, filepath: str) -> "CircuitDataset":
+        """Load dataset from disk.
+        
+        Args:
+            filepath: Path to .npz file
+            
+        Returns:
+            Loaded CircuitDataset
+            
+        Raises:
+            FileNotFoundError: If file doesn't exist
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Dataset file not found: {filepath}")
+        
+        data = np.load(filepath, allow_pickle=True)
+        circuits = data['circuits']
+        labels = data['labels']
+        
+        return cls(circuits=circuits, labels=labels)
+    
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        """Return shape of circuit array."""
+        return self.circuits.shape
+    
+    def split(self, val_fraction: float = 0.2) -> Tuple["CircuitDataset", "CircuitDataset"]:
+        """Split dataset into training and validation sets.
+        
+        Args:
+            val_fraction: Fraction of data to use for validation
+            
+        Returns:
+            (train_dataset, val_dataset)
+        """
+        n_val = int(len(self) * val_fraction)
+        n_train = len(self) - n_val
+        
+        # Create random permutation
+        indices = np.random.permutation(len(self))
+        train_indices = indices[:n_train]
+        val_indices = indices[n_train:]
+        
+        train_dataset = CircuitDataset(
+            circuits=self.circuits[train_indices],
+            labels=self.labels[train_indices],
+            config=self.config
+        )
+        
+        val_dataset = CircuitDataset(
+            circuits=self.circuits[val_indices],
+            labels=self.labels[val_indices],
+            config=self.config
+        )
+        
+        return train_dataset, val_dataset
 
-        np.savez(filename,
-                circuits = self.circ_rep,
-                labels = self.dm_labels,
-                allow_pickle=True)
+
+class DatasetGenerator:
+    """Generate datasets for training noise models.
+    
+    This is the main class for creating datasets. It coordinates:
+    - Circuit generation (random/Clifford)
+    - Noise application
+    - Circuit encoding for ML
+    - Label generation (density matrices)
+    
+    Args:
+        dataset_config: Configuration for dataset generation
+        noise_config: Configuration for noise model
+    
+    Example:
+        >>> dataset_config = DatasetConfig(n_circuits=100, qubits=2, moments=10)
+        >>> noise_config = NoiseConfig(dep_lambda=0.02, p0=0.03)
+        >>> generator = DatasetGenerator(dataset_config, noise_config)
+        >>> dataset = generator.generate()
+        >>> dataset.save("my_dataset")
+    """
+    
+    def __init__(self, dataset_config: DatasetConfig, noise_config: NoiseConfig):
+        self.dataset_config = dataset_config
+        self.noise_config = noise_config
+        
+        # Initialize components
+        self.circuit_generator = CircuitGenerator(dataset_config, noise_config.primitive_gates)
+        self.noise_model = QuantumNoiseModel(noise_config)
+        self.encoder = CircuitEncoder(noise_config.primitive_gates)
+    
+    @classmethod
+    def from_config(cls, config: ExperimentConfig) -> "DatasetGenerator":
+        """Create generator from complete experiment configuration.
+        
+        Args:
+            config: Complete experiment configuration
+            
+        Returns:
+            Configured DatasetGenerator
+        """
+        return cls(config.dataset, config.noise)
+    
+    def generate(self, verbose: bool = True) -> CircuitDataset:
+        """Generate complete dataset with circuits and labels.
+        
+        Args:
+            verbose: Print progress information
+            
+        Returns:
+            CircuitDataset with encoded circuits and density matrix labels
+        """
+        if verbose:
+            print(f"Generating {self.dataset_config.n_circuits} circuits...")
+        
+        # Generate circuits
+        circuits = self.circuit_generator.generate_batch(
+            n_circuits=self.dataset_config.n_circuits,
+            mixed=self.dataset_config.mixed
+        )
+        
+        if verbose:
+            print("Applying noise model...")
+        
+        # Apply noise and compute density matrices
+        noisy_circuits = [self.noise_model.apply(circuit) for circuit in circuits]
+        labels = np.array([circ().state() for circ in noisy_circuits])
+        
+        if verbose:
+            print("Encoding circuits...")
+        
+        # Encode circuits as arrays
+        encoded_circuits = np.array([
+            self.encoder.circuit_to_array(circuit)
+            for circuit in circuits
+        ], dtype=object)
+        
+        if verbose:
+            print(f"Dataset generated: {len(circuits)} circuits, "
+                  f"{self.dataset_config.qubits} qubits, "
+                  f"{self.dataset_config.moments} moments")
+        
+        return CircuitDataset(
+            circuits=encoded_circuits,
+            labels=labels,
+            config=self.dataset_config
+        )
+    
+    def generate_evaluation_set(
+        self,
+        eval_depth: Optional[int] = None,
+        eval_size: Optional[int] = None,
+        verbose: bool = True
+    ) -> CircuitDataset:
+        """Generate evaluation dataset with different parameters.
+        
+        This is useful for testing generalization to different circuit depths.
+        
+        Args:
+            eval_depth: Circuit depth for evaluation (uses config default if None)
+            eval_size: Number of circuits (uses config default if None)
+            verbose: Print progress information
+            
+        Returns:
+            CircuitDataset for evaluation
+        """
+        # Use config defaults if not specified
+        eval_depth = eval_depth or self.dataset_config.eval_depth
+        eval_size = eval_size or self.dataset_config.eval_size
+        
+        if verbose:
+            print(f"Generating evaluation set: {eval_size} circuits with depth {eval_depth}...")
+        
+        # Create temporary config with eval parameters
+        eval_config = DatasetConfig(
+            n_circuits=eval_size,
+            moments=eval_depth,
+            qubits=self.dataset_config.qubits,
+            clifford=self.dataset_config.clifford,
+            distributed_clifford=self.dataset_config.distributed_clifford,
+            mixed=self.dataset_config.mixed
+        )
+        
+        # Create temporary generator
+        temp_generator = DatasetGenerator(eval_config, self.noise_config)
+        
+        return temp_generator.generate(verbose=verbose)
+    
+    def generate_rb_dataset(
+        self,
+        start: int,
+        stop: int,
+        step: int,
+        n_circuits_per_depth: int,
+        verbose: bool = True
+    ) -> List[CircuitDataset]:
+        """Generate dataset for randomized benchmarking experiments.
+        
+        Creates multiple datasets with increasing circuit depths.
+        
+        Args:
+            start: Starting circuit depth
+            stop: Ending circuit depth (exclusive)
+            step: Step size between depths
+            n_circuits_per_depth: Number of circuits to generate per depth
+            verbose: Print progress information
+            
+        Returns:
+            List of CircuitDatasets, one per depth level
+        """
+        datasets = []
+        
+        for depth in range(start, stop, step):
+            if verbose:
+                print(f"Generating RB dataset for depth {depth}...")
+            
+            # Create config for this depth
+            rb_config = DatasetConfig(
+                n_circuits=n_circuits_per_depth,
+                moments=depth,
+                qubits=self.dataset_config.qubits,
+                clifford=True,  # RB uses Clifford circuits
+                distributed_clifford=True,
+                mixed=False
+            )
+            
+            # Generate dataset
+            temp_generator = DatasetGenerator(rb_config, self.noise_config)
+            dataset = temp_generator.generate(verbose=False)
+            datasets.append(dataset)
+        
+        if verbose:
+            print(f"Generated {len(datasets)} RB datasets")
+        
+        return datasets
+
+
+# Re-export main classes
+__all__ = [
+    "CircuitDataset",
+    "DatasetGenerator",
+    "DatasetConfig",
+    "NoiseConfig",
+    "ExperimentConfig",
+]
