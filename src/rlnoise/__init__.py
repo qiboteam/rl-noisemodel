@@ -13,6 +13,15 @@ from rlnoise.dataset import (
     CircuitDataset,
     DatasetGenerator,
 )
+from rlnoise.circuit_generator import (
+    CircuitGenerator,
+)
+from rlnoise.circuit_encoder import (
+    CircuitEncoder,
+)
+from rlnoise.noise_model import (
+    QuantumNoiseModel,
+)
 from rlnoise.gym_env import (
     QuantumCircuitEnv,
     create_quantum_circuit_env,
@@ -33,6 +42,11 @@ __all__ = [
     # Dataset
     "CircuitDataset",
     "DatasetGenerator",
+    # Circuit Generation and Encoding
+    "CircuitGenerator",
+    "CircuitEncoder",
+    # Noise Model
+    "QuantumNoiseModel",
     # Gym Environment
     "QuantumCircuitEnv",
     "create_quantum_circuit_env",

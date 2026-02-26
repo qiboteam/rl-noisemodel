@@ -39,6 +39,23 @@ class CircuitDataset:
         """Get a single circuit and label by index."""
         return self.circuits[idx], self.labels[idx]
     
+    def __str__(self) -> str:
+        """String representation showing dataset information."""
+        n_circuits = len(self)
+        n_moments, n_qubits, encoding_dim = self.circuits.shape[1:]
+        
+        return (
+            f"\n{'='*60}\n"
+            f"  CircuitDataset\n"
+            f"{'='*60}\n"
+            f"    • Total Circuits:      {n_circuits}\n"
+            f"    • Qubits:              {n_qubits}\n"
+            f"    • Moments (depth):     {n_moments}\n"
+            f"    • Encoding dimension:  {encoding_dim}\n"
+            f"    • Circuit shape:       {self.circuits.shape[1:]}\n"
+            f"{'='*60}"
+        )
+    
     def save(self, filepath: str):
         """Save dataset to disk in .npz format.
         
@@ -129,24 +146,45 @@ class DatasetGenerator:
     
     Args:
         dataset_config: Configuration for dataset generation
-        noise_config: Configuration for noise model
+        noise_config: Configuration for noise model (optional, uses defaults if not provided)
     
     Example:
-        >>> dataset_config = DatasetConfig(n_circuits=100, qubits=2, moments=10)
-        >>> noise_config = NoiseConfig(dep_lambda=0.02, p0=0.03)
+        >>> dataset_config = DatasetConfig(n_circuits=100, qubits=2, moments=10, primitive_gates=["rx", "rz"])
+        >>> noise_config = NoiseConfig(depolarizing=0.02, damping=0.03)
         >>> generator = DatasetGenerator(dataset_config, noise_config)
         >>> dataset = generator.generate()
         >>> dataset.save("my_dataset")
     """
     
-    def __init__(self, dataset_config: DatasetConfig, noise_config: NoiseConfig):
+    def __init__(self, dataset_config: DatasetConfig, noise_config: Optional[NoiseConfig] = None):
         self.dataset_config = dataset_config
-        self.noise_config = noise_config
+        self.noise_config = noise_config if noise_config is not None else NoiseConfig()
+        
+        # Validate noise config against dataset config
+        self._validate_configs()
         
         # Initialize components
-        self.circuit_generator = CircuitGenerator(dataset_config, noise_config.primitive_gates)
-        self.noise_model = QuantumNoiseModel(noise_config)
-        self.encoder = CircuitEncoder(noise_config.primitive_gates)
+        self.circuit_generator = CircuitGenerator(dataset_config)
+        self.noise_model = QuantumNoiseModel(self.noise_config, dataset_config.qubits)
+        self.encoder = CircuitEncoder(dataset_config.primitive_gates)
+    
+    def _validate_configs(self):
+        """Validate that noise config is compatible with dataset config."""
+        # Check that all gates in noise config exist in primitive gates
+        primitive_gate_set = set(self.dataset_config.primitive_gates + ["none"])
+        
+        for gate_list_name in ["x_coherent_on_gate", "z_coherent_on_gate", 
+                                "damping_on_gate", "depol_on_gate"]:
+            gate_list = getattr(self.noise_config, gate_list_name)
+            for gate in gate_list:
+                if gate.lower() not in primitive_gate_set:
+                    raise ValueError(
+                        f"Gate '{gate}' in {gate_list_name} is not in primitive_gates: "
+                        f"{self.dataset_config.primitive_gates}"
+                    )
+        
+        # Validate list lengths for per-qubit noise
+        self.noise_config.validate_list_lengths(self.dataset_config.qubits)
     
     @classmethod
     def from_config(cls, config: ExperimentConfig) -> "DatasetGenerator":
@@ -235,6 +273,7 @@ class DatasetGenerator:
             n_circuits=eval_size,
             moments=eval_depth,
             qubits=self.dataset_config.qubits,
+            primitive_gates=self.dataset_config.primitive_gates,
             clifford=self.dataset_config.clifford,
             distributed_clifford=self.dataset_config.distributed_clifford,
             mixed=self.dataset_config.mixed
@@ -278,6 +317,7 @@ class DatasetGenerator:
                 n_circuits=n_circuits_per_depth,
                 moments=depth,
                 qubits=self.dataset_config.qubits,
+                primitive_gates=self.dataset_config.primitive_gates,
                 clifford=True,  # RB uses Clifford circuits
                 distributed_clifford=True,
                 mixed=False

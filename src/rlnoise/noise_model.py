@@ -19,27 +19,20 @@ class QuantumNoiseModel:
     
     Args:
         config: NoiseConfig object specifying noise parameters
+        qubits: Number of qubits in the system
     """
     
-    def __init__(self, config: NoiseConfig):
+    def __init__(self, config: NoiseConfig, qubits: int):
         self.config = config
-        self._validate_config()
+        self.qubits = qubits
         
     def _validate_config(self):
-        """Validate that noise configuration is compatible with primitive gates."""
-        primitive_gate_set = set(self.config.primitive_gates + ["none"])
+        """Validate that noise configuration is compatible with primitive gates.
         
-        for gate_list in [
-            self.config.x_coherent_on_gate,
-            self.config.z_coherent_on_gate,
-            self.config.damping_on_gate,
-            self.config.depol_on_gate,
-        ]:
-            for gate in gate_list:
-                if gate.lower() not in primitive_gate_set:
-                    raise ValueError(
-                        f"Gate '{gate}' specified in noise config but not in primitive_gates"
-                    )
+        Note: This method is kept for backward compatibility but validation
+        is now done in DatasetGenerator.
+        \"\"\"
+        pass
     
     @staticmethod
     def _string_to_gate(gate_string: str) -> Optional[type]:
@@ -71,6 +64,10 @@ class QuantumNoiseModel:
     def _apply_standard_noise(self, circuit: Circuit) -> Circuit:
         """Apply standard depolarizing and reset noise using Qibo's NoiseModel.
         
+        Note: For per-qubit noise parameters (lists), the average value is used
+        since Qibo's NoiseModel applies noise at the gate class level.
+        Per-qubit coherent errors are applied individually in _add_coherent_errors().
+        
         Args:
             circuit: Input quantum circuit
             
@@ -80,18 +77,24 @@ class QuantumNoiseModel:
         noise_model = NoiseModel()
         noise_applied = False
         
+        # Get noise parameters (average if list)
+        damping_list = self.config.get_damping_list(self.qubits)
+        depol_list = self.config.get_depolarizing_list(self.qubits)
+        avg_damping = sum(damping_list) / len(damping_list)
+        avg_depol = sum(depol_list) / len(depol_list)
+        
         # Add reset/damping errors
         for gate_name in self.config.damping_on_gate:
             gate_class = self._string_to_gate(gate_name)
             if gate_class is not None:
-                noise_model.add(ResetError(p0=self.config.p0, p1=0), gate_class)
+                noise_model.add(ResetError(p0=avg_damping, p1=0), gate_class)
                 noise_applied = True
         
         # Add depolarizing errors
         for gate_name in self.config.depol_on_gate:
             gate_class = self._string_to_gate(gate_name)
             if gate_class is not None:
-                noise_model.add(DepolarizingError(self.config.dep_lambda), gate_class)
+                noise_model.add(DepolarizingError(avg_depol), gate_class)
                 noise_applied = True
         
         return noise_model.apply(circuit) if noise_applied else circuit
@@ -105,6 +108,10 @@ class QuantumNoiseModel:
         """
         gates_to_process = list(noisy_circuit.queue)
         
+        # Get noise parameters as lists
+        coherent_x_list = self.config.get_coherent_x_list(self.qubits)
+        coherent_y_list = self.config.get_coherent_y_list(self.qubits)
+        
         for gate in gates_to_process:
             # Add coherent X errors
             if self.config.x_coherent_on_gate:
@@ -112,7 +119,7 @@ class QuantumNoiseModel:
                     if type(gate) == self._string_to_gate(target_gate_name):
                         if "theta" in gate.init_kwargs:
                             qubit = gate.qubits[0]
-                            theta = self.config.epsilon_x * gate.init_kwargs["theta"]
+                            theta = coherent_x_list[qubit] * gate.init_kwargs["theta"]
                             noisy_circuit.add(gates.RX(qubit, theta=theta))
             
             # Add coherent Z errors
@@ -121,7 +128,7 @@ class QuantumNoiseModel:
                     if type(gate) == self._string_to_gate(target_gate_name):
                         if "theta" in gate.init_kwargs:
                             qubit = gate.qubits[0]
-                            theta = self.config.epsilon_z * gate.init_kwargs["theta"]
+                            theta = coherent_y_list[qubit] * gate.init_kwargs["theta"]
                             noisy_circuit.add(gates.RZ(qubit, theta=theta))
     
     def apply(self, circuit: Circuit) -> Circuit:

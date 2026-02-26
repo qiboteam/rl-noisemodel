@@ -22,9 +22,9 @@ class CircuitGenerator:
         config: DatasetConfig object specifying circuit parameters
     """
     
-    def __init__(self, config: DatasetConfig, primitive_gates: List[str]):
+    def __init__(self, config: DatasetConfig):
         self.config = config
-        self.primitive_gates = [gate.lower() for gate in primitive_gates]
+        self.primitive_gates = config.primitive_gates
         self.n_qubits = config.qubits
         self.n_moments = config.moments
         self.is_clifford = config.clifford

@@ -1,42 +1,174 @@
 """Configuration models for RL Noise."""
 
-from typing import List, Literal, Optional
-from pydantic import BaseModel, Field, field_validator
+from typing import List, Literal, Optional, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class NoiseConfig(BaseModel):
     """Configuration for noise model parameters.
     
     Attributes:
-        primitive_gates: List of primitive gate names (e.g., ['rx', 'rz', 'cz'])
         channels: List of noise channel types
-        dep_lambda: Depolarizing channel parameter (0-1)
-        p0: Reset channel parameter (0-1)
-        epsilon_x: Coherent X error parameter
-        epsilon_z: Coherent Z error parameter
+        dep_lambda: Depolarizing channel parameter (float or list per qubit) [alias: depolarizing]
+        p0: Reset channel parameter (float or list per qubit) [alias: damping]
+        coherent_x: Coherent X error parameter (float or list per qubit) [alias: epsilon_x]
+        coherent_y: Coherent Y error parameter (float or list per qubit) [alias: epsilon_z]
         x_coherent_on_gate: Gates to apply X coherent errors on
         z_coherent_on_gate: Gates to apply Z coherent errors on
         damping_on_gate: Gates to apply damping (reset) on
         depol_on_gate: Gates to apply depolarizing noise on
     """
     
-    primitive_gates: List[str] = Field(default=["rx", "rz"])
     channels: List[str] = Field(default=["DepolarizingChannel", "ResetChannel"])
-    dep_lambda: float = Field(default=0.02, ge=0.0, le=1.0)
-    p0: float = Field(default=0.03, ge=0.0, le=1.0)
-    epsilon_x: float = Field(default=0.04)
-    epsilon_z: float = Field(default=0.02)
-    x_coherent_on_gate: List[str] = Field(default=["rx"])
-    z_coherent_on_gate: List[str] = Field(default=["rz"])
-    damping_on_gate: List[str] = Field(default=["rx"])
-    depol_on_gate: List[str] = Field(default=["rz"])
+    dep_lambda: Union[float, List[float]] = Field(default=0.02, alias="depolarizing")
+    p0: Union[float, List[float]] = Field(default=0.03, alias="damping")
+    coherent_x: Union[float, List[float]] = Field(default=0.04, alias="epsilon_x")
+    coherent_y: Union[float, List[float]] = Field(default=0.02, alias="epsilon_z")
+    x_coherent_on_gate: List[str] = Field(default_factory=lambda: ["rx"])
+    z_coherent_on_gate: List[str] = Field(default_factory=lambda: ["rz"])
+    damping_on_gate: List[str] = Field(default_factory=lambda: ["rx"])
+    depol_on_gate: List[str] = Field(default_factory=lambda: ["rz"])
 
-    @field_validator("primitive_gates", "x_coherent_on_gate", "z_coherent_on_gate", 
+    model_config = {"populate_by_name": True}
+
+    @field_validator("x_coherent_on_gate", "z_coherent_on_gate", 
                      "damping_on_gate", "depol_on_gate")
     @classmethod
     def validate_gate_names(cls, v):
         """Ensure gate names are lowercase."""
         return [gate.lower() for gate in v]
+    
+    def validate_list_lengths(self, qubits: int):
+        """Validate that list parameters match the number of qubits.
+        
+        Args:
+            qubits: Number of qubits to validate against
+            
+        Raises:
+            ValueError: If any list parameter has incorrect length
+        """
+        for field_name in ['dep_lambda', 'p0', 'coherent_x', 'coherent_y']:
+            value = getattr(self, field_name)
+            if isinstance(value, list):
+                if len(value) != qubits:
+                    raise ValueError(
+                        f"{field_name} list length ({len(value)}) must match "
+                        f"number of qubits ({qubits})"
+                    )
+    
+    def _get_as_list(self, value: Union[float, List[float]], qubits: int) -> List[float]:
+        """Convert float or list to list of length qubits.
+        
+        Args:
+            value: Float or list of floats
+            qubits: Number of qubits
+            
+        Returns:
+            List of floats with length qubits
+        """
+        if isinstance(value, list):
+            return value
+        return [value] * qubits
+    
+    @property
+    def depolarizing(self) -> Union[float, List[float]]:
+        """Alias for dep_lambda."""
+        return self.dep_lambda
+    
+    @property
+    def damping(self) -> Union[float, List[float]]:
+        """Alias for p0."""
+        return self.p0
+    
+    @property
+    def epsilon_x(self) -> Union[float, List[float]]:
+        """Backward compatibility alias for coherent_x."""
+        return self.coherent_x
+    
+    @property
+    def epsilon_z(self) -> Union[float, List[float]]:
+        """Backward compatibility alias for coherent_y."""
+        return self.coherent_y
+    
+    def get_depolarizing_list(self, qubits: int) -> List[float]:
+        """Get depolarizing as list per qubit.
+        
+        Args:
+            qubits: Number of qubits
+            
+        Returns:
+            List of depolarizing parameters
+        """
+        return self._get_as_list(self.dep_lambda, qubits)
+    
+    def get_damping_list(self, qubits: int) -> List[float]:
+        """Get damping as list per qubit.
+        
+        Args:
+            qubits: Number of qubits
+            
+        Returns:
+            List of damping parameters
+        """
+        return self._get_as_list(self.p0, qubits)
+    
+    def get_coherent_x_list(self, qubits: int) -> List[float]:
+        """Get coherent_x as list per qubit.
+        
+        Args:
+            qubits: Number of qubits
+            
+        Returns:
+            List of coherent X parameters
+        """
+        return self._get_as_list(self.coherent_x, qubits)
+    
+    def get_coherent_y_list(self, qubits: int) -> List[float]:
+        """Get coherent_y as list per qubit.
+        
+        Args:
+            qubits: Number of qubits
+            
+        Returns:
+            List of coherent Y parameters
+        """
+        return self._get_as_list(self.coherent_y, qubits)
+    
+    def __str__(self) -> str:
+        """String representation showing key parameters."""
+        # Format noise parameters
+        def format_param(val):
+            if isinstance(val, list):
+                return "[" + ", ".join(f"{v:.4f}" for v in val) + "]"
+            return f"{val:.4f}"
+        
+        # Build noise application info
+        noise_apps = []
+        if self.x_coherent_on_gate:
+            noise_apps.append(f"    • X coherent → {', '.join(self.x_coherent_on_gate)}")
+        if self.z_coherent_on_gate:
+            noise_apps.append(f"    • Z coherent → {', '.join(self.z_coherent_on_gate)}")
+        if self.damping_on_gate:
+            noise_apps.append(f"    • Damping    → {', '.join(self.damping_on_gate)}")
+        if self.depol_on_gate:
+            noise_apps.append(f"    • Depolarize → {', '.join(self.depol_on_gate)}")
+        
+        noise_app_str = "\n".join(noise_apps) if noise_apps else "    (none configured)"
+        
+        return (
+            f"\n{'='*60}\n"
+            f"  NoiseConfig\n"
+            f"{'='*60}\n"
+            f"  Noise Parameters:\n"
+            f"    • Depolarizing:    {format_param(self.dep_lambda)}\n"
+            f"    • Damping:         {format_param(self.p0)}\n"
+            f"    • Coherent X:      {format_param(self.coherent_x)}\n"
+            f"    • Coherent Y:      {format_param(self.coherent_y)}\n"
+            f"  \n"
+            f"  Noise Application:\n"
+            f"{noise_app_str}\n"
+            f"{'='*60}"
+        )
 
 
 class DatasetConfig(BaseModel):
@@ -48,6 +180,7 @@ class DatasetConfig(BaseModel):
         eval_depth: Circuit depth for evaluation dataset
         moments: Number of moments (circuit depth) for training
         qubits: Number of qubits in circuits
+        primitive_gates: List of primitive gate names (e.g., ['rx', 'rz', 'cz'])
         distributed_clifford: Use distributed Clifford gates
         clifford: Generate Clifford circuits (quantized angles)
         mixed: Mix random and Clifford circuits
@@ -58,9 +191,52 @@ class DatasetConfig(BaseModel):
     eval_depth: int = Field(default=15, gt=0)
     moments: int = Field(default=10, gt=0)
     qubits: int = Field(default=1, gt=0)
+    primitive_gates: List[str] = Field(default=["rx", "rz"])
     distributed_clifford: bool = Field(default=False)
     clifford: bool = Field(default=True)
     mixed: bool = Field(default=False)
+    
+    @field_validator("primitive_gates")
+    @classmethod
+    def validate_gate_names(cls, v):
+        """Ensure gate names are lowercase."""
+        return [gate.lower() for gate in v]
+    
+    @model_validator(mode='after')
+    def validate_config(self):
+        """Validate configuration consistency."""
+        # Check CZ gate only with multiple qubits
+        if "cz" in self.primitive_gates and self.qubits < 2:
+            raise ValueError("CZ gate requires at least 2 qubits")
+        if "cnot" in self.primitive_gates and self.qubits < 2:
+            raise ValueError("CNOT gate requires at least 2 qubits")
+        
+        return self
+    
+    def __str__(self) -> str:
+        """String representation showing key parameters."""
+        circuit_type = "Clifford" if self.clifford else "Arbitrary"
+        if self.mixed:
+            circuit_type = "Mixed (Clifford + Arbitrary)"
+        
+        gates_str = ", ".join(self.primitive_gates)
+        
+        return (
+            f"\n{'='*50}\n"
+            f"  DatasetConfig\n"
+            f"{'='*50}\n"
+            f"  Training Dataset:\n"
+            f"    • Circuits:       {self.n_circuits}\n"
+            f"    • Qubits:         {self.qubits}\n"
+            f"    • Moments:        {self.moments}\n"
+            f"    • Type:           {circuit_type}\n"
+            f"    • Gates:          [{gates_str}]\n"
+            f"  \n"
+            f"  Evaluation Dataset:\n"
+            f"    • Circuits:       {self.eval_size}\n"
+            f"    • Moments:        {self.eval_depth}\n"
+            f"{'='*50}"
+        )
 
 
 class RandomizedBenchmarkingConfig(BaseModel):
