@@ -1,45 +1,85 @@
 """Configuration models for RL Noise."""
 
-from typing import List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+class GateSpecificNoise(BaseModel):
+    """Configuration for gate-specific noise application.
+    
+    Attributes:
+        gate: Gate name to apply noise to (e.g., 'rx', 'rz', 'cz')
+        noise_channel: Type of noise channel
+        noise_parameter: Noise parameter value (float for uniform, list for per-qubit), this feature is available only for coherent errors
+        angle_dependent: For coherent errors on rotation gates, scale by gate angle
+    """
+    
+    gate: str
+    noise_channel: Literal["depolarizing", "damping", "coherent_z", "coherent_x"]
+    noise_parameter: Union[float, List[float]]
+    angle_dependent: bool = Field(default=False)
+    
+    @field_validator("gate")
+    @classmethod
+    def validate_gate_name(cls, v):
+        """Ensure gate name is lowercase."""
+        return v.lower()
+    
+    @model_validator(mode='after')
+    def validate_angle_dependent(self):
+        """Validate that angle_dependent is only used with coherent errors."""
+        if self.angle_dependent:
+            if self.noise_channel not in ["coherent_x", "coherent_z"]:
+                raise ValueError(
+                    "angle_dependent can only be used with coherent_x or coherent_z"
+                )
+        return self
+    
+    def validate_parameter_length(self, qubits: int):
+        """Validate that list parameters match the number of qubits.
+        
+        Args:
+            qubits: Number of qubits to validate against
+            
+        Raises:
+            ValueError: If list parameter has incorrect length
+        """
+        if isinstance(self.noise_parameter, list):
+            if len(self.noise_parameter) != qubits:
+                raise ValueError(
+                    f"noise_parameter list length ({len(self.noise_parameter)}) must match "
+                    f"number of qubits ({qubits})"
+                )
+    
+    def get_parameter_list(self, qubits: int) -> List[float]:
+        """Get noise parameter as list per qubit.
+        
+        Args:
+            qubits: Number of qubits
+            
+        Returns:
+            List of noise parameters with length qubits
+        """
+        if isinstance(self.noise_parameter, list):
+            return self.noise_parameter
+        return [self.noise_parameter] * qubits
 
 
 class NoiseConfig(BaseModel):
     """Configuration for noise model parameters.
     
+    The noise configuration is now organized as a list of gate-specific noise
+    specifications, providing more flexibility and clarity in defining which
+    noise channels apply to which gates.
+    
     Attributes:
-        channels: List of noise channel types
-        dep_lambda: Depolarizing channel parameter (float or list per qubit) [alias: depolarizing]
-        p0: Reset channel parameter (float or list per qubit) [alias: damping]
-        coherent_x: Coherent X error parameter (float or list per qubit) [alias: epsilon_x]
-        coherent_y: Coherent Y error parameter (float or list per qubit) [alias: epsilon_z]
-        x_coherent_on_gate: Gates to apply X coherent errors on
-        z_coherent_on_gate: Gates to apply Z coherent errors on
-        damping_on_gate: Gates to apply damping (reset) on
-        depol_on_gate: Gates to apply depolarizing noise on
+        noise_list: List of gate-specific noise configurations
     """
     
-    channels: List[str] = Field(default=["DepolarizingChannel", "ResetChannel"])
-    dep_lambda: Union[float, List[float]] = Field(default=0.02, alias="depolarizing")
-    p0: Union[float, List[float]] = Field(default=0.03, alias="damping")
-    coherent_x: Union[float, List[float]] = Field(default=0.04, alias="epsilon_x")
-    coherent_y: Union[float, List[float]] = Field(default=0.02, alias="epsilon_z")
-    x_coherent_on_gate: List[str] = Field(default_factory=lambda: ["rx"])
-    z_coherent_on_gate: List[str] = Field(default_factory=lambda: ["rz"])
-    damping_on_gate: List[str] = Field(default_factory=lambda: ["rx"])
-    depol_on_gate: List[str] = Field(default_factory=lambda: ["rz"])
-
-    model_config = {"populate_by_name": True}
-
-    @field_validator("x_coherent_on_gate", "z_coherent_on_gate", 
-                     "damping_on_gate", "depol_on_gate")
-    @classmethod
-    def validate_gate_names(cls, v):
-        """Ensure gate names are lowercase."""
-        return [gate.lower() for gate in v]
+    noise_list: List[GateSpecificNoise] = Field(default_factory=list)
     
     def validate_list_lengths(self, qubits: int):
-        """Validate that list parameters match the number of qubits.
+        """Validate that all list parameters match the number of qubits.
         
         Args:
             qubits: Number of qubits to validate against
@@ -47,128 +87,83 @@ class NoiseConfig(BaseModel):
         Raises:
             ValueError: If any list parameter has incorrect length
         """
-        for field_name in ['dep_lambda', 'p0', 'coherent_x', 'coherent_y']:
-            value = getattr(self, field_name)
-            if isinstance(value, list):
-                if len(value) != qubits:
-                    raise ValueError(
-                        f"{field_name} list length ({len(value)}) must match "
-                        f"number of qubits ({qubits})"
-                    )
+        for noise in self.noise_list:
+            noise.validate_parameter_length(qubits)
     
-    def _get_as_list(self, value: Union[float, List[float]], qubits: int) -> List[float]:
-        """Convert float or list to list of length qubits.
+    def get_noise_for_gate(self, gate: str) -> List[GateSpecificNoise]:
+        """Get all noise configurations for a specific gate.
         
         Args:
-            value: Float or list of floats
-            qubits: Number of qubits
+            gate: Gate name to query
             
         Returns:
-            List of floats with length qubits
+            List of GateSpecificNoise objects for the specified gate
         """
-        if isinstance(value, list):
-            return value
-        return [value] * qubits
+        return [noise for noise in self.noise_list if noise.gate.lower() == gate.lower()]
     
-    @property
-    def depolarizing(self) -> Union[float, List[float]]:
-        """Alias for dep_lambda."""
-        return self.dep_lambda
-    
-    @property
-    def damping(self) -> Union[float, List[float]]:
-        """Alias for p0."""
-        return self.p0
-    
-    @property
-    def epsilon_x(self) -> Union[float, List[float]]:
-        """Backward compatibility alias for coherent_x."""
-        return self.coherent_x
-    
-    @property
-    def epsilon_z(self) -> Union[float, List[float]]:
-        """Backward compatibility alias for coherent_y."""
-        return self.coherent_y
-    
-    def get_depolarizing_list(self, qubits: int) -> List[float]:
-        """Get depolarizing as list per qubit.
+    def get_noise_by_channel(self, channel: str) -> List[GateSpecificNoise]:
+        """Get all noise configurations for a specific channel type.
         
         Args:
-            qubits: Number of qubits
+            channel: Noise channel type to query
             
         Returns:
-            List of depolarizing parameters
+            List of GateSpecificNoise objects with the specified channel
         """
-        return self._get_as_list(self.dep_lambda, qubits)
+        return [noise for noise in self.noise_list if noise.noise_channel == channel]
     
-    def get_damping_list(self, qubits: int) -> List[float]:
-        """Get damping as list per qubit.
+    def get_gates_for_channel(self, channel: str) -> List[str]:
+        """Get list of gates that have a specific noise channel applied.
         
         Args:
-            qubits: Number of qubits
+            channel: Noise channel type to query
             
         Returns:
-            List of damping parameters
+            List of gate names
         """
-        return self._get_as_list(self.p0, qubits)
-    
-    def get_coherent_x_list(self, qubits: int) -> List[float]:
-        """Get coherent_x as list per qubit.
-        
-        Args:
-            qubits: Number of qubits
-            
-        Returns:
-            List of coherent X parameters
-        """
-        return self._get_as_list(self.coherent_x, qubits)
-    
-    def get_coherent_y_list(self, qubits: int) -> List[float]:
-        """Get coherent_y as list per qubit.
-        
-        Args:
-            qubits: Number of qubits
-            
-        Returns:
-            List of coherent Y parameters
-        """
-        return self._get_as_list(self.coherent_y, qubits)
+        return [noise.gate for noise in self.noise_list if noise.noise_channel == channel]
     
     def __str__(self) -> str:
         """String representation showing key parameters."""
-        # Format noise parameters
-        def format_param(val):
-            if isinstance(val, list):
-                return "[" + ", ".join(f"{v:.4f}" for v in val) + "]"
-            return f"{val:.4f}"
+        if not self.noise_list:
+            return (
+                f"\n{'='*60}\n"
+                f"  NoiseConfig\n"
+                f"{'='*60}\n"
+                f"  No noise configured\n"
+                f"{'='*60}"
+            )
         
-        # Build noise application info
-        noise_apps = []
-        if self.x_coherent_on_gate:
-            noise_apps.append(f"    • X coherent → {', '.join(self.x_coherent_on_gate)}")
-        if self.z_coherent_on_gate:
-            noise_apps.append(f"    • Z coherent → {', '.join(self.z_coherent_on_gate)}")
-        if self.damping_on_gate:
-            noise_apps.append(f"    • Damping    → {', '.join(self.damping_on_gate)}")
-        if self.depol_on_gate:
-            noise_apps.append(f"    • Depolarize → {', '.join(self.depol_on_gate)}")
+        # Group by gate
+        gate_noise_map: Dict[str, List[GateSpecificNoise]] = {}
+        for noise in self.noise_list:
+            if noise.gate not in gate_noise_map:
+                gate_noise_map[noise.gate] = []
+            gate_noise_map[noise.gate].append(noise)
         
-        noise_app_str = "\n".join(noise_apps) if noise_apps else "    (none configured)"
+        # Format output
+        lines = [
+            f"\n{'='*60}",
+            f"  NoiseConfig",
+            f"{'='*60}",
+            f"  Gate-Specific Noise:"
+        ]
         
-        return (
-            f"\n{'='*60}\n"
-            f"  NoiseConfig\n"
-            f"{'='*60}\n"
-            f"  Noise Parameters:\n"
-            f"    • Depolarizing:    {format_param(self.dep_lambda)}\n"
-            f"    • Damping:         {format_param(self.p0)}\n"
-            f"    • Coherent X:      {format_param(self.coherent_x)}\n"
-            f"    • Coherent Y:      {format_param(self.coherent_y)}\n"
-            f"  \n"
-            f"  Noise Application:\n"
-            f"{noise_app_str}\n"
-            f"{'='*60}"
-        )
+        for gate in sorted(gate_noise_map.keys()):
+            lines.append(f"    Gate: {gate}")
+            for noise in gate_noise_map[gate]:
+                # Format parameter
+                if isinstance(noise.noise_parameter, list):
+                    param_str = "[" + ", ".join(f"{v:.4f}" for v in noise.noise_parameter) + "]"
+                else:
+                    param_str = f"{noise.noise_parameter:.4f}"
+                
+                # Add angle-dependent indicator
+                angle_dep = " (angle-dependent)" if noise.angle_dependent else ""
+                lines.append(f"      • {noise.noise_channel}: {param_str}{angle_dep}")
+        
+        lines.append(f"{'='*60}")
+        return "\n".join(lines)
 
 
 class DatasetConfig(BaseModel):
@@ -176,9 +171,7 @@ class DatasetConfig(BaseModel):
     
     Attributes:
         n_circuits: Number of circuits to generate
-        eval_size: Number of circuits for evaluation dataset
-        eval_depth: Circuit depth for evaluation dataset
-        moments: Number of moments (circuit depth) for training
+        moments: Number of moments (circuit depth)
         qubits: Number of qubits in circuits
         primitive_gates: List of primitive gate names (e.g., ['rx', 'rz', 'cz'])
         distributed_clifford: Use distributed Clifford gates
@@ -187,8 +180,6 @@ class DatasetConfig(BaseModel):
     """
     
     n_circuits: int = Field(default=100, gt=0)
-    eval_size: int = Field(default=100, gt=0)
-    eval_depth: int = Field(default=15, gt=0)
     moments: int = Field(default=10, gt=0)
     qubits: int = Field(default=1, gt=0)
     primitive_gates: List[str] = Field(default=["rx", "rz"])
@@ -225,17 +216,12 @@ class DatasetConfig(BaseModel):
             f"\n{'='*50}\n"
             f"  DatasetConfig\n"
             f"{'='*50}\n"
-            f"  Training Dataset:\n"
             f"    • Circuits:       {self.n_circuits}\n"
             f"    • Qubits:         {self.qubits}\n"
             f"    • Moments:        {self.moments}\n"
             f"    • Type:           {circuit_type}\n"
             f"    • Gates:          [{gates_str}]\n"
-            f"  \n"
-            f"  Evaluation Dataset:\n"
-            f"    • Circuits:       {self.eval_size}\n"
-            f"    • Moments:        {self.eval_depth}\n"
-            f"{'='*50}"
+            f"{'='*50}\n"
         )
 
 

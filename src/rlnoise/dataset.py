@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 import numpy as np
 from qibo.models import Circuit
 
@@ -13,7 +13,9 @@ from rlnoise.noise_model import QuantumNoiseModel
 
 
 class CircuitDataset:
-    """Container for quantum circuit dataset with labels.
+    """General-purpose container for quantum circuit dataset with labels.
+    
+    This class can be used for both training and evaluation datasets.
     
     Attributes:
         circuits: Array of circuit encodings, shape (n_circuits, n_moments, n_qubits, encoding_dim)
@@ -44,17 +46,19 @@ class CircuitDataset:
         n_circuits = len(self)
         n_moments, n_qubits, encoding_dim = self.circuits.shape[1:]
         
-        return (
+        result = (
             f"\n{'='*60}\n"
             f"  CircuitDataset\n"
             f"{'='*60}\n"
-            f"    • Total Circuits:      {n_circuits}\n"
+            f"    • Circuits:            {n_circuits}\n"
             f"    • Qubits:              {n_qubits}\n"
             f"    • Moments (depth):     {n_moments}\n"
             f"    • Encoding dimension:  {encoding_dim}\n"
             f"    • Circuit shape:       {self.circuits.shape[1:]}\n"
             f"{'='*60}"
         )
+        
+        return result
     
     def save(self, filepath: str):
         """Save dataset to disk in .npz format.
@@ -173,15 +177,13 @@ class DatasetGenerator:
         # Check that all gates in noise config exist in primitive gates
         primitive_gate_set = set(self.dataset_config.primitive_gates + ["none"])
         
-        for gate_list_name in ["x_coherent_on_gate", "z_coherent_on_gate", 
-                                "damping_on_gate", "depol_on_gate"]:
-            gate_list = getattr(self.noise_config, gate_list_name)
-            for gate in gate_list:
-                if gate.lower() not in primitive_gate_set:
-                    raise ValueError(
-                        f"Gate '{gate}' in {gate_list_name} is not in primitive_gates: "
-                        f"{self.dataset_config.primitive_gates}"
-                    )
+        # Get all gates mentioned in noise_list
+        for noise_spec in self.noise_config.noise_list:
+            if noise_spec.gate.lower() not in primitive_gate_set:
+                raise ValueError(
+                    f"Gate '{noise_spec.gate}' in noise configuration is not in primitive_gates: "
+                    f"{self.dataset_config.primitive_gates}"
+                )
         
         # Validate list lengths for per-qubit noise
         self.noise_config.validate_list_lengths(self.dataset_config.qubits)
@@ -205,7 +207,7 @@ class DatasetGenerator:
             verbose: Print progress information
             
         Returns:
-            CircuitDataset with encoded circuits and density matrix labels
+            CircuitDataset containing the generated circuits and labels
         """
         if verbose:
             print(f"Generating {self.dataset_config.n_circuits} circuits...")
@@ -233,56 +235,15 @@ class DatasetGenerator:
         ], dtype=object)
         
         if verbose:
-            print(f"Dataset generated: {len(circuits)} circuits, "
-                  f"{self.dataset_config.qubits} qubits, "
-                  f"{self.dataset_config.moments} moments")
+            print(f"Dataset generated.")
         
-        return CircuitDataset(
+        dataset = CircuitDataset(
             circuits=encoded_circuits,
             labels=labels,
-            config=self.dataset_config
-        )
-    
-    def generate_evaluation_set(
-        self,
-        eval_depth: Optional[int] = None,
-        eval_size: Optional[int] = None,
-        verbose: bool = True
-    ) -> CircuitDataset:
-        """Generate evaluation dataset with different parameters.
-        
-        This is useful for testing generalization to different circuit depths.
-        
-        Args:
-            eval_depth: Circuit depth for evaluation (uses config default if None)
-            eval_size: Number of circuits (uses config default if None)
-            verbose: Print progress information
-            
-        Returns:
-            CircuitDataset for evaluation
-        """
-        # Use config defaults if not specified
-        eval_depth = eval_depth or self.dataset_config.eval_depth
-        eval_size = eval_size or self.dataset_config.eval_size
-        
-        if verbose:
-            print(f"Generating evaluation set: {eval_size} circuits with depth {eval_depth}...")
-        
-        # Create temporary config with eval parameters
-        eval_config = DatasetConfig(
-            n_circuits=eval_size,
-            moments=eval_depth,
-            qubits=self.dataset_config.qubits,
-            primitive_gates=self.dataset_config.primitive_gates,
-            clifford=self.dataset_config.clifford,
-            distributed_clifford=self.dataset_config.distributed_clifford,
-            mixed=self.dataset_config.mixed
+            config=self.dataset_config,
         )
         
-        # Create temporary generator
-        temp_generator = DatasetGenerator(eval_config, self.noise_config)
-        
-        return temp_generator.generate(verbose=verbose)
+        return dataset
     
     def generate_rb_dataset(
         self,
@@ -320,7 +281,7 @@ class DatasetGenerator:
                 primitive_gates=self.dataset_config.primitive_gates,
                 clifford=True,  # RB uses Clifford circuits
                 distributed_clifford=True,
-                mixed=False
+                mixed=False,
             )
             
             # Generate dataset

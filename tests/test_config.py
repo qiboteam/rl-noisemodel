@@ -3,56 +3,187 @@
 import pytest
 from rlnoise.config import (
     NoiseConfig,
+    GateSpecificNoise,
     DatasetConfig,
     RandomizedBenchmarkingConfig,
     ExperimentConfig,
 )
 
 
-class TestNoiseConfig:
-    """Test NoiseConfig validation and creation."""
+class TestGateSpecificNoise:
+    """Test GateSpecificNoise validation and creation."""
     
-    def test_default_config(self):
-        """Test default noise configuration."""
-        config = NoiseConfig()
-        
-        assert config.primitive_gates == ["rx", "rz"]
-        assert config.dep_lambda == 0.02
-        assert config.p0 == 0.03
-        assert config.epsilon_x == 0.04
-        assert config.epsilon_z == 0.02
-    
-    def test_custom_config(self):
-        """Test custom noise parameters."""
-        config = NoiseConfig(
-            primitive_gates=["rx", "rz", "cz"],
-            dep_lambda=0.05,
-            p0=0.01,
+    def test_basic_creation(self):
+        """Test creating a basic gate-specific noise."""
+        noise = GateSpecificNoise(
+            gate="rx",
+            noise_channel="depolarizing",
+            noise_parameter=0.05
         )
         
-        assert "cz" in config.primitive_gates
-        assert config.dep_lambda == 0.05
-        assert config.p0 == 0.01
+        assert noise.gate == "rx"
+        assert noise.noise_channel == "depolarizing"
+        assert noise.noise_parameter == 0.05
+        assert noise.angle_dependent is False
     
     def test_gate_name_normalization(self):
         """Test that gate names are normalized to lowercase."""
-        config = NoiseConfig(
-            primitive_gates=["RX", "RZ", "CZ"],
-            x_coherent_on_gate=["RX"],
+        noise = GateSpecificNoise(
+            gate="RX",
+            noise_channel="coherent_x",
+            noise_parameter=0.1
         )
         
-        assert config.primitive_gates == ["rx", "rz", "cz"]
-        assert config.x_coherent_on_gate == ["rx"]
+        assert noise.gate == "rx"
     
-    def test_invalid_lambda(self):
-        """Test validation of depolarizing parameter."""
-        with pytest.raises(Exception):  # Pydantic ValidationError
-            NoiseConfig(dep_lambda=1.5)
+    def test_per_qubit_parameters(self):
+        """Test per-qubit noise parameters."""
+        noise = GateSpecificNoise(
+            gate="rx",
+            noise_channel="coherent_x",
+            noise_parameter=[0.1, 0.2, 0.3]
+        )
+        
+        assert isinstance(noise.noise_parameter, list)
+        assert len(noise.noise_parameter) == 3
     
-    def test_invalid_p0(self):
-        """Test validation of reset parameter."""
-        with pytest.raises(Exception):
-            NoiseConfig(p0=-0.1)
+    def test_angle_dependent_coherent(self):
+        """Test angle-dependent coherent noise."""
+        noise = GateSpecificNoise(
+            gate="rx",
+            noise_channel="coherent_x",
+            noise_parameter=0.1,
+            angle_dependent=True
+        )
+        
+        assert noise.angle_dependent is True
+    
+    def test_angle_dependent_validation(self):
+        """Test that angle_dependent only works with coherent errors."""
+        with pytest.raises(ValueError, match="angle_dependent can only be used"):
+            GateSpecificNoise(
+                gate="rx",
+                noise_channel="depolarizing",
+                noise_parameter=0.1,
+                angle_dependent=True
+            )
+    
+    def test_parameter_list_conversion(self):
+        """Test get_parameter_list method."""
+        # Test with float
+        noise1 = GateSpecificNoise(
+            gate="rx",
+            noise_channel="depolarizing",
+            noise_parameter=0.05
+        )
+        assert noise1.get_parameter_list(3) == [0.05, 0.05, 0.05]
+        
+        # Test with list
+        noise2 = GateSpecificNoise(
+            gate="rx",
+            noise_channel="coherent_x",
+            noise_parameter=[0.1, 0.2]
+        )
+        assert noise2.get_parameter_list(2) == [0.1, 0.2]
+    
+    def test_validate_parameter_length(self):
+        """Test parameter length validation."""
+        noise = GateSpecificNoise(
+            gate="rx",
+            noise_channel="coherent_x",
+            noise_parameter=[0.1, 0.2]
+        )
+        
+        # Should pass
+        noise.validate_parameter_length(2)
+        
+        # Should fail
+        with pytest.raises(ValueError, match="noise_parameter list length"):
+            noise.validate_parameter_length(3)
+
+
+class TestNoiseConfig:
+    """Test NoiseConfig validation and creation."""
+    
+    def test_empty_config(self):
+        """Test empty noise configuration."""
+        config = NoiseConfig()
+        
+        assert config.noise_list == []
+    
+    def test_with_noise_list(self):
+        """Test noise config with gate-specific noise."""
+        config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.05),
+                GateSpecificNoise(gate="rz", noise_channel="coherent_z", noise_parameter=0.02),
+            ]
+        )
+        
+        assert len(config.noise_list) == 2
+        assert config.noise_list[0].gate == "rx"
+        assert config.noise_list[1].gate == "rz"
+    
+    def test_get_noise_for_gate(self):
+        """Test querying noise by gate."""
+        config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.05),
+                GateSpecificNoise(gate="rx", noise_channel="coherent_x", noise_parameter=0.1),
+                GateSpecificNoise(gate="rz", noise_channel="coherent_z", noise_parameter=0.02),
+            ]
+        )
+        
+        rx_noise = config.get_noise_for_gate("rx")
+        assert len(rx_noise) == 2
+        assert all(n.gate == "rx" for n in rx_noise)
+        
+        rz_noise = config.get_noise_for_gate("rz")
+        assert len(rz_noise) == 1
+    
+    def test_get_noise_by_channel(self):
+        """Test querying noise by channel type."""
+        config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="coherent_x", noise_parameter=0.1),
+                GateSpecificNoise(gate="rz", noise_channel="coherent_z", noise_parameter=0.02),
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.05),
+            ]
+        )
+        
+        coherent_x = config.get_noise_by_channel("coherent_x")
+        assert len(coherent_x) == 1
+        assert coherent_x[0].noise_channel == "coherent_x"
+    
+    def test_get_gates_for_channel(self):
+        """Test getting gates that have a specific noise channel."""
+        config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="coherent_x", noise_parameter=0.1),
+                GateSpecificNoise(gate="rz", noise_channel="coherent_x", noise_parameter=0.1),
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.05),
+            ]
+        )
+        
+        gates = config.get_gates_for_channel("coherent_x")
+        assert len(gates) == 2
+        assert "rx" in gates
+        assert "rz" in gates
+    
+    def test_validate_list_lengths(self):
+        """Test validation of per-qubit parameter lengths."""
+        config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="coherent_x", noise_parameter=[0.1, 0.2]),
+            ]
+        )
+        
+        # Should pass
+        config.validate_list_lengths(2)
+        
+        # Should fail
+        with pytest.raises(ValueError):
+            config.validate_list_lengths(3)
 
 
 class TestDatasetConfig:
@@ -131,8 +262,19 @@ class TestExperimentConfig:
                 "moments": 15,
             },
             "noise": {
-                "primitive_gates": ["rx", "rz", "cz"],
-                "dep_lambda": 0.03,
+                "noise_list": [
+                    {
+                        "gate": "rx",
+                        "noise_channel": "depolarizing",
+                        "noise_parameter": 0.03
+                    },
+                    {
+                        "gate": "rz",
+                        "noise_channel": "coherent_z",
+                        "noise_parameter": 0.02,
+                        "angle_dependent": True
+                    }
+                ]
             },
             "rb": {
                 "start": 5,
@@ -145,7 +287,8 @@ class TestExperimentConfig:
         
         assert config.dataset.n_circuits == 200
         assert config.dataset.qubits == 2
-        assert config.noise.dep_lambda == 0.03
+        assert len(config.noise.noise_list) == 2
+        assert config.noise.noise_list[0].noise_parameter == 0.03
         assert config.rb is not None
         assert config.rb.start == 5
     
@@ -156,7 +299,7 @@ class TestExperimentConfig:
                 "n_circuits": 100,
             },
             "noise": {
-                "dep_lambda": 0.02,
+                "noise_list": []
             }
         }
         

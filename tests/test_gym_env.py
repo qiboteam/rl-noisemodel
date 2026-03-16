@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from gymnasium import spaces
 
-from rlnoise.config import DatasetConfig, NoiseConfig, GymEnvConfig, RewardConfig
+from rlnoise.config import DatasetConfig, NoiseConfig, GateSpecificNoise, GymEnvConfig, RewardConfig
 from rlnoise.dataset import DatasetGenerator
 from rlnoise.circuit_encoder import CircuitEncoder
 from rlnoise.gym_env import QuantumCircuitEnv, create_quantum_circuit_env
@@ -58,8 +58,9 @@ class TestQuantumCircuitEnv:
             clifford=True
         )
         noise_config = NoiseConfig(
-            primitive_gates=["rx", "rz"],
-            dep_lambda=0.02
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.02),
+            ]
         )
         
         generator = DatasetGenerator(dataset_config, noise_config)
@@ -272,8 +273,9 @@ class TestMultiQubitEnv:
             clifford=True
         )
         noise_config = NoiseConfig(
-            primitive_gates=["rx", "rz", "cz"],
-            dep_lambda=0.02
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.02),
+            ]
         )
         
         generator = DatasetGenerator(dataset_config, noise_config)
@@ -311,7 +313,7 @@ class TestCreateQuantumCircuitEnv:
     def test_create_with_defaults(self):
         """Test creating environment with defaults."""
         dataset_config = DatasetConfig(n_circuits=5, qubits=1, moments=5)
-        noise_config = NoiseConfig(primitive_gates=["rx", "rz"])
+        noise_config = NoiseConfig(noise_list=[])
         
         generator = DatasetGenerator(dataset_config, noise_config)
         dataset = generator.generate(verbose=False)
@@ -327,7 +329,7 @@ class TestCreateQuantumCircuitEnv:
     def test_create_with_custom_configs(self):
         """Test creating environment with custom configs."""
         dataset_config = DatasetConfig(n_circuits=5, qubits=1, moments=5)
-        noise_config = NoiseConfig(primitive_gates=["rx", "rz"])
+        noise_config = NoiseConfig(noise_list=[])
         
         generator = DatasetGenerator(dataset_config, noise_config)
         dataset = generator.generate(verbose=False)

@@ -5,6 +5,7 @@ __version__ = "0.1.0"
 from rlnoise.config import (
     DatasetConfig,
     NoiseConfig,
+    GateSpecificNoise,
     GymEnvConfig,
     RewardConfig,
     ExperimentConfig,
@@ -36,6 +37,7 @@ __all__ = [
     # Configuration
     "DatasetConfig",
     "NoiseConfig",
+    "GateSpecificNoise",
     "GymEnvConfig",
     "RewardConfig",
     "ExperimentConfig",

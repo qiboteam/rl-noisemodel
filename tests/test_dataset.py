@@ -5,7 +5,7 @@ import numpy as np
 import tempfile
 import os
 
-from rlnoise.config import DatasetConfig, NoiseConfig, ExperimentConfig
+from rlnoise.config import DatasetConfig, NoiseConfig, GateSpecificNoise, ExperimentConfig
 from rlnoise.dataset import CircuitDataset, DatasetGenerator
 
 
@@ -93,9 +93,10 @@ class TestDatasetGenerator:
     def noise_config(self):
         """Simple noise configuration."""
         return NoiseConfig(
-            primitive_gates=["rx", "rz"],
-            dep_lambda=0.02,
-            p0=0.01,
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.02),
+                GateSpecificNoise(gate="rz", noise_channel="damping", noise_parameter=0.01),
+            ]
         )
     
     @pytest.fixture
@@ -137,17 +138,6 @@ class TestDatasetGenerator:
             # Check trace is close to 1
             assert np.abs(np.trace(dm) - 1.0) < 1e-6
     
-    def test_generate_evaluation_set(self, generator):
-        """Test evaluation set generation."""
-        eval_dataset = generator.generate_evaluation_set(
-            eval_depth=7,
-            eval_size=3,
-            verbose=False
-        )
-        
-        assert isinstance(eval_dataset, CircuitDataset)
-        assert len(eval_dataset) == 3
-    
     def test_generate_rb_dataset(self, generator):
         """Test randomized benchmarking dataset generation."""
         rb_datasets = generator.generate_rb_dataset(
@@ -170,10 +160,10 @@ class TestDatasetGenerator:
             n_circuits=3,
             qubits=2,
             moments=5,
+            primitive_gates=["rx", "rz", "cz"],
             clifford=True,
         )
         
-        noise_config.primitive_gates = ["rx", "rz", "cz"]
         generator = DatasetGenerator(config, noise_config)
         
         dataset = generator.generate(verbose=False)
@@ -204,6 +194,7 @@ class TestDatasetGenerator:
             qubits=1,
             moments=5,
             clifford=False,
+
         )
         
         generator = DatasetGenerator(config, noise_config)

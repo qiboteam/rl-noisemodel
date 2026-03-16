@@ -72,11 +72,11 @@ class CircuitGenerator:
         
         elif gate_type == "rx":
             theta = self._sample_angle()
-            return gates.RX(qubit, theta=theta)
+            return gates.RX(qubit, theta=theta, trainable=False)
         
         elif gate_type == "rz":
             theta = self._sample_angle()
-            return gates.RZ(qubit, theta=theta)
+            return gates.RZ(qubit, theta=theta, trainable=False)
         
         else:
             raise ValueError(f"Unknown gate type: {gate_type}")
@@ -89,7 +89,7 @@ class CircuitGenerator:
         """
         if self.is_clifford:
             # Clifford: use quantized angles
-            return random.choice([0, 0.25, 0.5, 0.75]) * 2 * np.pi
+            return random.choice([0.25, 0.5, 0.75]) * 2 * np.pi
         else:
             # Non-Clifford: uniform random angle
             return np.random.random() * 2 * np.pi
@@ -129,38 +129,38 @@ class CircuitGenerator:
         elif gate_name == "cx":
             # CNOT decomposition: RZ(π/2) - RX(π/2) - CZ - RZ(π/2) - RX(π/2)
             control, target = gate.qubits[0], gate.qubits[1]
-            target_circuit.add(gates.RZ(target, np.pi / 2))
-            target_circuit.add(gates.RX(target, np.pi / 2))
+            target_circuit.add(gates.RZ(target, np.pi / 2, trainable=False))
+            target_circuit.add(gates.RX(target, np.pi / 2, trainable=False))
             target_circuit.add(gates.CZ(control, target))
-            target_circuit.add(gates.RZ(target, np.pi / 2))
-            target_circuit.add(gates.RX(target, np.pi / 2))
+            target_circuit.add(gates.RZ(target, np.pi / 2, trainable=False))
+            target_circuit.add(gates.RX(target, np.pi / 2, trainable=False))
         
         elif gate_name == "h":
             # Hadamard decomposition: RZ(π/2) - RX(π/2)
             qubit = gate.qubits[0]
-            target_circuit.add(gates.RZ(qubit, np.pi / 2))
-            target_circuit.add(gates.RX(qubit, np.pi / 2))
+            target_circuit.add(gates.RZ(qubit, np.pi / 2, trainable=False))
+            target_circuit.add(gates.RX(qubit, np.pi / 2, trainable=False))
         
         elif gate_name == "z":
             # Z gate: RZ(π)
             qubit = gate.qubits[0]
-            target_circuit.add(gates.RZ(qubit, np.pi))
+            target_circuit.add(gates.RZ(qubit, np.pi, trainable=False))
         
         elif gate_name == "y":
             # Y gate: RZ(π) - RX(π)
             qubit = gate.qubits[0]
-            target_circuit.add(gates.RZ(qubit, np.pi))
-            target_circuit.add(gates.RX(qubit, np.pi))
+            target_circuit.add(gates.RZ(qubit, np.pi, trainable=False))
+            target_circuit.add(gates.RX(qubit, np.pi, trainable=False))
         
         elif gate_name == "x":
             # X gate: RX(π)
             qubit = gate.qubits[0]
-            target_circuit.add(gates.RX(qubit, np.pi))
+            target_circuit.add(gates.RX(qubit, np.pi, trainable=False))
         
         elif gate_name == "s":
             # S gate: RZ(π/2)
             qubit = gate.qubits[0]
-            target_circuit.add(gates.RZ(qubit, np.pi / 2))
+            target_circuit.add(gates.RZ(qubit, np.pi / 2, trainable=False))
         
         else:
             raise ValueError(f"Cannot decompose unknown gate: {gate_name}")

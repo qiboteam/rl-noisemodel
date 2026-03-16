@@ -141,21 +141,21 @@ class CircuitEncoder:
         # Decode gate type
         if array[self.IDX_RX] == 1:
             theta = array[self.IDX_PARAM] * 2 * np.pi
-            gate = gates.RX(qubit, theta=theta)
+            gate = gates.RX(qubit, theta=theta, trainable=False)
         
         elif array[self.IDX_RZ] == 1:
             theta = array[self.IDX_PARAM] * 2 * np.pi
-            gate = gates.RZ(qubit, theta=theta)
+            gate = gates.RZ(qubit, theta=theta, trainable=False)
         
         elif array[self.IDX_CZ] != 0 and qubit2 is not None:
             gate = gates.CZ(qubit, qubit2)
         
         # Decode noise channels
         if array[self.IDX_EPSILON_X] != 0:
-            channels.append(gates.RX(qubit, theta=array[self.IDX_EPSILON_X]))
+            channels.append(gates.RX(qubit, theta=array[self.IDX_EPSILON_X], trainable=False))
         
         if array[self.IDX_EPSILON_Z] != 0:
-            channels.append(gates.RZ(qubit, theta=array[self.IDX_EPSILON_Z]))
+            channels.append(gates.RZ(qubit, theta=array[self.IDX_EPSILON_Z], trainable=False))
         
         if array[self.IDX_RESET] != 0:
             channels.append(gates.ResetChannel(qubit, [array[self.IDX_RESET], 0]))
