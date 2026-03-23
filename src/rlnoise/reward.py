@@ -129,7 +129,7 @@ class RewardFunction:
             "log": lambda x: -np.log(alpha * x + 1e-15),
             "linear": lambda x: -alpha * x,  # Negative for reward
             "inverted": lambda x: 1.0 / (alpha * x + 1e-15),
-            "inverted_squared": lambda x: 1.0 / (alpha * x**2 + 1e-15),
+            "inverted_squared": lambda x: 1.0 / (alpha * x**2 + 1e-10),
         }
         
         if function not in transform_map:
@@ -182,13 +182,6 @@ class RewardFunction:
             "trace_distance": trace_distance(predicted_dm, target_dm),
             "fidelity": 1.0 - compute_fidelity(predicted_dm, target_dm),  # Convert back to fidelity
         }
-        
-        # Compute reward using configured metric
-        distance = self.metric(predicted_dm, target_dm)
-        metrics["distance"] = distance
-        metrics["reward"] = self.transform(distance)
-        metrics["metric_used"] = self.config.metric
-        metrics["function_used"] = self.config.function
         
         return metrics
 

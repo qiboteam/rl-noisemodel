@@ -7,7 +7,7 @@ from gymnasium import spaces
 from rlnoise.config import DatasetConfig, NoiseConfig, GateSpecificNoise, GymEnvConfig, RewardConfig
 from rlnoise.dataset import DatasetGenerator
 from rlnoise.circuit_encoder import CircuitEncoder
-from rlnoise.gym_env import QuantumCircuitEnv, create_quantum_circuit_env
+from rlnoise.gym_env import QuantumCircuitEnv
 
 
 class TestGymEnvConfig:

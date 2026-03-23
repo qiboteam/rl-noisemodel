@@ -310,3 +310,45 @@ class ExperimentConfig(BaseModel):
             reward=RewardConfig(**config_dict["reward"]) if "reward" in config_dict else None,
             rb=RandomizedBenchmarkingConfig(**config_dict["rb"]) if "rb" in config_dict else None
         )
+
+
+class AgentConfig(BaseModel):
+    """Configuration for RL agent training.
+    
+    Attributes:
+        policy: Policy type (e.g., 'MlpPolicy', 'CnnPolicy')
+        features_dim: Dimension of feature extractor output
+        filter_size: Size of CNN filter (width)
+        n_filters: Number of CNN filters
+        pi_net_arch: Policy network architecture (list of layer sizes)
+        vf_net_arch: Value function network architecture (list of layer sizes)
+        n_steps: Number of steps before PPO update
+        batch_size: Batch size for PPO updates
+        learning_rate: Learning rate for optimizer
+        gamma: Discount factor
+        clip_range: Clipping parameter for PPO
+        verbose: Verbosity level (0=none, 1=info, 2=debug)
+    """
+    
+    policy: str = Field(default="MlpPolicy")
+    features_dim: int = Field(default=64, gt=0)
+    filter_size: int = Field(default=3, gt=0)
+    n_filters: int = Field(default=32, gt=0)
+    pi_net_arch: List[int] = Field(default=[32, 32])
+    vf_net_arch: List[int] = Field(default=[32, 32])
+    n_steps: int = Field(default=2048, gt=0)
+    batch_size: int = Field(default=64, gt=0)
+    learning_rate: float = Field(default=3e-4, gt=0.0)
+    gamma: float = Field(default=0.99, ge=0.0, le=1.0)
+    clip_range: float = Field(default=0.2, gt=0.0)
+    verbose: int = Field(default=1, ge=0, le=2)
+    
+    @field_validator("batch_size")
+    @classmethod
+    def validate_batch_size(cls, v, info):
+        """Ensure batch_size divides n_steps."""
+        n_steps = info.data.get("n_steps", 2048)
+        if n_steps % v != 0:
+            raise ValueError(f"batch_size ({v}) must divide n_steps ({n_steps})")
+        return v
+

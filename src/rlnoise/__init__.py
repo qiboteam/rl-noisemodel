@@ -9,6 +9,7 @@ from rlnoise.config import (
     GymEnvConfig,
     RewardConfig,
     ExperimentConfig,
+    AgentConfig,
 )
 from rlnoise.dataset import (
     CircuitDataset,
@@ -25,11 +26,19 @@ from rlnoise.noise_model import (
 )
 from rlnoise.gym_env import (
     QuantumCircuitEnv,
-    create_quantum_circuit_env,
 )
 from rlnoise.reward import (
     RewardFunction,
     create_reward_function,
+)
+from rlnoise.neural_network import (
+    CNNFeaturesExtractor,
+)
+from rlnoise.callback import (
+    TrainingCallback,
+)
+from rlnoise.rl_agent import (
+    RLAgent,
 )
 
 __all__ = [
@@ -41,6 +50,7 @@ __all__ = [
     "GymEnvConfig",
     "RewardConfig",
     "ExperimentConfig",
+    "AgentConfig",
     # Dataset
     "CircuitDataset",
     "DatasetGenerator",
@@ -51,8 +61,11 @@ __all__ = [
     "QuantumNoiseModel",
     # Gym Environment
     "QuantumCircuitEnv",
-    "create_quantum_circuit_env",
     # Reward
     "RewardFunction",
     "create_reward_function",
+    # Training
+    "CNNFeaturesExtractor",
+    "TrainingCallback",
+    "RLAgent",
 ]

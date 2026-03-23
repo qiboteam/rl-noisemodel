@@ -38,7 +38,6 @@ class QuantumCircuitEnv(gymnasium.Env):
         encoder: CircuitEncoder for circuit representation
         env_config: GymEnvConfig for environment parameters
         reward_config: RewardConfig for reward function
-        primitive_gates: List of primitive gate names
     
     Example:
         >>> dataset = CircuitDataset.load("training_data.npz")
@@ -59,7 +58,6 @@ class QuantumCircuitEnv(gymnasium.Env):
         encoder: CircuitEncoder,
         env_config: GymEnvConfig,
         reward_config: RewardConfig,
-        primitive_gates: list,
     ):
         super().__init__()
         
@@ -68,7 +66,6 @@ class QuantumCircuitEnv(gymnasium.Env):
         self.encoder = encoder
         self.env_config = env_config
         self.reward_config = reward_config
-        self.primitive_gates = primitive_gates
         
         # Initialize reward function
         self.reward_fn = RewardFunction(reward_config)
@@ -116,6 +113,39 @@ class QuantumCircuitEnv(gymnasium.Env):
         self.circuit_length = None
         self.padded_circuit = None
     
+    def __repr__(self) -> str:
+        """Developer-friendly representation."""
+        return (
+            f"QuantumCircuitEnv("
+            f"n_circuits={self.n_circuits}, "
+            f"n_qubits={self.n_qubits}, "
+            f"kernel_size={self.kernel_size}, "
+            f"metric='{self.reward_config.metric}')"
+        )
+    
+    def __str__(self) -> str:
+        """Human-readable representation."""
+        lines = [
+            "QuantumCircuitEnv:",
+            "  Dataset:",
+            f"    circuits: {self.n_circuits} ({self.n_circuits_train} train, "
+            f"{self.n_circuits - self.n_circuits_train} val)",
+            f"    qubits: {self.n_qubits}",
+            "  Encoder:",
+            f"    primitive_gates: {self.encoder.primitive_gates}",
+            "  Environment:",
+            f"    observation_space: {self.observation_space.shape}",
+            f"    action_space: {self.action_space.shape}",
+            f"    kernel_size: {self.kernel_size}",
+            f"    action_max: {self.action_max}",
+            f"    only_depolarizing: {self.only_depol}",
+            "  Reward:",
+            f"    metric: {self.reward_config.metric}",
+            f"    function: {self.reward_config.function}",
+            f"    alpha: {self.reward_config.alpha}",
+        ]
+        return "\n".join(lines)
+    
     def _pad_circuit(self, circuit: np.ndarray) -> np.ndarray:
         """Add padding to circuit for sliding window.
         
@@ -146,7 +176,7 @@ class QuantumCircuitEnv(gymnasium.Env):
         """
         # Update padded circuit with current state
         pad_size = self.kernel_size // 2
-        self.padded_circuit[:, :, pad_size:-pad_size] = self.current_circuit
+        self.padded_circuit[:, :, pad_size:-pad_size] = self.current_circuit.transpose(2, 1, 0)
         
         # Extract window at current position
         window = self.padded_circuit[
@@ -311,37 +341,3 @@ class QuantumCircuitEnv(gymnasium.Env):
     def n_validation_circuits(self) -> int:
         """Number of validation circuits."""
         return self.n_circuits - self.n_circuits_train
-
-
-def create_quantum_circuit_env(
-    dataset: CircuitDataset,
-    primitive_gates: list,
-    env_config: Optional[GymEnvConfig] = None,
-    reward_config: Optional[RewardConfig] = None,
-) -> QuantumCircuitEnv:
-    """Create a QuantumCircuitEnv with default configurations.
-    
-    Args:
-        dataset: Dataset of circuits
-        primitive_gates: List of primitive gate names
-        env_config: Environment configuration (uses defaults if None)
-        reward_config: Reward configuration (uses defaults if None)
-        
-    Returns:
-        Configured environment
-    """
-    if env_config is None:
-        env_config = GymEnvConfig()
-    
-    if reward_config is None:
-        reward_config = RewardConfig()
-    
-    encoder = CircuitEncoder(primitive_gates)
-    
-    return QuantumCircuitEnv(
-        dataset=dataset,
-        encoder=encoder,
-        env_config=env_config,
-        reward_config=reward_config,
-        primitive_gates=primitive_gates,
-    )
