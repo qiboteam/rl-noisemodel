@@ -81,7 +81,96 @@ class RLAgent:
                 clip_range=agent_config.clip_range,
                 verbose=agent_config.verbose,
             )
-    
+
+    def __str__(self) -> str:
+        """Summary showing input/action dimensions and parameter counts."""
+        obs_shape = self.model.observation_space.shape
+        action_space = self.model.action_space
+        action_shape = action_space.shape
+        action_low = float(action_space.low.flat[0]) if hasattr(action_space, "low") else None  # type: ignore[union-attr]
+        action_high = float(action_space.high.flat[0]) if hasattr(action_space, "high") else None  # type: ignore[union-attr]
+
+        total_params = sum(p.numel() for p in self.model.policy.parameters())
+        trainable_params = sum(
+            p.numel() for p in self.model.policy.parameters() if p.requires_grad
+        )
+
+        lines = [
+            "=" * 60,
+            "RLAgent (PPO)",
+            "=" * 60,
+            f"  Observation space:    {obs_shape}",
+            f"  Action space:         {action_shape}",
+            f"  Action range:         [{action_low:.3f}, {action_high:.3f}]" if action_low is not None else "  Action range:         N/A",
+            "-" * 60,
+            f"  Total parameters:     {total_params:,}",
+            f"  Trainable parameters: {trainable_params:,}",
+            "-" * 60,
+            f"  Features dim:         {self.agent_config.features_dim}",
+            f"  CNN filters:          {self.agent_config.n_filters}",
+            f"  CNN filter size:      {self.agent_config.filter_size}",
+            f"  Policy net arch:      {self.agent_config.pi_net_arch}",
+            f"  Value net arch:       {self.agent_config.vf_net_arch}",
+            "-" * 60,
+            f"  Learning rate:        {self.agent_config.learning_rate}",
+            f"  Batch size:           {self.agent_config.batch_size}",
+            f"  N steps:              {self.agent_config.n_steps}",
+            f"  Gamma:                {self.agent_config.gamma}",
+            "=" * 60,
+        ]
+        return "\n".join(lines)
+
+    def print_network(self) -> None:
+        """Print the neural network architecture.
+
+        Shows three levels of detail:
+        1. PyTorch's built-in module tree (layers and their shapes).
+        2. Parameter count per named sub-module.
+        3. All parameter tensor shapes with trainability flag.
+        """
+        policy = self.model.policy
+
+        print("=" * 70)
+        print("NEURAL NETWORK ARCHITECTURE")
+        print("=" * 70)
+        print()
+        print(policy)
+
+        print()
+        print("=" * 70)
+        print("PARAMETER COUNT BY MODULE")
+        print("=" * 70)
+        total = 0
+        for name, module in policy.named_modules():
+            params = sum(p.numel() for p in module.parameters(recurse=False))
+            if params > 0:
+                trainable = sum(
+                    p.numel()
+                    for p in module.parameters(recurse=False)
+                    if p.requires_grad
+                )
+                print(
+                    f"  {name:50s}  {params:>8,} params"
+                    f"  (trainable: {trainable:>8,})"
+                )
+                total += params
+        print("-" * 70)
+        print(f"  {'TOTAL':50s}  {total:>8,} params")
+        print("=" * 70)
+
+        print()
+        print("=" * 70)
+        print("PARAMETER TENSOR SHAPES")
+        print("=" * 70)
+        for name, param in policy.named_parameters():
+            grad_flag = "grad" if param.requires_grad else "no-grad"
+            shape_str = str(list(param.shape))
+            print(
+                f"  [{grad_flag:7s}]  {name:55s}"
+                f"  {shape_str:>25s}  ({param.numel():,})"
+            )
+        print("=" * 70)
+
     def train(
         self,
         total_timesteps: int,
@@ -89,6 +178,7 @@ class RLAgent:
         save_path: Optional[str] = None,
         save_best: bool = True,
         progress_bar: bool = True,
+        verbose: bool = True,
     ) -> Dict[str, Any]:
         """Train the agent.
         
@@ -98,25 +188,37 @@ class RLAgent:
             save_path: Path to save best model
             save_best: Whether to save best model
             progress_bar: Whether to show progress bar
+            verbose: If True, print average reward at each evaluation step
         
         Returns:
             Dictionary with training results
         """
+        # Capture stdout NOW, before rich's progress bar wraps sys.stdout.
+        # The callback will write to this stream so output reaches the notebook.
+        import sys as _sys
+        out_stream = _sys.stdout
+
         # Create callback
         callback = TrainingCallback(
             env=self.env,
             check_freq=check_freq,
             save_path=save_path,
             save_best=save_best,
-            verbose=1,
+            verbose=int(verbose),
+            out_stream=out_stream,
         )
         
-        # Train
-        self.model.learn(
-            total_timesteps=total_timesteps,
-            progress_bar=progress_bar,
-            callback=callback,
-        )
+        # Suppress PPO's own tabular output; the callback handles all printing
+        original_verbose = self.model.verbose
+        self.model.verbose = 0
+        try:
+            self.model.learn(
+                total_timesteps=total_timesteps,
+                progress_bar=progress_bar,
+                callback=callback,
+            )
+        finally:
+            self.model.verbose = original_verbose
         
         # Return training results
         return callback.get_results()

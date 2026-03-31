@@ -1,5 +1,6 @@
 """Training callbacks for monitoring and evaluation."""
 
+import sys
 import numpy as np
 from pathlib import Path
 from typing import Optional
@@ -40,6 +41,7 @@ class TrainingCallback(BaseCallback):
         save_path: Optional[str] = None,
         save_best: bool = True,
         verbose: int = 1,
+        out_stream=None,
     ):
         """Initialize the training callback.
         
@@ -49,6 +51,7 @@ class TrainingCallback(BaseCallback):
             save_path: Path to save best model (without extension)
             save_best: Whether to save best model
             verbose: Verbosity level
+            out_stream: Output stream for prints (captured before rich wraps stdout)
         """
         super().__init__(verbose)
         
@@ -56,6 +59,8 @@ class TrainingCallback(BaseCallback):
         self.check_freq = check_freq
         self.save_path = save_path
         self.save_best = save_best
+        self._out = out_stream if out_stream is not None else sys.stdout
+        self.has_val_set = env.n_circuits > env.n_circuits_train
         
         # Initialize tracking
         self.best_mean_reward = -np.inf
@@ -63,78 +68,80 @@ class TrainingCallback(BaseCallback):
         self.train_results = []
         self.timestep_list = []
         
+        # Accumulate episode-terminal rewards from the live rollout between evals
+        self._rollout_rewards: list = []
+        
+        if not self.has_val_set:
+            print(
+                "Warning: no validation set found (val_split=0.0). "
+                "Evaluation rewards will be recorded as 0.0.",
+                file=self._out,
+            )
+        
         # Create save directory if needed
         if save_path is not None:
             Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     
     def _on_step(self) -> bool:
-        """Called after each step during training.
-        
-        Returns:
-            bool: If False, training stops
-        """
-        # Check if it's time to evaluate
+        """Called after each step during training."""
+        # Collect terminal rewards from the live rollout (reward is non-zero only at done)
+        dones = self.locals.get("dones", [])
+        rewards = self.locals.get("rewards", [])
+        for done, reward in zip(dones, rewards):
+            if done:
+                self._rollout_rewards.append(float(reward))
+
         if self.n_calls % self.check_freq == 0:
             self._evaluate()
         
         return True
     
     def _evaluate(self):
-        """Evaluate model on training and validation sets."""
-        if self.verbose > 0:
-            print(f"\n{'='*60}")
-            print(f"Evaluation at timestep {self.num_timesteps}")
-            print(f"{'='*60}")
-        
-        # Evaluate on training set
-        train_metrics = self._evaluate_on_set(train=True)
+        """Record training reward from rollout and evaluate validation set."""
+        # Training reward: average of terminal rewards collected since last eval
+        if self._rollout_rewards:
+            r = np.array(self._rollout_rewards)
+            train_metrics = np.array([r.mean(), r.std()])
+        else:
+            train_metrics = np.zeros(2)
+        self._rollout_rewards = []  # reset for next interval
         self.train_results.append(train_metrics)
         
-        # Evaluate on validation set (if exists)
-        if self.env.n_circuits > self.env.n_circuits_train:
+        # Evaluate on validation set, or store zeros if none exists
+        if self.has_val_set:
             val_metrics = self._evaluate_on_set(train=False)
-            self.eval_results.append(val_metrics)
         else:
-            val_metrics = None
+            val_metrics = np.zeros(2)
+        self.eval_results.append(val_metrics)
         
         # Store timestep
         self.timestep_list.append(self.num_timesteps)
         
-        # Print results
+        # Print single-line summary
         if self.verbose > 0:
-            self._print_metrics("Training", train_metrics)
-            if val_metrics is not None:
-                self._print_metrics("Validation", val_metrics)
+            msg = (
+                f"Step {self.num_timesteps:>7d} | "
+                f"Train reward: {train_metrics[0]:.4f} ± {train_metrics[1]:.4f}  |  "
+                f"Val reward: {val_metrics[0]:.4f} ± {val_metrics[1]:.4f}"
+            )
+            print(msg, file=self._out, flush=True)
         
         # Save best model based on validation reward (or training if no val set)
         if self.save_best and self.save_path is not None:
-            mean_reward = val_metrics[0] if val_metrics is not None else train_metrics[0]
+            mean_reward = val_metrics[0] if self.has_val_set else train_metrics[0]
             
             if mean_reward > self.best_mean_reward:
                 self.best_mean_reward = mean_reward
-                if self.verbose > 0:
-                    print(f"\nNew best model! Mean reward: {mean_reward:.4f}")
-                    print(f"Saving to {self.save_path}")
                 self.model.save(self.save_path)
-        
-        if self.verbose > 0:
-            print(f"{'='*60}\n")
     
     def _evaluate_on_set(self, train: bool = True) -> np.ndarray:
-        """Evaluate model on training or validation set.
-        
-        Args:
-            train: If True, evaluate on training set, else validation
+        """Run deterministic episodes over the validation set.
         
         Returns:
-            Array of metrics: [mean_reward, std_reward]
+            Array [mean_reward, std_reward]
         """
-        if train:
-            start = 0
-            stop = self.env.n_circuits_train
-        else:
-            start = self.env.n_circuits_train
-            stop = self.env.n_circuits
+        start = 0 if train else self.env.n_circuits_train
+        stop = self.env.n_circuits_train if train else self.env.n_circuits
         
         rewards = []
         
@@ -154,14 +161,8 @@ class TrainingCallback(BaseCallback):
         return np.array([rewards.mean(), rewards.std()])
     
     def _print_metrics(self, set_name: str, metrics: np.ndarray):
-        """Print evaluation metrics.
-        
-        Args:
-            set_name: Name of the set ("Training" or "Validation")
-            metrics: Array of metrics [mean_reward, std_reward]
-        """
-        print(f"{set_name} Set:")
-        print(f"  Reward: {metrics[0]:.4f} ± {metrics[1]:.4f}")
+        """Print evaluation metrics."""
+        print(f"{set_name}: reward {metrics[0]:.4f} ± {metrics[1]:.4f}", file=self._out, flush=True)
     
     def get_results(self) -> dict:
         """Get all recorded results.
