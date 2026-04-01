@@ -1,5 +1,7 @@
 """Reinforcement learning agent for quantum noise modeling."""
 
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Optional, Union, Dict, Any
 import numpy as np
@@ -179,6 +181,7 @@ class RLAgent:
         save_best: bool = True,
         progress_bar: bool = True,
         verbose: bool = True,
+        deterministic_train_eval: bool = True,
     ) -> Dict[str, Any]:
         """Train the agent.
         
@@ -189,6 +192,10 @@ class RLAgent:
             save_best: Whether to save best model
             progress_bar: Whether to show progress bar
             verbose: If True, print average reward at each evaluation step
+            deterministic_train_eval: If True (default), evaluate training
+                performance with a full deterministic pass over all training
+                circuits at each check step.  If False, use rewards accumulated
+                from the live rollout (faster but noisier).
         
         Returns:
             Dictionary with training results
@@ -198,14 +205,24 @@ class RLAgent:
         import sys as _sys
         out_stream = _sys.stdout
 
+        # When save_best=True but no explicit path, save to a temp directory so
+        # we can restore the best weights at the end of training.
+        _temp_dir: Optional[str] = None
+        effective_save_path = save_path
+        if save_best and save_path is None:
+            _temp_dir = tempfile.mkdtemp()
+            effective_save_path = str(Path(_temp_dir) / "best_model")
+
         # Create callback
         callback = TrainingCallback(
             env=self.env,
             check_freq=check_freq,
-            save_path=save_path,
+            save_path=effective_save_path,
             save_best=save_best,
             verbose=int(verbose),
             out_stream=out_stream,
+            deterministic_train_eval=deterministic_train_eval,
+            verbose_save=save_path is not None,  # suppress print for temp path
         )
         
         # Suppress PPO's own tabular output; the callback handles all printing
@@ -219,7 +236,20 @@ class RLAgent:
             )
         finally:
             self.model.verbose = original_verbose
-        
+
+        # Restore best model weights if save_best was used and a best model was found
+        if save_best and effective_save_path is not None and callback.best_mean_reward > -np.inf:
+            loaded = PPO.load(effective_save_path)
+            self.model.policy.load_state_dict(loaded.policy.state_dict())
+            if save_path is not None:
+                print(f"Loaded best model weights from {save_path}", file=out_stream, flush=True)
+            else:
+                print("Loaded best model weights.", file=out_stream, flush=True)
+
+        # Clean up temp directory
+        if _temp_dir is not None:
+            shutil.rmtree(_temp_dir, ignore_errors=True)
+
         # Return training results
         return callback.get_results()
     

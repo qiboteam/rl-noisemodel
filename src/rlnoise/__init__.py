@@ -40,6 +40,16 @@ from rlnoise.callback import (
 from rlnoise.rl_agent import (
     RLAgent,
 )
+from rlnoise.visualization import (
+    plot_training_dashboard,
+    plot_benchmarking_results,
+)
+from rlnoise.benchmarking import (
+    generate_rb_circuits,
+    fit_rb_decay,
+    evaluate_benchmarks,
+    maximally_mixed_state,
+)
 
 __all__ = [
     "__version__",
@@ -68,4 +78,12 @@ __all__ = [
     "CNNFeaturesExtractor",
     "TrainingCallback",
     "RLAgent",
+    # Visualization
+    "plot_training_dashboard",
+    "plot_benchmarking_results",
+    # Benchmarking
+    "generate_rb_circuits",
+    "fit_rb_decay",
+    "evaluate_benchmarks",
+    "maximally_mixed_state",
 ]

@@ -42,6 +42,8 @@ class TrainingCallback(BaseCallback):
         save_best: bool = True,
         verbose: int = 1,
         out_stream=None,
+        deterministic_train_eval: bool = True,
+        verbose_save: bool = True,
     ):
         """Initialize the training callback.
         
@@ -52,6 +54,12 @@ class TrainingCallback(BaseCallback):
             save_best: Whether to save best model
             verbose: Verbosity level
             out_stream: Output stream for prints (captured before rich wraps stdout)
+            deterministic_train_eval: If True (default), evaluate training performance
+                with a full deterministic pass over all training circuits at each
+                check step.  If False, accumulate terminal rewards/metrics from the
+                live rollout between check steps instead (faster but noisier).
+            verbose_save: If False, suppress the "Model saved in ..." print (used
+                when saving to a temporary path).
         """
         super().__init__(verbose)
         
@@ -59,17 +67,21 @@ class TrainingCallback(BaseCallback):
         self.check_freq = check_freq
         self.save_path = save_path
         self.save_best = save_best
+        self._verbose_save = verbose_save
         self._out = out_stream if out_stream is not None else sys.stdout
         self.has_val_set = env.n_circuits > env.n_circuits_train
+        self.deterministic_train_eval = deterministic_train_eval
         
         # Initialize tracking
         self.best_mean_reward = -np.inf
         self.eval_results = []
         self.train_results = []
         self.timestep_list = []
-        
-        # Accumulate episode-terminal rewards from the live rollout between evals
+        self._metric_name = env.reward_config.metric
+
+        # Rollout accumulators (used only when deterministic_train_eval=False)
         self._rollout_rewards: list = []
+        self._rollout_metric_values: list = []
         
         if not self.has_val_set:
             print(
@@ -84,34 +96,46 @@ class TrainingCallback(BaseCallback):
     
     def _on_step(self) -> bool:
         """Called after each step during training."""
-        # Collect terminal rewards from the live rollout (reward is non-zero only at done)
-        dones = self.locals.get("dones", [])
-        rewards = self.locals.get("rewards", [])
-        for done, reward in zip(dones, rewards):
-            if done:
-                self._rollout_rewards.append(float(reward))
+        if not self.deterministic_train_eval:
+            # Accumulate terminal rewards/metrics from the live rollout
+            dones = self.locals.get("dones", [])
+            rewards = self.locals.get("rewards", [])
+            infos = self.locals.get("infos", [])
+            for done, reward, info in zip(dones, rewards, infos):
+                if done:
+                    self._rollout_rewards.append(float(reward))
+                    if info is not None and "metric" in info:
+                        self._rollout_metric_values.append(float(info["metric"]))
 
         if self.n_calls % self.check_freq == 0:
             self._evaluate()
-        
         return True
     
     def _evaluate(self):
-        """Record training reward from rollout and evaluate validation set."""
-        # Training reward: average of terminal rewards collected since last eval
-        if self._rollout_rewards:
-            r = np.array(self._rollout_rewards)
-            train_metrics = np.array([r.mean(), r.std()])
+        """Evaluate the current policy on train and validation sets."""
+        if self.deterministic_train_eval:
+            train_metrics = self._evaluate_on_set(train=True)
         else:
-            train_metrics = np.zeros(2)
-        self._rollout_rewards = []  # reset for next interval
+            # Use rewards/metrics accumulated from the live rollout
+            if self._rollout_rewards:
+                r = np.array(self._rollout_rewards)
+                m = np.array(self._rollout_metric_values) if self._rollout_metric_values else np.zeros(0)
+                train_metrics = np.array([
+                    r.mean(), r.std(),
+                    m.mean() if len(m) else 0.0,
+                    m.std() if len(m) else 0.0,
+                ])
+            else:
+                train_metrics = np.zeros(4)
+            self._rollout_rewards = []
+            self._rollout_metric_values = []
         self.train_results.append(train_metrics)
-        
+
         # Evaluate on validation set, or store zeros if none exists
         if self.has_val_set:
             val_metrics = self._evaluate_on_set(train=False)
         else:
-            val_metrics = np.zeros(2)
+            val_metrics = np.zeros(4)
         self.eval_results.append(val_metrics)
         
         # Store timestep
@@ -121,8 +145,10 @@ class TrainingCallback(BaseCallback):
         if self.verbose > 0:
             msg = (
                 f"Step {self.num_timesteps:>7d} | "
-                f"Train reward: {train_metrics[0]:.4f} ± {train_metrics[1]:.4f}  |  "
-                f"Val reward: {val_metrics[0]:.4f} ± {val_metrics[1]:.4f}"
+                f"Train reward: {train_metrics[0]:.4f} ± {train_metrics[1]:.4f}  "
+                f"{self._metric_name}: {train_metrics[2]:.4f} ± {train_metrics[3]:.4f}  |  "
+                f"Val reward: {val_metrics[0]:.4f} ± {val_metrics[1]:.4f}  "
+                f"{self._metric_name}: {val_metrics[2]:.4f} ± {val_metrics[3]:.4f}"
             )
             print(msg, file=self._out, flush=True)
         
@@ -133,22 +159,27 @@ class TrainingCallback(BaseCallback):
             if mean_reward > self.best_mean_reward:
                 self.best_mean_reward = mean_reward
                 self.model.save(self.save_path)
+                if self._verbose_save:
+                    print(f"Model saved in {self.save_path}", file=self._out, flush=True)
     
     def _evaluate_on_set(self, train: bool = True) -> np.ndarray:
         """Run deterministic episodes over the validation set.
         
         Returns:
-            Array [mean_reward, std_reward]
+            Array [mean_reward, std_reward, mean_metric, std_metric]
         """
         start = 0 if train else self.env.n_circuits_train
         stop = self.env.n_circuits_train if train else self.env.n_circuits
         
         rewards = []
+        metric_values = []
         
         for i in range(start, stop):
             # Reset to specific circuit
             obs, _ = self.env.reset(options={"circuit_idx": i})
             done = False
+            reward = 0.0
+            info: dict = {}
             
             while not done:
                 # Get deterministic action from model
@@ -156,9 +187,14 @@ class TrainingCallback(BaseCallback):
                 obs, reward, done, truncated, info = self.env.step(action)
             
             rewards.append(reward)
+            if "metric" in info:
+                metric_values.append(info["metric"])
         
         rewards = np.array(rewards)
-        return np.array([rewards.mean(), rewards.std()])
+        if metric_values:
+            metric_values = np.array(metric_values)
+            return np.array([rewards.mean(), rewards.std(), metric_values.mean(), metric_values.std()])
+        return np.array([rewards.mean(), rewards.std(), 0.0, 0.0])
     
     def _print_metrics(self, set_name: str, metrics: np.ndarray):
         """Print evaluation metrics."""
@@ -168,11 +204,14 @@ class TrainingCallback(BaseCallback):
         """Get all recorded results.
         
         Returns:
-            Dictionary with timesteps and results for train/val sets
+            Dictionary with timesteps, results for train/val sets, and metric name.
+            Each entry in train_results/eval_results is
+            [mean_reward, std_reward, mean_metric, std_metric].
         """
         return {
             "timesteps": self.timestep_list,
             "train_results": self.train_results,
             "eval_results": self.eval_results,
             "best_mean_reward": self.best_mean_reward,
+            "metric_name": self._metric_name,
         }

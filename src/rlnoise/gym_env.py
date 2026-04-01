@@ -299,8 +299,13 @@ class QuantumCircuitEnv(gymnasium.Env):
         # Check if we're at the end
         terminated = self.position >= self.circuit_length - 1
         
-        # Compute reward (only at terminal state)
-        reward = self._compute_reward(is_terminal=terminated)
+        # Compute reward and raw metric only at terminal state
+        reward = 0.0
+        if terminated:
+            circuit = self._get_current_circuit()
+            predicted_dm = circuit().state()
+            metric_value = float(self.reward_fn.metric(predicted_dm, self.target_dm))
+            reward = float(self.reward_fn.transform(metric_value))
         
         # Move to next position if not terminated
         if not terminated:
@@ -316,6 +321,8 @@ class QuantumCircuitEnv(gymnasium.Env):
             "position": self.position,
             "circuit_length": self.circuit_length,
         }
+        if terminated:
+            info["metric"] = metric_value
         
         return obs, reward, terminated, truncated, info
     
