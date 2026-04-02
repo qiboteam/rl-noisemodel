@@ -190,6 +190,7 @@ class RLAgent:
         progress_bar: bool = True,
         verbose: bool = True,
         deterministic_train_eval: bool = True,
+        history_path: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Train the agent.
 
@@ -204,6 +205,11 @@ class RLAgent:
                 performance with a full deterministic pass over all training
                 circuits at each check step.  If False, use rewards accumulated
                 from the live rollout (faster but noisier).
+            history_path: Optional path to save training history as a .npz
+                file (e.g. ``"results/run1_history"``).  The ``.npz`` extension
+                is added automatically.  The file can be reloaded later with
+                :meth:`~rlnoise.callback.TrainingCallback.load_history` and
+                passed to :func:`~rlnoise.visualization.plot_training_dashboard`.
 
         Returns:
             Dictionary with training results
@@ -256,6 +262,11 @@ class RLAgent:
         # Clean up temp directory
         if _temp_dir is not None:
             shutil.rmtree(_temp_dir, ignore_errors=True)
+
+        # Optionally persist the training history
+        if history_path is not None:
+            callback.save_history(history_path)
+            print(f"Training history saved to {history_path}.npz", file=out_stream, flush=True)
 
         # Return training results
         return callback.get_results()

@@ -216,3 +216,44 @@ class TestDatasetGenerator:
             # Load and verify
             loaded = CircuitDataset.load(filepath + ".npz")
             assert len(loaded) == len(dataset)
+
+
+class TestDatasetStrAndVerbose:
+    """Tests for __str__ and verbose generation path."""
+
+    @pytest.fixture
+    def simple_dataset(self):
+        config = DatasetConfig(n_circuits=4, qubits=1, moments=3, clifford=True)
+        noise_config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.01),
+            ]
+        )
+        gen = DatasetGenerator(config, noise_config)
+        return gen.generate(verbose=False)
+
+    def test_circuit_dataset_str(self, simple_dataset):
+        """CircuitDataset __str__ shows key metadata."""
+        s = str(simple_dataset)
+        assert "CircuitDataset" in s
+        assert "4" in s     # n_circuits
+        assert "Circuits" in s
+
+    def test_generate_verbose(self):
+        """generate(verbose=True) prints progress without raising."""
+        config = DatasetConfig(n_circuits=3, qubits=1, moments=3, clifford=True)
+        noise_config = NoiseConfig(noise_list=[])
+        gen = DatasetGenerator(config, noise_config)
+        # Should not raise; output goes to stdout
+        dataset = gen.generate(verbose=True)
+        assert len(dataset) == 3
+
+    def test_from_config_classmethod(self):
+        """DatasetGenerator.from_config creates a correctly configured generator."""
+        from rlnoise.config import ExperimentConfig
+        config = DatasetConfig(n_circuits=3, qubits=1, moments=3)
+        noise = NoiseConfig(noise_list=[])
+        exp = ExperimentConfig(dataset=config, noise=noise)
+        gen = DatasetGenerator.from_config(exp)
+        assert gen.dataset_config == config
+        assert gen.noise_config == noise

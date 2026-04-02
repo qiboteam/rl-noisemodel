@@ -1,5 +1,7 @@
 """Configuration models for RL Noise."""
 
+import json
+from pathlib import Path
 from typing import Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -292,6 +294,7 @@ class ExperimentConfig(BaseModel):
         noise: Noise model configuration
         gym_env: Gym environment configuration (optional)
         reward: Reward function configuration (optional)
+        agent: Agent training configuration (optional)
         rb: Randomized benchmarking configuration (optional)
     """
 
@@ -299,18 +302,53 @@ class ExperimentConfig(BaseModel):
     noise: NoiseConfig
     gym_env: Optional[GymEnvConfig] = None
     reward: Optional[RewardConfig] = None
+    agent: Optional["AgentConfig"] = None
     rb: Optional[RandomizedBenchmarkingConfig] = None
 
     @classmethod
     def from_json(cls, config_dict: dict) -> "ExperimentConfig":
-        """Create configuration from JSON dictionary."""
+        """Create configuration from a dictionary.
+
+        Args:
+            config_dict: Dictionary with configuration data.
+
+        Returns:
+            ExperimentConfig instance.
+        """
         return cls(
             dataset=DatasetConfig(**config_dict.get("dataset", {})),
             noise=NoiseConfig(**config_dict.get("noise", {})),
-            gym_env=GymEnvConfig(**config_dict["gym_env"]) if "gym_env" in config_dict else None,
-            reward=RewardConfig(**config_dict["reward"]) if "reward" in config_dict else None,
-            rb=RandomizedBenchmarkingConfig(**config_dict["rb"]) if "rb" in config_dict else None
+            gym_env=GymEnvConfig(**config_dict["gym_env"]) if config_dict.get("gym_env") else None,
+            reward=RewardConfig(**config_dict["reward"]) if config_dict.get("reward") else None,
+            agent=AgentConfig(**config_dict["agent"]) if config_dict.get("agent") else None,
+            rb=RandomizedBenchmarkingConfig(**config_dict["rb"]) if config_dict.get("rb") else None
         )
+
+    def to_json_file(self, filepath: str) -> None:
+        """Save configuration to a JSON file.
+
+        Args:
+            filepath: Destination path.  Parent directories are created
+                automatically if they do not exist.
+        """
+        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+        with open(filepath, "w", encoding="utf-8") as fh:
+            json.dump(self.model_dump(), fh, indent=2)
+
+    @classmethod
+    def from_json_file(cls, filepath: str) -> "ExperimentConfig":
+        """Load configuration from a JSON file previously saved with
+        :meth:`to_json_file`.
+
+        Args:
+            filepath: Path to the JSON file.
+
+        Returns:
+            ExperimentConfig instance.
+        """
+        with open(filepath, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        return cls.from_json(data)
 
 
 class AgentConfig(BaseModel):
@@ -352,3 +390,7 @@ class AgentConfig(BaseModel):
         if n_steps % v != 0:
             raise ValueError(f"batch_size ({v}) must divide n_steps ({n_steps})")
         return v
+
+
+# Resolve the forward reference to AgentConfig inside ExperimentConfig.
+ExperimentConfig.model_rebuild()

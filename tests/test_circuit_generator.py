@@ -151,3 +151,95 @@ class TestCircuitGenerator:
         assert len(decomposed.queue) == 2
         assert type(decomposed.queue[0]) == gates.RZ
         assert type(decomposed.queue[1]) == gates.RX
+
+    def test_decompose_z_gate(self, generator_1q):
+        """Z gate → RZ(π)."""
+        raw = Circuit(1, density_matrix=True)
+        raw.add(gates.Z(0))
+        out = Circuit(1, density_matrix=True)
+        generator_1q._decompose_gate(raw.queue[0], out)
+        assert len(out.queue) == 1
+        assert type(out.queue[0]) == gates.RZ
+
+    def test_decompose_x_gate(self, generator_1q):
+        """X gate → RX(π)."""
+        raw = Circuit(1, density_matrix=True)
+        raw.add(gates.X(0))
+        out = Circuit(1, density_matrix=True)
+        generator_1q._decompose_gate(raw.queue[0], out)
+        assert len(out.queue) == 1
+        assert type(out.queue[0]) == gates.RX
+
+    def test_decompose_y_gate(self, generator_1q):
+        """Y gate → RZ(π) + RX(π)."""
+        raw = Circuit(1, density_matrix=True)
+        raw.add(gates.Y(0))
+        out = Circuit(1, density_matrix=True)
+        generator_1q._decompose_gate(raw.queue[0], out)
+        assert len(out.queue) == 2
+        assert type(out.queue[0]) == gates.RZ
+        assert type(out.queue[1]) == gates.RX
+
+    def test_decompose_s_and_sdg(self, generator_1q):
+        """S and Sdg gates → single RZ."""
+        for gate_cls in [gates.S, gates.SDG]:
+            raw = Circuit(1, density_matrix=True)
+            raw.add(gate_cls(0))
+            out = Circuit(1, density_matrix=True)
+            generator_1q._decompose_gate(raw.queue[0], out)
+            assert len(out.queue) == 1
+            assert type(out.queue[0]) == gates.RZ
+
+    def test_decompose_t_and_tdg(self, generator_1q):
+        """T and Tdg gates → single RZ."""
+        for gate_cls in [gates.T, gates.TDG]:
+            raw = Circuit(1, density_matrix=True)
+            raw.add(gate_cls(0))
+            out = Circuit(1, density_matrix=True)
+            generator_1q._decompose_gate(raw.queue[0], out)
+            assert len(out.queue) == 1
+            assert type(out.queue[0]) == gates.RZ
+
+    def test_decompose_sx_and_sxdg(self, generator_1q):
+        """SX → RX(π/2); SXDG → RX(−π/2)."""
+        for gate_cls in [gates.SX, gates.SXDG]:
+            raw = Circuit(1, density_matrix=True)
+            raw.add(gate_cls(0))
+            out = Circuit(1, density_matrix=True)
+            generator_1q._decompose_gate(raw.queue[0], out)
+            assert len(out.queue) == 1
+            assert type(out.queue[0]) == gates.RX
+
+    def test_decompose_swap(self, generator_2q):
+        """SWAP → 3 × CX pattern (3 × 5 = 15 primitive gates)."""
+        raw = Circuit(2, density_matrix=True)
+        raw.add(gates.SWAP(0, 1))
+        out = Circuit(2, density_matrix=True)
+        generator_2q._decompose_gate(raw.queue[0], out)
+        # 3 CX decompositions, each adds 5 gates
+        assert len(out.queue) == 15
+
+    def test_decompose_unknown_gate_raises(self, generator_1q):
+        """_decompose_gate raises ValueError for unsupported gates."""
+        raw = Circuit(1, density_matrix=True)
+        raw.add(gates.RX(0, theta=0.1, trainable=False))
+        # Rename so it looks unknown
+        g = raw.queue[0]
+        g.name = "unknown_gate_xyz"
+        out = Circuit(1, density_matrix=True)
+        with pytest.raises(ValueError, match="Cannot decompose unknown gate"):
+            generator_1q._decompose_gate(g, out)
+
+    def test_cnot_gate_generation(self):
+        """Test circuit generation when cnot is in primitive gates."""
+        config = DatasetConfig(
+            n_circuits=3,
+            qubits=2,
+            moments=5,
+            clifford=False,
+            primitive_gates=["rx", "cnot"],
+        )
+        generator = CircuitGenerator(config)
+        circuit = generator.generate_random_circuit()
+        assert isinstance(circuit, Circuit)
+        assert circuit.nqubits == 2

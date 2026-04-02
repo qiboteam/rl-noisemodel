@@ -344,3 +344,60 @@ class TestCreateQuantumCircuitEnv:
         
         assert env.kernel_size == 5
         assert env.reward_fn.config.metric == "mse"
+
+
+class TestGymEnvRepresentations:
+    """Tests for __repr__, __str__, and internal helper methods."""
+
+    @pytest.fixture
+    def env(self):
+        dataset_config = DatasetConfig(n_circuits=6, qubits=1, moments=4, clifford=True)
+        noise_config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.01),
+            ]
+        )
+        generator = DatasetGenerator(dataset_config, noise_config)
+        dataset = generator.generate(verbose=False)
+        encoder = CircuitEncoder(primitive_gates=["rx", "rz"])
+        env_config = GymEnvConfig(kernel_size=3, val_split=0.2)
+        reward_config = RewardConfig(metric="trace", alpha=10.0)
+        return QuantumCircuitEnv(dataset, encoder, env_config, reward_config)
+
+    def test_repr(self, env):
+        """Test __repr__ contains key fields."""
+        r = repr(env)
+        assert "QuantumCircuitEnv" in r
+        assert "n_circuits" in r
+        assert "kernel_size" in r
+
+    def test_str(self, env):
+        """Test __str__ contains readable summary."""
+        s = str(env)
+        assert "QuantumCircuitEnv" in s
+        assert "circuits" in s
+        assert "action_space" in s
+
+    def test_compute_reward_non_terminal(self, env):
+        """Test _compute_reward returns 0 when not terminal."""
+        env.reset()
+        reward = env._compute_reward(is_terminal=False)
+        assert reward == 0.0
+
+    def test_compute_reward_terminal(self, env):
+        """Test _compute_reward computes a real value at terminal state."""
+        env.reset()
+        # Advance to end of circuit so state is meaningful
+        while env.position < env.circuit_length - 1:
+            env._apply_action(env.action_space.sample())
+            env.position += 1
+
+        reward = env._compute_reward(is_terminal=True)
+        assert isinstance(reward, float)
+        assert np.isfinite(reward)
+
+    def test_n_validation_circuits_property(self, env):
+        """Test n_validation_circuits property."""
+        n_val = env.n_validation_circuits
+        assert n_val == env.n_circuits - env.n_circuits_train
+        assert n_val >= 0

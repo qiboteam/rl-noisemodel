@@ -43,7 +43,7 @@ jobs:
         run: poetry install --with dev
 
       - name: Run tests with coverage
-        run: poetry run pytest --tb=short -q
+        run: poetry run pytest --tb=short
 
       - name: Run pylint
         run: poetry run pylint src/rlnoise/

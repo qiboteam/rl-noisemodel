@@ -1,11 +1,15 @@
 """Unit tests for configuration models."""
 
+import json
+import os
+import tempfile
 import pytest
 from rlnoise.config import (
     NoiseConfig,
     GateSpecificNoise,
     DatasetConfig,
     RandomizedBenchmarkingConfig,
+    AgentConfig,
     ExperimentConfig,
 )
 
@@ -307,3 +311,103 @@ class TestExperimentConfig:
         
         assert config.dataset.n_circuits == 100
         assert config.rb is None
+
+    def test_from_json_with_agent(self):
+        """Test config creation with agent key."""
+        json_dict = {
+            "dataset": {"n_circuits": 50},
+            "noise": {"noise_list": []},
+            "agent": {
+                "policy": "MlpPolicy",
+                "features_dim": 32,
+                "filter_size": 2,
+                "n_filters": 16,
+                "pi_net_arch": [16],
+                "vf_net_arch": [16],
+                "n_steps": 32,
+                "batch_size": 8,
+            },
+        }
+
+        config = ExperimentConfig.from_json(json_dict)
+        assert config.agent is not None
+        assert config.agent.features_dim == 32
+
+    def test_to_json_file_and_from_json_file(self):
+        """Test round-trip JSON file serialization."""
+        noise_config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.03),
+            ]
+        )
+        dataset_config = DatasetConfig(n_circuits=10, qubits=1, moments=5)
+        agent_config = AgentConfig(features_dim=32, n_steps=32, batch_size=8)
+
+        exp = ExperimentConfig(
+            dataset=dataset_config,
+            noise=noise_config,
+            agent=agent_config,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            filepath = os.path.join(tmpdir, "subdir", "exp.json")
+            exp.to_json_file(filepath)
+
+            assert os.path.exists(filepath)
+
+            reloaded = ExperimentConfig.from_json_file(filepath)
+
+        assert reloaded.dataset.n_circuits == 10
+        assert len(reloaded.noise.noise_list) == 1
+        assert reloaded.agent is not None
+        assert reloaded.agent.features_dim == 32
+
+
+class TestConfigStrMethods:
+    """Test __str__ methods for DatasetConfig and NoiseConfig."""
+
+    def test_noise_config_str_empty(self):
+        """Empty NoiseConfig __str__ mentions 'No noise configured'."""
+        config = NoiseConfig()
+        s = str(config)
+        assert "NoiseConfig" in s
+        assert "No noise configured" in s
+
+    def test_noise_config_str_with_noise(self):
+        """NoiseConfig __str__ lists gates and channels."""
+        config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="depolarizing", noise_parameter=0.05),
+                GateSpecificNoise(gate="rz", noise_channel="coherent_z", noise_parameter=0.02,
+                                  angle_dependent=True),
+            ]
+        )
+        s = str(config)
+        assert "NoiseConfig" in s
+        assert "rx" in s
+        assert "depolarizing" in s
+        assert "angle-dependent" in s
+
+    def test_noise_config_str_list_parameter(self):
+        """NoiseConfig __str__ handles list noise parameters."""
+        config = NoiseConfig(
+            noise_list=[
+                GateSpecificNoise(gate="rx", noise_channel="coherent_x",
+                                  noise_parameter=[0.01, 0.02]),
+            ]
+        )
+        s = str(config)
+        assert "[" in s  # list representation
+
+    def test_dataset_config_str(self):
+        """DatasetConfig __str__ shows key fields."""
+        config = DatasetConfig(n_circuits=50, qubits=2, moments=8, mixed=True)
+        s = str(config)
+        assert "DatasetConfig" in s
+        assert "50" in s
+        assert "Mixed" in s
+
+    def test_dataset_config_cnot_validation(self):
+        """DatasetConfig raises ValueError for cnot on 1 qubit."""
+        with pytest.raises(Exception):
+            DatasetConfig(qubits=1, primitive_gates=["rx", "cnot"])

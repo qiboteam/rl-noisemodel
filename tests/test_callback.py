@@ -244,5 +244,128 @@ class TestTrainingCallback:
         assert np.all(callback.eval_results[0] == 0.0)
 
 
+    def test_save_and_load_history(self, simple_env, tmp_path):
+        """Test save_history and load_history round-trip."""
+        callback = TrainingCallback(env=simple_env, check_freq=50)
+
+        callback.timestep_list = [50, 100]
+        callback.train_results = [
+            np.array([1.0, 0.1, 0.5, 0.05]),
+            np.array([1.2, 0.2, 0.6, 0.07]),
+        ]
+        callback.eval_results = [
+            np.array([0.9, 0.15, 0.45, 0.06]),
+            np.array([1.1, 0.18, 0.55, 0.08]),
+        ]
+        callback.best_mean_reward = 1.1
+
+        filepath = str(tmp_path / "hist")
+        callback.save_history(filepath)
+
+        assert (tmp_path / "hist.npz").exists()
+
+        loaded = TrainingCallback.load_history(filepath)
+
+        assert loaded["timesteps"] == [50, 100]
+        assert abs(loaded["best_mean_reward"] - 1.1) < 1e-6
+        assert loaded["metric_name"] == "trace"
+        assert loaded["check_freq"] == 50
+        assert loaded["n_qubits"] == simple_env.n_qubits
+        assert loaded["n_circuits_train"] == simple_env.n_circuits_train
+        assert loaded["n_circuits_val"] == simple_env.n_circuits - simple_env.n_circuits_train
+
+    def test_load_history_adds_npz_extension(self, simple_env, tmp_path):
+        """Test that load_history works with or without .npz extension."""
+        callback = TrainingCallback(env=simple_env, check_freq=100)
+        callback.timestep_list = [100]
+        callback.train_results = [np.array([1.0, 0.0, 0.0, 0.0])]
+        callback.eval_results = [np.array([1.0, 0.0, 0.0, 0.0])]
+
+        filepath = str(tmp_path / "hist2")
+        callback.save_history(filepath)
+
+        # Load with explicit extension
+        loaded_ext = TrainingCallback.load_history(filepath + ".npz")
+        loaded_no_ext = TrainingCallback.load_history(filepath)
+        assert loaded_ext["n_qubits"] == loaded_no_ext["n_qubits"]
+
+    def test_get_results_all_fields(self, simple_env):
+        """Test that get_results returns all expected metadata fields."""
+        callback = TrainingCallback(env=simple_env, check_freq=50)
+
+        results = callback.get_results()
+
+        for key in ("timesteps", "train_results", "eval_results",
+                    "best_mean_reward", "metric_name",
+                    "check_freq", "n_qubits", "n_circuits_train", "n_circuits_val"):
+            assert key in results, f"Missing key: {key}"
+
+        assert results["check_freq"] == 50
+        assert results["n_qubits"] == simple_env.n_qubits
+        assert results["n_circuits_train"] == simple_env.n_circuits_train
+        assert results["n_circuits_val"] == simple_env.n_circuits - simple_env.n_circuits_train
+
+    def test_non_deterministic_on_step_accumulates_rewards(self, simple_env):
+        """Test _on_step accumulates terminal rewards in non-deterministic mode."""
+        callback = TrainingCallback(
+            env=simple_env, check_freq=1000, deterministic_train_eval=False
+        )
+
+        callback.n_calls = 5
+        callback.num_timesteps = 5
+        callback.locals = {
+            "dones": [True, False, True],
+            "rewards": [0.8, 0.3, 0.6],
+            "infos": [{"metric": 0.5}, {}, {"metric": 0.9}],
+        }
+
+        result = callback._on_step()
+        assert result is True
+        assert len(callback._rollout_rewards) == 2
+        assert callback._rollout_rewards[0] == pytest.approx(0.8)
+        assert callback._rollout_rewards[1] == pytest.approx(0.6)
+        assert len(callback._rollout_metric_values) == 2
+
+    def test_non_deterministic_evaluate_uses_rollout(self, simple_env):
+        """Test _evaluate in non-deterministic mode uses accumulated rollout rewards."""
+        callback = TrainingCallback(
+            env=simple_env, check_freq=100, deterministic_train_eval=False
+        )
+
+        mock_model = Mock()
+        mock_model.predict = Mock(return_value=(np.zeros((1, 4)), None))
+        callback.model = mock_model
+        callback.num_timesteps = 100
+
+        callback._rollout_rewards = [0.5, 0.8, 0.9]
+        callback._rollout_metric_values = [0.4, 0.7, 0.8]
+
+        callback._evaluate()
+
+        assert len(callback.train_results) == 1
+        assert callback._rollout_rewards == []   # flushed
+        expected_mean = np.mean([0.5, 0.8, 0.9])
+        assert callback.train_results[0][0] == pytest.approx(expected_mean)
+
+    def test_non_deterministic_evaluate_empty_rollout(self, simple_env):
+        """Test _evaluate in non-deterministic mode with empty rollout uses zeros."""
+        callback = TrainingCallback(
+            env=simple_env, check_freq=100, deterministic_train_eval=False
+        )
+
+        mock_model = Mock()
+        mock_model.predict = Mock(return_value=(np.zeros((1, 4)), None))
+        callback.model = mock_model
+        callback.num_timesteps = 100
+
+        # Empty rollout → should produce zero train_metrics
+        callback._rollout_rewards = []
+
+        callback._evaluate()
+
+        assert len(callback.train_results) == 1
+        np.testing.assert_array_equal(callback.train_results[0], np.zeros(4))
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -223,4 +223,68 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
             "eval_results": self.eval_results,
             "best_mean_reward": self.best_mean_reward,
             "metric_name": self._metric_name,
+            "check_freq": self.check_freq,
+            "n_qubits": self.env.n_qubits,
+            "n_circuits_train": self.env.n_circuits_train,
+            "n_circuits_val": self.env.n_circuits - self.env.n_circuits_train,
+        }
+
+    def save_history(self, filepath: str) -> None:
+        """Save the full training history to a .npz file.
+
+        The saved file can be reloaded with :meth:`load_history` and passed
+        directly to :func:`~rlnoise.visualization.plot_training_dashboard`.
+
+        Args:
+            filepath: Destination path.  The ``.npz`` extension is added
+                automatically if omitted.
+        """
+        if not filepath.endswith(".npz"):
+            filepath = filepath + ".npz"
+        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+
+        results = self.get_results()
+        np.savez(
+            filepath,
+            timesteps=np.array(results["timesteps"]),
+            train_results=np.array(results["train_results"]),
+            eval_results=np.array(results["eval_results"]),
+            best_mean_reward=np.array(results["best_mean_reward"]),
+            metric_name=np.array(results["metric_name"]),
+            check_freq=np.array(results["check_freq"]),
+            n_qubits=np.array(results["n_qubits"]),
+            n_circuits_train=np.array(results["n_circuits_train"]),
+            n_circuits_val=np.array(results["n_circuits_val"]),
+        )
+
+    @staticmethod
+    def load_history(filepath: str) -> dict:
+        """Load training history previously saved with :meth:`save_history`.
+
+        The returned dictionary is compatible with
+        :func:`~rlnoise.visualization.plot_training_dashboard`.
+
+        Args:
+            filepath: Path to the ``.npz`` file.  The extension is added
+                automatically if omitted.
+
+        Returns:
+            Dictionary with keys ``timesteps``, ``train_results``,
+            ``eval_results``, ``best_mean_reward``, ``metric_name``,
+            ``check_freq``, ``n_qubits``, ``n_circuits_train``,
+            ``n_circuits_val``.
+        """
+        if not filepath.endswith(".npz"):
+            filepath = filepath + ".npz"
+        data = np.load(filepath, allow_pickle=True)
+        return {
+            "timesteps": data["timesteps"].tolist(),
+            "train_results": data["train_results"].tolist(),
+            "eval_results": data["eval_results"].tolist(),
+            "best_mean_reward": float(data["best_mean_reward"]),
+            "metric_name": str(data["metric_name"]),
+            "check_freq": int(data["check_freq"]),
+            "n_qubits": int(data["n_qubits"]),
+            "n_circuits_train": int(data["n_circuits_train"]),
+            "n_circuits_val": int(data["n_circuits_val"]),
         }
