@@ -34,7 +34,6 @@ black = "^23.7.0"
 isort = "^5.12.0"
 mypy = "^1.4.0"
 jupyter = "^1.0.0"
-pywinpty = "!=3.0.3"
 
 [tool.poetry.group.hardware]
 optional = true
