@@ -205,9 +205,9 @@ class TestCNNFeaturesExtractor:
             # Process as batch
             features_batch = extractor(obs_batch)
         
-        # Results should match
-        assert torch.allclose(features_batch[0], features1[0])
-        assert torch.allclose(features_batch[1], features2[0])
+        # Results should match (with tolerance for fp arithmetic in batch vs single proc)
+        assert torch.allclose(features_batch[0], features1[0], atol=1e-5)
+        assert torch.allclose(features_batch[1], features2[0], atol=1e-5)
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ from rlnoise.noise_model import (
 )
 from rlnoise.gym_env import (
     QuantumCircuitEnv,
+    create_quantum_circuit_env,
 )
 from rlnoise.reward import (
     RewardFunction,

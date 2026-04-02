@@ -108,7 +108,7 @@ class TestTrainingCallback:
         metrics = callback._evaluate_on_set(train=True)
         
         assert isinstance(metrics, np.ndarray)
-        assert metrics.shape == (2,)  # mean and std
+        assert metrics.shape == (4,)  # mean_reward, std_reward, mean_metric, std_metric
         assert not np.isnan(metrics).any()
         assert np.isfinite(metrics).all()
     
@@ -179,9 +179,9 @@ class TestTrainingCallback:
         callback._print_metrics("Test Set", metrics)
         
         captured = capsys.readouterr()
-        assert "Reward" in captured.out
-        assert "1.234" in captured.out
-        assert "0.567" in captured.out
+        assert "reward" in captured.out
+        assert "1.2340" in captured.out
+        assert "0.5670" in captured.out
     
     def test_save_path_directory_creation(self, simple_env):
         """Test that callback creates save directory."""
@@ -240,7 +240,8 @@ class TestTrainingCallback:
         callback._evaluate()
         
         assert len(callback.train_results) == 1
-        assert len(callback.eval_results) == 0  # No validation results
+        assert len(callback.eval_results) == 1  # zeros appended when no val set
+        assert np.all(callback.eval_results[0] == 0.0)
 
 
 if __name__ == "__main__":

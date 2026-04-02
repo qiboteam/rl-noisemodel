@@ -10,10 +10,9 @@ Provides tools to:
     4. Maximally mixed state (MMS)
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
-from qibo import gates
 from qibo.models import Circuit
 from qibo.noise import DepolarizingError, NoiseModel
 from qibo.quantum_info import fidelity as qibo_fidelity
@@ -85,7 +84,7 @@ def _apply_rb_noise_model(circuit: Circuit, lambda_rb: float) -> Circuit:
 
 def generate_rb_circuits(
     circuit_gen: CircuitGenerator,
-    encoder: CircuitEncoder,
+    encoder: CircuitEncoder,  # pylint: disable=unused-argument
     noise_model: QuantumNoiseModel,
     depths: List[int],
     n_circuits_per_depth: int,
@@ -148,7 +147,7 @@ def generate_rb_circuits(
 # RB fit
 # ---------------------------------------------------------------------------
 
-def fit_rb_decay(
+def fit_rb_decay(  # pylint: disable=too-many-locals
     rb_data: List[Dict[str, Any]],
     noise_model: QuantumNoiseModel,
 ) -> Tuple[float, float]:
@@ -187,7 +186,9 @@ def fit_rb_decay(
     depths_np = np.array(depths_arr)
     survival_np = np.array(avg_survival_arr)
 
-    model_fn = lambda d, a, lam: a * np.power(lam, d)  # noqa: E731
+    def model_fn(d, a, lam):
+        return a * np.power(lam, d)
+
 
     try:
         popt, _ = curve_fit(
@@ -213,7 +214,7 @@ def fit_rb_decay(
 # Evaluation
 # ---------------------------------------------------------------------------
 
-def evaluate_benchmarks(
+def evaluate_benchmarks(  # pylint: disable=too-many-locals,unused-argument
     rb_data: List[Dict[str, Any]],
     encoder: CircuitEncoder,
     rl_agent,

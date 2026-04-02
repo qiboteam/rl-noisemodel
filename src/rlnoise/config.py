@@ -6,25 +6,26 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class GateSpecificNoise(BaseModel):
     """Configuration for gate-specific noise application.
-    
+
     Attributes:
         gate: Gate name to apply noise to (e.g., 'rx', 'rz', 'cz')
         noise_channel: Type of noise channel
-        noise_parameter: Noise parameter value (float for uniform, list for per-qubit), this feature is available only for coherent errors
+        noise_parameter: Noise parameter value (float for uniform, list for per-qubit).
+            This feature is available only for coherent errors.
         angle_dependent: For coherent errors on rotation gates, scale by gate angle
     """
-    
+
     gate: str
     noise_channel: Literal["depolarizing", "damping", "coherent_z", "coherent_x"]
     noise_parameter: Union[float, List[float]]
     angle_dependent: bool = Field(default=False)
-    
+
     @field_validator("gate")
     @classmethod
     def validate_gate_name(cls, v):
         """Ensure gate name is lowercase."""
         return v.lower()
-    
+
     @model_validator(mode='after')
     def validate_angle_dependent(self):
         """Validate that angle_dependent is only used with coherent errors."""
@@ -34,13 +35,13 @@ class GateSpecificNoise(BaseModel):
                     "angle_dependent can only be used with coherent_x or coherent_z"
                 )
         return self
-    
+
     def validate_parameter_length(self, qubits: int):
         """Validate that list parameters match the number of qubits.
-        
+
         Args:
             qubits: Number of qubits to validate against
-            
+
         Raises:
             ValueError: If list parameter has incorrect length
         """
@@ -50,13 +51,13 @@ class GateSpecificNoise(BaseModel):
                     f"noise_parameter list length ({len(self.noise_parameter)}) must match "
                     f"number of qubits ({qubits})"
                 )
-    
+
     def get_parameter_list(self, qubits: int) -> List[float]:
         """Get noise parameter as list per qubit.
-        
+
         Args:
             qubits: Number of qubits
-            
+
         Returns:
             List of noise parameters with length qubits
         """
@@ -67,62 +68,62 @@ class GateSpecificNoise(BaseModel):
 
 class NoiseConfig(BaseModel):
     """Configuration for noise model parameters.
-    
+
     The noise configuration is now organized as a list of gate-specific noise
     specifications, providing more flexibility and clarity in defining which
     noise channels apply to which gates.
-    
+
     Attributes:
         noise_list: List of gate-specific noise configurations
     """
-    
+
     noise_list: List[GateSpecificNoise] = Field(default_factory=list)
-    
+
     def validate_list_lengths(self, qubits: int):
         """Validate that all list parameters match the number of qubits.
-        
+
         Args:
             qubits: Number of qubits to validate against
-            
+
         Raises:
             ValueError: If any list parameter has incorrect length
         """
         for noise in self.noise_list:
             noise.validate_parameter_length(qubits)
-    
+
     def get_noise_for_gate(self, gate: str) -> List[GateSpecificNoise]:
         """Get all noise configurations for a specific gate.
-        
+
         Args:
             gate: Gate name to query
-            
+
         Returns:
             List of GateSpecificNoise objects for the specified gate
         """
         return [noise for noise in self.noise_list if noise.gate.lower() == gate.lower()]
-    
+
     def get_noise_by_channel(self, channel: str) -> List[GateSpecificNoise]:
         """Get all noise configurations for a specific channel type.
-        
+
         Args:
             channel: Noise channel type to query
-            
+
         Returns:
             List of GateSpecificNoise objects with the specified channel
         """
         return [noise for noise in self.noise_list if noise.noise_channel == channel]
-    
+
     def get_gates_for_channel(self, channel: str) -> List[str]:
         """Get list of gates that have a specific noise channel applied.
-        
+
         Args:
             channel: Noise channel type to query
-            
+
         Returns:
             List of gate names
         """
         return [noise.gate for noise in self.noise_list if noise.noise_channel == channel]
-    
+
     def __str__(self) -> str:
         """String representation showing key parameters."""
         if not self.noise_list:
@@ -133,22 +134,22 @@ class NoiseConfig(BaseModel):
                 f"  No noise configured\n"
                 f"{'='*60}"
             )
-        
+
         # Group by gate
         gate_noise_map: Dict[str, List[GateSpecificNoise]] = {}
         for noise in self.noise_list:
             if noise.gate not in gate_noise_map:
                 gate_noise_map[noise.gate] = []
             gate_noise_map[noise.gate].append(noise)
-        
+
         # Format output
         lines = [
             f"\n{'='*60}",
-            f"  NoiseConfig",
+            "  NoiseConfig",
             f"{'='*60}",
-            f"  Gate-Specific Noise:"
+            "  Gate-Specific Noise:"
         ]
-        
+
         for gate in sorted(gate_noise_map.keys()):
             lines.append(f"    Gate: {gate}")
             for noise in gate_noise_map[gate]:
@@ -157,18 +158,18 @@ class NoiseConfig(BaseModel):
                     param_str = "[" + ", ".join(f"{v:.4f}" for v in noise.noise_parameter) + "]"
                 else:
                     param_str = f"{noise.noise_parameter:.4f}"
-                
+
                 # Add angle-dependent indicator
                 angle_dep = " (angle-dependent)" if noise.angle_dependent else ""
-                lines.append(f"      • {noise.noise_channel}: {param_str}{angle_dep}")
-        
+                lines.append(f"      â€¢ {noise.noise_channel}: {param_str}{angle_dep}")
+
         lines.append(f"{'='*60}")
         return "\n".join(lines)
 
 
 class DatasetConfig(BaseModel):
     """Configuration for dataset generation.
-    
+
     Attributes:
         n_circuits: Number of circuits to generate
         moments: Number of moments (circuit depth)
@@ -178,7 +179,7 @@ class DatasetConfig(BaseModel):
         clifford: Generate Clifford circuits (quantized angles)
         mixed: Mix random and Clifford circuits
     """
-    
+
     n_circuits: int = Field(default=100, gt=0)
     moments: int = Field(default=10, gt=0)
     qubits: int = Field(default=1, gt=0)
@@ -186,13 +187,13 @@ class DatasetConfig(BaseModel):
     distributed_clifford: bool = Field(default=False)
     clifford: bool = Field(default=True)
     mixed: bool = Field(default=False)
-    
+
     @field_validator("primitive_gates")
     @classmethod
     def validate_gate_names(cls, v):
         """Ensure gate names are lowercase."""
         return [gate.lower() for gate in v]
-    
+
     @model_validator(mode='after')
     def validate_config(self):
         """Validate configuration consistency."""
@@ -201,40 +202,40 @@ class DatasetConfig(BaseModel):
             raise ValueError("CZ gate requires at least 2 qubits")
         if "cnot" in self.primitive_gates and self.qubits < 2:
             raise ValueError("CNOT gate requires at least 2 qubits")
-        
+
         return self
-    
+
     def __str__(self) -> str:
         """String representation showing key parameters."""
         circuit_type = "Clifford" if self.clifford else "Arbitrary"
         if self.mixed:
             circuit_type = "Mixed (Clifford + Arbitrary)"
-        
+
         gates_str = ", ".join(self.primitive_gates)
-        
+
         return (
             f"\n{'='*50}\n"
             f"  DatasetConfig\n"
             f"{'='*50}\n"
-            f"    • Circuits:       {self.n_circuits}\n"
-            f"    • Qubits:         {self.qubits}\n"
-            f"    • Moments:        {self.moments}\n"
-            f"    • Type:           {circuit_type}\n"
-            f"    • Gates:          [{gates_str}]\n"
+            f"    â€¢ Circuits:       {self.n_circuits}\n"
+            f"    â€¢ Qubits:         {self.qubits}\n"
+            f"    â€¢ Moments:        {self.moments}\n"
+            f"    â€¢ Type:           {circuit_type}\n"
+            f"    â€¢ Gates:          [{gates_str}]\n"
             f"{'='*50}\n"
         )
 
 
 class RandomizedBenchmarkingConfig(BaseModel):
     """Configuration for randomized benchmarking experiments.
-    
+
     Attributes:
         start: Starting circuit depth
-        stop: Ending circuit depth  
+        stop: Ending circuit depth
         step: Step size for circuit depth
         n_circ: Number of circuits per depth
     """
-    
+
     start: int = Field(default=3, gt=0)
     stop: int = Field(default=31, gt=0)
     step: int = Field(default=3, gt=0)
@@ -243,7 +244,7 @@ class RandomizedBenchmarkingConfig(BaseModel):
 
 class GymEnvConfig(BaseModel):
     """Configuration for gymnasium environment.
-    
+
     Attributes:
         kernel_size: Size of sliding window for observations (must be odd)
         action_penalty: Penalty for applying noise actions
@@ -251,13 +252,13 @@ class GymEnvConfig(BaseModel):
         enable_only_depolarizing: Only allow depolarizing noise actions
         val_split: Fraction of dataset to use for validation
     """
-    
+
     kernel_size: int = Field(default=3, gt=0)
     action_penalty: float = Field(default=0.0, ge=0.0)
     action_space_max_value: float = Field(default=0.06, gt=0.0)
     enable_only_depolarizing: bool = Field(default=False)
     val_split: float = Field(default=0.2, ge=0.0, le=1.0)
-    
+
     @field_validator("kernel_size")
     @classmethod
     def validate_kernel_size(cls, v):
@@ -269,13 +270,13 @@ class GymEnvConfig(BaseModel):
 
 class RewardConfig(BaseModel):
     """Configuration for reward function.
-    
+
     Attributes:
         metric: Distance metric ('mse', 'fidelity', 'trace', 'mae')
         function: Reward function type ('log', 'linear', 'inverted', 'inverted_squared')
         alpha: Scaling parameter for reward function
     """
-    
+
     metric: Literal["mse", "fidelity", "trace", "mae"] = Field(default="trace")
     function: Literal["log", "linear", "inverted", "inverted_squared"] = Field(
         default="inverted_squared"
@@ -285,7 +286,7 @@ class RewardConfig(BaseModel):
 
 class ExperimentConfig(BaseModel):
     """Complete experiment configuration.
-    
+
     Attributes:
         dataset: Dataset generation configuration
         noise: Noise model configuration
@@ -293,7 +294,7 @@ class ExperimentConfig(BaseModel):
         reward: Reward function configuration (optional)
         rb: Randomized benchmarking configuration (optional)
     """
-    
+
     dataset: DatasetConfig
     noise: NoiseConfig
     gym_env: Optional[GymEnvConfig] = None
@@ -314,7 +315,7 @@ class ExperimentConfig(BaseModel):
 
 class AgentConfig(BaseModel):
     """Configuration for RL agent training.
-    
+
     Attributes:
         policy: Policy type (e.g., 'MlpPolicy', 'CnnPolicy')
         features_dim: Dimension of feature extractor output
@@ -329,7 +330,7 @@ class AgentConfig(BaseModel):
         clip_range: Clipping parameter for PPO
         verbose: Verbosity level (0=none, 1=info, 2=debug)
     """
-    
+
     policy: str = Field(default="MlpPolicy")
     features_dim: int = Field(default=64, gt=0)
     filter_size: int = Field(default=3, gt=0)
@@ -342,7 +343,7 @@ class AgentConfig(BaseModel):
     gamma: float = Field(default=0.99, ge=0.0, le=1.0)
     clip_range: float = Field(default=0.2, gt=0.0)
     verbose: int = Field(default=1, ge=0, le=2)
-    
+
     @field_validator("batch_size")
     @classmethod
     def validate_batch_size(cls, v, info):
@@ -351,4 +352,3 @@ class AgentConfig(BaseModel):
         if n_steps % v != 0:
             raise ValueError(f"batch_size ({v}) must divide n_steps ({n_steps})")
         return v
-

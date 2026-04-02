@@ -2,7 +2,14 @@
 name = "rlnoise"
 version = "0.1.0"
 description = "Quantum noise modeling through reinforcement learning"
-authors = ["Simone Bordoni", "Piergiorgio Buttarini", "Andrea Papaluca", "Alejandro Sopena"]
+authors = [
+    "Simone Bordoni",
+    "Andrea Papaluca",
+    "Piergiorgio Buttarini",
+    "Alejandro Sopena",
+    "Stefano Giagu (coordinator)",
+    "Stefano Carrazza (coordinator)",
+]
 readme = "README.md"
 homepage = "https://github.com/qiboteam/rl-noisemodel"
 repository = "https://github.com/qiboteam/rl-noisemodel"

@@ -126,7 +126,7 @@ _BENCH_LABELS = {
 }
 
 
-def plot_benchmarking_results(
+def plot_benchmarking_results(  # pylint: disable=too-many-locals
     results: Dict[str, Any],
     figsize: tuple = (18, 5),
     title: Optional[str] = None,
@@ -170,7 +170,7 @@ def plot_benchmarking_results(
 
     fig, axes = plt.subplots(1, len(metrics), figsize=figsize)
 
-    for ax, (metric_key, metric_label, higher_better) in zip(axes, metrics):
+    for ax, (metric_key, metric_label, _higher_better) in zip(axes, metrics):
         for k in model_keys:
             color = _BENCH_COLORS[k]
             label = _BENCH_LABELS[k]
