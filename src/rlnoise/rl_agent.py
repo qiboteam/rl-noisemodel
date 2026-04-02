@@ -191,6 +191,7 @@ class RLAgent:
         verbose: bool = True,
         deterministic_train_eval: bool = True,
         history_path: Optional[str] = None,
+        previous_history: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Train the agent.
 
@@ -210,6 +211,12 @@ class RLAgent:
                 is added automatically.  The file can be reloaded later with
                 :meth:`~rlnoise.callback.TrainingCallback.load_history` and
                 passed to :func:`~rlnoise.visualization.plot_training_dashboard`.
+            previous_history: Optional history dict returned by a previous
+                :meth:`train` call (or loaded with
+                :meth:`~rlnoise.callback.TrainingCallback.load_history`).
+                When provided, the new callback is pre-populated with all
+                prior timestep/result data so that the returned history and
+                any saved ``.npz`` file contain the full combined curve.
 
         Returns:
             Dictionary with training results
@@ -237,6 +244,14 @@ class RLAgent:
             deterministic_train_eval=deterministic_train_eval,
             verbose_save=save_path is not None,  # suppress print for temp path
         )
+
+        # Pre-populate the callback with data from a previous training run so
+        # that the returned history (and any saved .npz) spans both runs.
+        if previous_history is not None:
+            callback.timestep_list = list(previous_history["timesteps"])
+            callback.train_results = [np.array(r) for r in previous_history["train_results"]]
+            callback.eval_results = [np.array(r) for r in previous_history["eval_results"]]
+            callback.best_mean_reward = float(previous_history["best_mean_reward"])
 
         # Suppress PPO's own tabular output; the callback handles all printing
         original_verbose = self.model.verbose

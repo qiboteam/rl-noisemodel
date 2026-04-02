@@ -261,6 +261,45 @@ class TestRLAgent:
         # The run should complete without error; best reward may or may not improve
         assert "best_mean_reward" in results
 
+    def test_train_with_previous_history(self, simple_env, agent_config, tmp_path):
+        """Test that previous_history is prepended to the new run's results."""
+        agent = RLAgent(simple_env, agent_config)
+
+        # Build a fake previous history with 3 checkpoints
+        prev = {
+            "timesteps": [25, 50, 75],
+            "train_results": [
+                [1.0, 0.1, 0.5, 0.05],
+                [1.1, 0.1, 0.6, 0.05],
+                [1.2, 0.1, 0.7, 0.05],
+            ],
+            "eval_results": [
+                [0.9, 0.1, 0.4, 0.05],
+                [1.0, 0.1, 0.5, 0.05],
+                [1.1, 0.1, 0.6, 0.05],
+            ],
+            "best_mean_reward": 1.1,
+            "metric_name": "trace",
+            "check_freq": 25,
+            "n_qubits": simple_env.n_qubits,
+            "n_circuits_train": simple_env.n_circuits_train,
+            "n_circuits_val": simple_env.n_circuits - simple_env.n_circuits_train,
+        }
+
+        results = agent.train(
+            total_timesteps=50,
+            check_freq=25,
+            progress_bar=False,
+            previous_history=prev,
+        )
+
+        # Should have at least 3 old + however many new checkpoints were added
+        assert len(results["timesteps"]) >= 3
+        # First three timesteps must match the old run
+        assert results["timesteps"][:3] == [25, 50, 75]
+        # best_mean_reward must be at least the old best
+        assert results["best_mean_reward"] >= prev["best_mean_reward"]
+
     def test_apply_to_circuit_2d_input(self, simple_env, agent_config):
         """Test apply_to_circuit expands 2-D input correctly."""
         agent = RLAgent(simple_env, agent_config)
