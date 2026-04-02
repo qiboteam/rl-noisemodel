@@ -161,7 +161,43 @@ class CircuitGenerator:
             # S gate: RZ(π/2)
             qubit = gate.qubits[0]
             target_circuit.add(gates.RZ(qubit, np.pi / 2, trainable=False))
-        
+
+        elif gate_name == "sdg":
+            # S† gate: RZ(-π/2)
+            qubit = gate.qubits[0]
+            target_circuit.add(gates.RZ(qubit, -np.pi / 2, trainable=False))
+
+        elif gate_name == "t":
+            # T gate: RZ(π/4)
+            qubit = gate.qubits[0]
+            target_circuit.add(gates.RZ(qubit, np.pi / 4, trainable=False))
+
+        elif gate_name == "tdg":
+            # T† gate: RZ(-π/4)
+            qubit = gate.qubits[0]
+            target_circuit.add(gates.RZ(qubit, -np.pi / 4, trainable=False))
+
+        elif gate_name == "sx":
+            # √X gate: RX(π/2)
+            qubit = gate.qubits[0]
+            target_circuit.add(gates.RX(qubit, np.pi / 2, trainable=False))
+
+        elif gate_name == "sxdg":
+            # √X† gate: RX(-π/2)
+            qubit = gate.qubits[0]
+            target_circuit.add(gates.RX(qubit, -np.pi / 2, trainable=False))
+
+        elif gate_name == "swap":
+            # SWAP decomposition via three CZ + Hadamards
+            q0, q1 = gate.qubits[0], gate.qubits[1]
+            # SWAP = CX(q0,q1) · CX(q1,q0) · CX(q0,q1)
+            for ctrl, tgt in [(q0, q1), (q1, q0), (q0, q1)]:
+                target_circuit.add(gates.RZ(tgt, np.pi / 2, trainable=False))
+                target_circuit.add(gates.RX(tgt, np.pi / 2, trainable=False))
+                target_circuit.add(gates.CZ(ctrl, tgt))
+                target_circuit.add(gates.RZ(tgt, np.pi / 2, trainable=False))
+                target_circuit.add(gates.RX(tgt, np.pi / 2, trainable=False))
+
         else:
             raise ValueError(f"Cannot decompose unknown gate: {gate_name}")
     

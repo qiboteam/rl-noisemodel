@@ -128,8 +128,8 @@ class RewardFunction:
         transform_map = {
             "log": lambda x: -np.log(alpha * x + 1e-15),
             "linear": lambda x: -alpha * x,  # Negative for reward
-            "inverted": lambda x: 1.0 / (alpha * x + 1e-15),
-            "inverted_squared": lambda x: 1.0 / (alpha * x**2 + 1e-10),
+            "inverted": lambda x: 1.0 / (alpha * x + 1e-6),  # Add small term to avoid division by zero
+            "inverted_squared": lambda x: 1.0 / (alpha * x**2 + 1e-6),
         }
         
         if function not in transform_map:

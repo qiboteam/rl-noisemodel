@@ -44,8 +44,14 @@ class CircuitDataset:
     def __str__(self) -> str:
         """String representation showing dataset information."""
         n_circuits = len(self)
-        n_moments, n_qubits, encoding_dim = self.circuits.shape[1:]
-        
+        # Support both dense (n, moments, qubits, enc) and object (n,) arrays
+        first = self.circuits[0]
+        n_moments, n_qubits, encoding_dim = first.shape
+        shape_str = (
+            self.circuits.shape[1:] if self.circuits.ndim == 4
+            else f"variable (sample: {first.shape})"
+        )
+
         result = (
             f"\n{'='*60}\n"
             f"  CircuitDataset\n"
@@ -54,10 +60,10 @@ class CircuitDataset:
             f"    • Qubits:              {n_qubits}\n"
             f"    • Moments (depth):     {n_moments}\n"
             f"    • Encoding dimension:  {encoding_dim}\n"
-            f"    • Circuit shape:       {self.circuits.shape[1:]}\n"
+            f"    • Circuit shape:       {shape_str}\n"
             f"{'='*60}"
         )
-        
+
         return result
     
     def save(self, filepath: str):
