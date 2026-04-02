@@ -191,7 +191,7 @@ def fit_rb_decay(  # pylint: disable=too-many-locals
 
 
     try:
-        popt, _ = curve_fit(
+        fit_result = curve_fit(
             model_fn,
             depths_np,
             survival_np,
@@ -199,6 +199,7 @@ def fit_rb_decay(  # pylint: disable=too-many-locals
             maxfev=5000,
             bounds=([0.0, 0.0], [2.0, 1.0]),
         )
+        popt = fit_result[0]
         a_fit, lambda_fit = float(popt[0]), float(popt[1])
     except RuntimeError:
         # Fallback: linear fit in log space

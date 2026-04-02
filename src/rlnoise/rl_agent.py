@@ -181,7 +181,7 @@ class RLAgent:
             )
         print("=" * 70)
 
-    def train(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def train(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
         self,
         total_timesteps: int,
         check_freq: int = 1000,
