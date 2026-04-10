@@ -267,12 +267,22 @@ class RLAgent:
 
         # Restore best model weights if save_best was used and a best model was found
         if save_best and effective_save_path is not None and callback.best_mean_reward > -np.inf:
-            loaded = PPO.load(effective_save_path)
-            self.model.policy.load_state_dict(loaded.policy.state_dict())
-            if save_path is not None:
-                print(f"Loaded best model weights from {save_path}", file=out_stream, flush=True)
+            save_zip = Path(effective_save_path + ".zip")
+            if save_zip.exists():
+                loaded = PPO.load(effective_save_path)
+                self.model.policy.load_state_dict(loaded.policy.state_dict())
+                if save_path is not None:
+                    print(
+                        f"Loaded best model weights from {save_path}",
+                        file=out_stream, flush=True,
+                    )
+                else:
+                    print("Loaded best model weights.", file=out_stream, flush=True)
             else:
-                print("Loaded best model weights.", file=out_stream, flush=True)
+                print(
+                    "No improvement over previous best — keeping current model weights.",
+                    file=out_stream, flush=True,
+                )
 
         # Clean up temp directory
         if _temp_dir is not None:

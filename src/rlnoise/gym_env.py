@@ -9,7 +9,7 @@ from gymnasium import spaces
 from rlnoise.config import GymEnvConfig, RewardConfig
 from rlnoise.dataset import CircuitDataset
 from rlnoise.circuit_encoder import CircuitEncoder
-from rlnoise.reward import RewardFunction
+from rlnoise.reward import RewardFunction, trace_distance as _trace_distance, compute_fidelity
 
 
 class QuantumCircuitEnv(gymnasium.Env):  # pylint: disable=too-many-instance-attributes
@@ -306,6 +306,8 @@ class QuantumCircuitEnv(gymnasium.Env):  # pylint: disable=too-many-instance-att
             predicted_dm = circuit().state()
             metric_value = float(self.reward_fn.metric(predicted_dm, self.target_dm))
             reward = float(self.reward_fn.transform(metric_value))
+            trace_dist_value = float(_trace_distance(predicted_dm, self.target_dm))
+            fidelity_value = 1.0 - float(compute_fidelity(predicted_dm, self.target_dm))
 
         # Move to next position if not terminated
         if not terminated:
@@ -323,6 +325,8 @@ class QuantumCircuitEnv(gymnasium.Env):  # pylint: disable=too-many-instance-att
         }
         if terminated:
             info["metric"] = metric_value
+            info["trace_distance"] = trace_dist_value
+            info["fidelity"] = fidelity_value
 
         return obs, reward, terminated, truncated, info
 

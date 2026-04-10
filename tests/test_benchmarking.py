@@ -2,6 +2,7 @@
 
 import pytest
 import numpy as np
+from unittest.mock import patch, MagicMock
 import matplotlib
 matplotlib.use("Agg")  # Non-interactive backend for testing
 
@@ -9,6 +10,7 @@ from rlnoise.benchmarking import (
     maximally_mixed_state,
     generate_rb_circuits,
     fit_rb_decay,
+    evaluate_benchmarks,
     _build_composite_circuit,
     _apply_rb_noise_model,
 )
@@ -168,3 +170,137 @@ class TestFitRbDecay:
         )
         _, lam = fit_rb_decay(rb_data, noise_model)
         assert 0.0 <= lam <= 1.0
+
+    def test_fallback_on_curve_fit_failure(self, rb_setup):
+        """Test that the log-space fallback is used when curve_fit raises RuntimeError."""
+        circuit_gen, encoder, noise_model = rb_setup
+        rb_data = generate_rb_circuits(
+            circuit_gen, encoder, noise_model,
+            depths=[3, 5, 7], n_circuits_per_depth=2
+        )
+        with patch("rlnoise.benchmarking.curve_fit", side_effect=RuntimeError("convergence error")):
+            a, lam = fit_rb_decay(rb_data, noise_model)
+        assert isinstance(a, float)
+        assert isinstance(lam, float)
+        assert a == 1.0  # fallback sets a=1.0
+        assert 0.0 <= lam <= 1.0
+
+
+class TestEvaluateBenchmarks:
+    """Tests for evaluate_benchmarks."""
+
+    def test_returns_expected_keys(self, rb_setup):
+        """evaluate_benchmarks returns a dict with the correct top-level keys."""
+        circuit_gen, encoder, noise_model = rb_setup
+        rb_data = generate_rb_circuits(
+            circuit_gen, encoder, noise_model,
+            depths=[3], n_circuits_per_depth=2
+        )
+        _, lam = fit_rb_decay(rb_data, noise_model)
+
+        from rlnoise.rl_agent import RLAgent
+        from rlnoise.config import GymEnvConfig, RewardConfig, AgentConfig
+        from rlnoise.dataset import DatasetGenerator
+        from rlnoise.gym_env import QuantumCircuitEnv
+
+        dataset_config = DatasetConfig(
+            n_circuits=4, qubits=1, moments=3, clifford=True,
+            primitive_gates=["rx", "rz"],
+        )
+        dataset = DatasetGenerator(dataset_config, noise_model.config).generate()
+        env = QuantumCircuitEnv(
+            dataset=dataset,
+            encoder=encoder,
+            env_config=GymEnvConfig(kernel_size=3, action_space_max_value=0.1, val_split=0.0),
+            reward_config=RewardConfig(metric="trace", function="inverted_squared", alpha=20.0),
+        )
+        agent = RLAgent(env=env, agent_config=AgentConfig(
+            n_steps=100, batch_size=25, features_dim=16, n_filters=8,
+        ))
+
+        results = evaluate_benchmarks(rb_data=rb_data, encoder=encoder, rl_agent=agent, lambda_rb=lam)
+
+        assert "depths" in results
+        for model_key in ("rl", "rb", "no_noise", "mms"):
+            assert model_key in results
+            for metric in ("fidelity", "fidelity_std", "trace", "trace_std", "mse", "mse_std"):
+                assert metric in results[model_key]
+
+    def test_depths_match_input(self, rb_setup):
+        """depths list in results matches the input RB depths."""
+        circuit_gen, encoder, noise_model = rb_setup
+        depths = [3, 5]
+        rb_data = generate_rb_circuits(
+            circuit_gen, encoder, noise_model,
+            depths=depths, n_circuits_per_depth=2
+        )
+        _, lam = fit_rb_decay(rb_data, noise_model)
+
+        from rlnoise.rl_agent import RLAgent
+        from rlnoise.config import GymEnvConfig, RewardConfig, AgentConfig
+        from rlnoise.dataset import DatasetGenerator
+        from rlnoise.gym_env import QuantumCircuitEnv
+
+        dataset_config = DatasetConfig(
+            n_circuits=4, qubits=1, moments=3, clifford=True,
+            primitive_gates=["rx", "rz"],
+        )
+        dataset = DatasetGenerator(dataset_config, noise_model.config).generate()
+        env = QuantumCircuitEnv(
+            dataset=dataset,
+            encoder=encoder,
+            env_config=GymEnvConfig(kernel_size=3, action_space_max_value=0.1, val_split=0.0),
+            reward_config=RewardConfig(metric="trace", function="inverted_squared", alpha=20.0),
+        )
+        agent = RLAgent(env=env, agent_config=AgentConfig(
+            n_steps=100, batch_size=25, features_dim=16, n_filters=8,
+        ))
+
+        results = evaluate_benchmarks(rb_data=rb_data, encoder=encoder, rl_agent=agent, lambda_rb=lam)
+
+        assert results["depths"] == depths
+        assert len(results["rl"]["fidelity"]) == len(depths)
+
+    def test_metric_values_in_range(self, rb_setup):
+        """Fidelity is in [0,1] and trace/mse are non-negative."""
+        circuit_gen, encoder, noise_model = rb_setup
+        rb_data = generate_rb_circuits(
+            circuit_gen, encoder, noise_model,
+            depths=[3], n_circuits_per_depth=2
+        )
+        _, lam = fit_rb_decay(rb_data, noise_model)
+
+        from rlnoise.rl_agent import RLAgent
+        from rlnoise.config import GymEnvConfig, RewardConfig, AgentConfig
+        from rlnoise.dataset import DatasetGenerator
+        from rlnoise.gym_env import QuantumCircuitEnv
+
+        dataset_config = DatasetConfig(
+            n_circuits=4, qubits=1, moments=3, clifford=True,
+            primitive_gates=["rx", "rz"],
+        )
+        dataset = DatasetGenerator(dataset_config, noise_model.config).generate()
+        env = QuantumCircuitEnv(
+            dataset=dataset,
+            encoder=encoder,
+            env_config=GymEnvConfig(kernel_size=3, action_space_max_value=0.1, val_split=0.0),
+            reward_config=RewardConfig(metric="trace", function="inverted_squared", alpha=20.0),
+        )
+        agent = RLAgent(env=env, agent_config=AgentConfig(
+            n_steps=100, batch_size=25, features_dim=16, n_filters=8,
+        ))
+
+        results = evaluate_benchmarks(rb_data=rb_data, encoder=encoder, rl_agent=agent, lambda_rb=lam)
+
+        for model_key in ("rl", "rb", "no_noise", "mms"):
+            for f in results[model_key]["fidelity"]:
+                assert -0.01 <= f <= 1.01, f"fidelity {f} out of range for {model_key}"
+            for t in results[model_key]["trace"]:
+                assert t >= -0.01, f"trace distance {t} negative for {model_key}"
+            for m in results[model_key]["mse"]:
+                assert m >= -1e-9, f"mse {m} negative for {model_key}"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
+

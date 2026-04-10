@@ -15,8 +15,8 @@ def training_results():
     """Synthetic training results compatible with TrainingCallback.get_results()."""
     n = 5
     timesteps = list(range(100, 100 * (n + 1), 100))
-    train_results = [np.array([float(i), 0.1, 0.5 - i * 0.05, 0.02]) for i in range(1, n + 1)]
-    eval_results = [np.array([float(i) * 0.9, 0.15, 0.4 - i * 0.04, 0.03]) for i in range(1, n + 1)]
+    train_results = [np.array([float(i), 0.1, 0.5 - i * 0.05, 0.02, 0.5 + i * 0.05, 0.02]) for i in range(1, n + 1)]
+    eval_results = [np.array([float(i) * 0.9, 0.15, 0.4 - i * 0.04, 0.03, 0.6 + i * 0.04, 0.02]) for i in range(1, n + 1)]
     return {
         "timesteps": timesteps,
         "train_results": train_results,
@@ -61,8 +61,21 @@ class TestPlotTrainingDashboard:
 
     def test_correct_number_of_axes(self, training_results):
         fig = plot_training_dashboard(training_results)
-        assert len(fig.axes) == 2  # reward + metric
+        assert len(fig.axes) == 3  # reward + trace distance + fidelity
         plt.close(fig)
+
+    def test_selective_panels(self, training_results):
+        fig = plot_training_dashboard(training_results, show_reward=True, show_trace_distance=False, show_fidelity=False)
+        assert len(fig.axes) == 1
+        plt.close(fig)
+
+        fig = plot_training_dashboard(training_results, show_reward=True, show_trace_distance=True, show_fidelity=False)
+        assert len(fig.axes) == 2
+        plt.close(fig)
+
+    def test_no_panels_raises(self, training_results):
+        with pytest.raises(ValueError):
+            plot_training_dashboard(training_results, show_reward=False, show_trace_distance=False, show_fidelity=False)
 
     def test_with_title(self, training_results):
         fig = plot_training_dashboard(training_results, title="Test Title")

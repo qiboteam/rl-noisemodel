@@ -108,7 +108,7 @@ class TestTrainingCallback:
         metrics = callback._evaluate_on_set(train=True)
         
         assert isinstance(metrics, np.ndarray)
-        assert metrics.shape == (4,)  # mean_reward, std_reward, mean_metric, std_metric
+        assert metrics.shape == (6,)  # mean_reward, std_reward, mean_trace, std_trace, mean_fidelity, std_fidelity
         assert not np.isnan(metrics).any()
         assert np.isfinite(metrics).all()
     
@@ -316,7 +316,11 @@ class TestTrainingCallback:
         callback.locals = {
             "dones": [True, False, True],
             "rewards": [0.8, 0.3, 0.6],
-            "infos": [{"metric": 0.5}, {}, {"metric": 0.9}],
+            "infos": [
+                {"trace_distance": 0.5, "fidelity": 0.95},
+                {},
+                {"trace_distance": 0.9, "fidelity": 0.80},
+            ],
         }
 
         result = callback._on_step()
@@ -324,7 +328,8 @@ class TestTrainingCallback:
         assert len(callback._rollout_rewards) == 2
         assert callback._rollout_rewards[0] == pytest.approx(0.8)
         assert callback._rollout_rewards[1] == pytest.approx(0.6)
-        assert len(callback._rollout_metric_values) == 2
+        assert len(callback._rollout_trace_values) == 2
+        assert len(callback._rollout_fidelity_values) == 2
 
     def test_non_deterministic_evaluate_uses_rollout(self, simple_env):
         """Test _evaluate in non-deterministic mode uses accumulated rollout rewards."""
@@ -338,7 +343,8 @@ class TestTrainingCallback:
         callback.num_timesteps = 100
 
         callback._rollout_rewards = [0.5, 0.8, 0.9]
-        callback._rollout_metric_values = [0.4, 0.7, 0.8]
+        callback._rollout_trace_values = [0.4, 0.7, 0.8]
+        callback._rollout_fidelity_values = [0.6, 0.3, 0.2]
 
         callback._evaluate()
 
@@ -364,7 +370,7 @@ class TestTrainingCallback:
         callback._evaluate()
 
         assert len(callback.train_results) == 1
-        np.testing.assert_array_equal(callback.train_results[0], np.zeros(4))
+        np.testing.assert_array_equal(callback.train_results[0], np.zeros(6))
 
 
 if __name__ == "__main__":

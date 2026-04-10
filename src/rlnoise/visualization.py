@@ -8,30 +8,37 @@ import matplotlib.figure
 import numpy as np
 
 
-def plot_training_dashboard(
+def plot_training_dashboard(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     results: Dict[str, Any],
-    figsize: tuple = (12, 5),
+    figsize: tuple = None,
     title: Optional[str] = None,
     filepath: Optional[str] = None,
+    show_reward: bool = True,
+    show_trace_distance: bool = True,
+    show_fidelity: bool = True,
 ) -> matplotlib.figure.Figure:
-    """Plot training dashboard with reward and metric evolution.
+    """Plot training dashboard with selectable metrics.
 
-    Two side-by-side plots are produced:
-    - Left: reward vs. timestep for the training set and evaluation set.
-    - Right: raw metric (e.g. trace distance or fidelity) vs. timestep for both sets.
+    Up to three side-by-side plots are produced based on the boolean flags:
+    - Reward vs. timestep (train and eval).
+    - Trace distance vs. timestep (train and eval).
+    - Fidelity vs. timestep (train and eval).
 
     Shaded bands show ±1 standard deviation.
 
     Args:
         results: Dictionary returned by ``TrainingCallback.get_results()``.
-            Must contain the keys ``timesteps``, ``train_results``,
-            ``eval_results``, and ``metric_name``.  Each row of
-            ``train_results``/``eval_results`` is
-            ``[mean_reward, std_reward, mean_metric, std_metric]``.
-        figsize: ``(width, height)`` in inches.
+            Must contain ``timesteps``, ``train_results``, ``eval_results``.
+            Each row of ``train_results``/``eval_results`` is
+            ``[mean_reward, std_reward, mean_trace_dist, std_trace_dist,
+            mean_fidelity, std_fidelity]``.
+        figsize: ``(width, height)`` in inches.  Defaults to 6 inches per
+            enabled panel.
         title: Optional super-title for the figure.
-        filepath: Optional path to save the figure (e.g. ``"plots/dashboard.png"``).
-            If ``None``, the figure is not saved.
+        filepath: Optional path to save the figure.
+        show_reward: Whether to include the reward panel.
+        show_trace_distance: Whether to include the trace-distance panel.
+        show_fidelity: Whether to include the fidelity panel.
 
     Returns:
         The :class:`matplotlib.figure.Figure` object.
@@ -39,61 +46,57 @@ def plot_training_dashboard(
     timesteps = np.array(results["timesteps"])
     train = np.array(results["train_results"])
     val = np.array(results["eval_results"])
-    metric_name = results.get("metric_name", "metric")
-    metric_label = metric_name.replace("_", " ").title()
 
     train_color = "#1f77b4"  # blue
     eval_color = "#ff7f0e"   # orange
 
-    fig, axes = plt.subplots(1, 2, figsize=figsize)
+    panels = []
+    if show_reward:
+        panels.append(("Reward", 0, 1))
+    if show_trace_distance:
+        panels.append(("Trace Distance", 2, 3))
+    if show_fidelity:
+        panels.append(("Fidelity", 4, 5))
 
-    # --- Reward ---
-    ax = axes[0]
-    ax.plot(timesteps, train[:, 0], color=train_color, label="Train")
-    ax.fill_between(
-        timesteps,
-        train[:, 0] - train[:, 1],
-        train[:, 0] + train[:, 1],
-        alpha=0.2,
-        color=train_color,
-    )
-    ax.plot(timesteps, val[:, 0], color=eval_color, label="Eval")
-    ax.fill_between(
-        timesteps,
-        val[:, 0] - val[:, 1],
-        val[:, 0] + val[:, 1],
-        alpha=0.2,
-        color=eval_color,
-    )
-    ax.set_xlabel("Timestep")
-    ax.set_ylabel("Reward")
-    ax.set_title("Reward")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
+    n_panels = len(panels)
+    if n_panels == 0:
+        raise ValueError(
+            "At least one of show_reward, show_trace_distance, show_fidelity must be True."
+        )
 
-    # --- Raw metric ---
-    ax = axes[1]
-    ax.plot(timesteps, train[:, 2], color=train_color, label="Train")
-    ax.fill_between(
-        timesteps,
-        train[:, 2] - train[:, 3],
-        train[:, 2] + train[:, 3],
-        alpha=0.2,
-        color=train_color,
-    )
-    ax.plot(timesteps, val[:, 2], color=eval_color, label="Eval")
-    ax.fill_between(
-        timesteps,
-        val[:, 2] - val[:, 3],
-        val[:, 2] + val[:, 3],
-        alpha=0.2,
-        color=eval_color,
-    )
-    ax.set_xlabel("Timestep")
-    ax.set_ylabel(metric_label)
-    ax.set_title(metric_label)
-    ax.legend()
-    ax.grid(True, alpha=0.3)
+    if figsize is None:
+        figsize = (6 * n_panels, 5)
+
+    fig, axes = plt.subplots(1, n_panels, figsize=figsize)
+    if n_panels == 1:
+        axes = [axes]
+
+    for ax, (label, mean_col, std_col) in zip(axes, panels):
+        # Guard against results arrays that lack fidelity columns (old files)
+        if mean_col >= train.shape[1]:
+            ax.set_visible(False)
+            continue
+        ax.plot(timesteps, train[:, mean_col], color=train_color, label="Train")
+        ax.fill_between(
+            timesteps,
+            train[:, mean_col] - train[:, std_col],
+            train[:, mean_col] + train[:, std_col],
+            alpha=0.2,
+            color=train_color,
+        )
+        ax.plot(timesteps, val[:, mean_col], color=eval_color, label="Eval")
+        ax.fill_between(
+            timesteps,
+            val[:, mean_col] - val[:, std_col],
+            val[:, mean_col] + val[:, std_col],
+            alpha=0.2,
+            color=eval_color,
+        )
+        ax.set_xlabel("Timestep")
+        ax.set_ylabel(label)
+        ax.set_title(label)
+        ax.legend()
+        ax.grid(True, alpha=0.3)
 
     if title is not None:
         fig.suptitle(title, fontsize=14)

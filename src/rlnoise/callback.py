@@ -81,7 +81,8 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
 
         # Rollout accumulators (used only when deterministic_train_eval=False)
         self._rollout_rewards: list = []
-        self._rollout_metric_values: list = []
+        self._rollout_trace_values: list = []
+        self._rollout_fidelity_values: list = []
 
         if not self.has_val_set:
             print(
@@ -104,8 +105,11 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
             for done, reward, info in zip(dones, rewards, infos):
                 if done:
                     self._rollout_rewards.append(float(reward))
-                    if info is not None and "metric" in info:
-                        self._rollout_metric_values.append(float(info["metric"]))
+                    if info is not None:
+                        if "trace_distance" in info:
+                            self._rollout_trace_values.append(float(info["trace_distance"]))
+                        if "fidelity" in info:
+                            self._rollout_fidelity_values.append(float(info["fidelity"]))
 
         if self.n_calls % self.check_freq == 0:
             self._evaluate()
@@ -119,26 +123,31 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
             # Use rewards/metrics accumulated from the live rollout
             if self._rollout_rewards:
                 r = np.array(self._rollout_rewards)
-                m = (
-                    np.array(self._rollout_metric_values)
-                    if self._rollout_metric_values else np.zeros(0)
+                t = (
+                    np.array(self._rollout_trace_values)
+                    if self._rollout_trace_values else np.zeros(0)
+                )
+                f = (
+                    np.array(self._rollout_fidelity_values)
+                    if self._rollout_fidelity_values else np.zeros(0)
                 )
                 train_metrics = np.array([
                     r.mean(), r.std(),
-                    m.mean() if len(m) else 0.0,
-                    m.std() if len(m) else 0.0,
+                    t.mean() if len(t) else 0.0, t.std() if len(t) else 0.0,
+                    f.mean() if len(f) else 0.0, f.std() if len(f) else 0.0,
                 ])
             else:
-                train_metrics = np.zeros(4)
+                train_metrics = np.zeros(6)
             self._rollout_rewards = []
-            self._rollout_metric_values = []
+            self._rollout_trace_values = []
+            self._rollout_fidelity_values = []
         self.train_results.append(train_metrics)
 
         # Evaluate on validation set, or store zeros if none exists
         if self.has_val_set:
             val_metrics = self._evaluate_on_set(train=False)
         else:
-            val_metrics = np.zeros(4)
+            val_metrics = np.zeros(6)
         self.eval_results.append(val_metrics)
 
         # Store timestep
@@ -148,10 +157,12 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
         if self.verbose > 0:
             msg = (
                 f"Step {self.num_timesteps:>7d} | "
-                f"Train reward: {train_metrics[0]:.4f} Â± {train_metrics[1]:.4f}  "
-                f"{self._metric_name}: {train_metrics[2]:.4f} Â± {train_metrics[3]:.4f}  |  "
-                f"Val reward: {val_metrics[0]:.4f} Â± {val_metrics[1]:.4f}  "
-                f"{self._metric_name}: {val_metrics[2]:.4f} Â± {val_metrics[3]:.4f}"
+                f"Train reward: {train_metrics[0]:.4f} \u00b1 {train_metrics[1]:.4f}  "
+                f"trace_dist: {train_metrics[2]:.4f} \u00b1 {train_metrics[3]:.4f}  "
+                f"fidelity: {train_metrics[4]:.4f} \u00b1 {train_metrics[5]:.4f}  |  "
+                f"Val reward: {val_metrics[0]:.4f} \u00b1 {val_metrics[1]:.4f}  "
+                f"trace_dist: {val_metrics[2]:.4f} \u00b1 {val_metrics[3]:.4f}  "
+                f"fidelity: {val_metrics[4]:.4f} \u00b1 {val_metrics[5]:.4f}"
             )
             print(msg, file=self._out, flush=True)
 
@@ -169,13 +180,15 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
         """Run deterministic episodes over the validation set.
 
         Returns:
-            Array [mean_reward, std_reward, mean_metric, std_metric]
+            Array [mean_reward, std_reward, mean_trace_dist,
+            std_trace_dist, mean_fidelity, std_fidelity]
         """
         start = 0 if train else self.env.n_circuits_train
         stop = self.env.n_circuits_train if train else self.env.n_circuits
 
         rewards = []
-        metric_values = []
+        trace_values = []
+        fidelity_values = []
 
         for i in range(start, stop):
             # Reset to specific circuit
@@ -190,17 +203,19 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
                 obs, reward, done, _, info = self.env.step(action)
 
             rewards.append(reward)
-            if "metric" in info:
-                metric_values.append(info["metric"])
+            if "trace_distance" in info:
+                trace_values.append(info["trace_distance"])
+            if "fidelity" in info:
+                fidelity_values.append(info["fidelity"])
 
         rewards = np.array(rewards)
-        if metric_values:
-            metric_values = np.array(metric_values)
-            return np.array([
-                rewards.mean(), rewards.std(),
-                metric_values.mean(), metric_values.std(),
-            ])
-        return np.array([rewards.mean(), rewards.std(), 0.0, 0.0])
+        t = np.array(trace_values) if trace_values else np.zeros(0)
+        f = np.array(fidelity_values) if fidelity_values else np.zeros(0)
+        return np.array([
+            rewards.mean(), rewards.std(),
+            t.mean() if len(t) else 0.0, t.std() if len(t) else 0.0,
+            f.mean() if len(f) else 0.0, f.std() if len(f) else 0.0,
+        ])
 
     def _print_metrics(self, set_name: str, metrics: np.ndarray):
         """Print evaluation metrics."""
@@ -215,7 +230,7 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
         Returns:
             Dictionary with timesteps, results for train/val sets, and metric name.
             Each entry in train_results/eval_results is
-            [mean_reward, std_reward, mean_metric, std_metric].
+            [mean_reward, std_reward, mean_trace_dist, std_trace_dist, mean_fidelity, std_fidelity].
         """
         return {
             "timesteps": self.timestep_list,
@@ -277,10 +292,17 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
         if not filepath.endswith(".npz"):
             filepath = filepath + ".npz"
         data = np.load(filepath, allow_pickle=True)
+        train_results = data["train_results"]
+        eval_results = data["eval_results"]
+        # Backward compat: old files stored 4 columns; pad fidelity columns with zeros
+        if train_results.ndim == 2 and train_results.shape[1] == 4:
+            pad = np.zeros((train_results.shape[0], 2))
+            train_results = np.hstack([train_results, pad])
+            eval_results = np.hstack([eval_results, pad])
         return {
             "timesteps": data["timesteps"].tolist(),
-            "train_results": data["train_results"].tolist(),
-            "eval_results": data["eval_results"].tolist(),
+            "train_results": train_results.tolist(),
+            "eval_results": eval_results.tolist(),
             "best_mean_reward": float(data["best_mean_reward"]),
             "metric_name": str(data["metric_name"]),
             "check_freq": int(data["check_freq"]),

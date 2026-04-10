@@ -56,11 +56,11 @@ class CircuitDataset:
             f"\n{'='*60}\n"
             f"  CircuitDataset\n"
             f"{'='*60}\n"
-            f"    â€¢ Circuits:            {n_circuits}\n"
-            f"    â€¢ Qubits:              {n_qubits}\n"
-            f"    â€¢ Moments (depth):     {n_moments}\n"
-            f"    â€¢ Encoding dimension:  {encoding_dim}\n"
-            f"    â€¢ Circuit shape:       {shape_str}\n"
+            f"    - Circuits:            {n_circuits}\n"
+            f"    - Qubits:              {n_qubits}\n"
+            f"    - Moments (depth):     {n_moments}\n"
+            f"    - Encoding dimension:  {encoding_dim}\n"
+            f"    - Circuit shape:       {shape_str}\n"
             f"{'='*60}"
         )
 

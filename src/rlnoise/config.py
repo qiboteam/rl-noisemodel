@@ -163,7 +163,7 @@ class NoiseConfig(BaseModel):
 
                 # Add angle-dependent indicator
                 angle_dep = " (angle-dependent)" if noise.angle_dependent else ""
-                lines.append(f"      â€¢ {noise.noise_channel}: {param_str}{angle_dep}")
+                lines.append(f"      - {noise.noise_channel}: {param_str}{angle_dep}")
 
         lines.append(f"{'='*60}")
         return "\n".join(lines)
@@ -219,11 +219,11 @@ class DatasetConfig(BaseModel):
             f"\n{'='*50}\n"
             f"  DatasetConfig\n"
             f"{'='*50}\n"
-            f"    â€¢ Circuits:       {self.n_circuits}\n"
-            f"    â€¢ Qubits:         {self.qubits}\n"
-            f"    â€¢ Moments:        {self.moments}\n"
-            f"    â€¢ Type:           {circuit_type}\n"
-            f"    â€¢ Gates:          [{gates_str}]\n"
+            f"    - Circuits:       {self.n_circuits}\n"
+            f"    - Qubits:         {self.qubits}\n"
+            f"    - Moments:        {self.moments}\n"
+            f"    - Type:           {circuit_type}\n"
+            f"    - Gates:          [{gates_str}]\n"
             f"{'='*50}\n"
         )
 
