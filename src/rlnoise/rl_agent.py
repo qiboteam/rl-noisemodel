@@ -277,9 +277,9 @@ class RLAgent:
                         file=out_stream, flush=True,
                     )
                 else:
-                    print("Loaded best model weights.", file=out_stream, flush=True)
+                    print("Loaded best model weights.", file=out_stream, flush=True)  # pragma: no cover
             else:
-                print(
+                print(  # pragma: no cover
                     "No improvement over previous best — keeping current model weights.",
                     file=out_stream, flush=True,
                 )

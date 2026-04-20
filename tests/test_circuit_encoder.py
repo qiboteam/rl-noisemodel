@@ -180,3 +180,51 @@ class TestCircuitEncoder:
         # Should have CZ gate
         has_cz = any(type(gate) == gates.CZ for gate in circuit.queue)
         assert has_cz
+
+    def test_array_to_circuit_mixed_moment_cz_and_single_qubit(self, encoder):
+        """Regression test: CZ gate and single-qubit gate in the same moment.
+
+        When CZ(0,2) and RX(1) occupy the same circuit moment, array_to_circuit
+        must emit both the two-qubit gate AND the single-qubit gate.
+        Previously only the CZ pair was processed and RX(1) was silently dropped.
+        """
+        enc3 = CircuitEncoder(primitive_gates=["rx", "rz", "cz"])
+        circuit = Circuit(3, density_matrix=True)
+        circuit.add(gates.CZ(0, 2))   # qubits 0,2 occupied in moment 0
+        circuit.add(gates.RX(1, 0.5)) # qubit 1 free -> placed in same moment 0
+
+        # Confirm qibo really puts them in the same moment
+        assert len(circuit.queue.moments) == 1, "Expected CZ and RX to share one moment"
+
+        arr = enc3.circuit_to_array(circuit)
+        assert arr.shape[0] == 1  # one moment
+
+        reconstructed = enc3.array_to_circuit(arr)
+        gate_types = [type(g) for g in reconstructed.queue]
+
+        assert gates.CZ in gate_types, "CZ gate missing from reconstructed circuit"
+        assert gates.RX in gate_types, "RX gate missing from reconstructed circuit (regression)"
+
+    def test_array_to_circuit_mixed_moment_fidelity(self, encoder):
+        """Regression test: circuit reconstructed from mixed moment achieves high fidelity.
+
+        The density matrix of a circuit with CZ(0,2)+RX(1) in the same moment,
+        encoded and decoded through array_to_circuit, must be identical to the
+        original (within floating-point noise).
+        """
+        from qibo.quantum_info import fidelity as qibo_fidelity
+
+        enc3 = CircuitEncoder(primitive_gates=["rx", "rz", "cz"])
+        circuit = Circuit(3, density_matrix=True)
+        circuit.add(gates.CZ(0, 2))
+        circuit.add(gates.RX(1, 0.9))
+        circuit.add(gates.RZ(0, 0.4))
+
+        arr = enc3.circuit_to_array(circuit)
+        reconstructed = enc3.array_to_circuit(arr)
+
+        dm_original = circuit().state()
+        dm_reconstructed = reconstructed().state()
+
+        fid = float(qibo_fidelity(dm_original, dm_reconstructed))
+        assert fid > 0.9999, f"Reconstructed circuit fidelity {fid:.6f} too low (expected >0.9999)"

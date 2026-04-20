@@ -296,6 +296,11 @@ class ExperimentConfig(BaseModel):
         reward: Reward function configuration (optional)
         agent: Agent training configuration (optional)
         rb: Randomized benchmarking configuration (optional)
+        eval_n_circuits: Number of circuits in the held-out evaluation set
+        eval_depth: Circuit depth for evaluation circuits
+        eval_clifford: If True use Clifford angles for eval; False = non-Clifford
+        total_timesteps: Total PPO training timesteps
+        check_freq: Callback evaluation frequency (in env steps)
     """
 
     dataset: DatasetConfig
@@ -304,6 +309,11 @@ class ExperimentConfig(BaseModel):
     reward: Optional[RewardConfig] = None
     agent: Optional["AgentConfig"] = None
     rb: Optional[RandomizedBenchmarkingConfig] = None
+    eval_n_circuits: int = Field(default=200, gt=0)
+    eval_depth: int = Field(default=15, gt=0)
+    eval_clifford: bool = Field(default=False)
+    total_timesteps: int = Field(default=200_000, gt=0)
+    check_freq: int = Field(default=2_000, gt=0)
 
     @classmethod
     def from_json(cls, config_dict: dict) -> "ExperimentConfig":
@@ -321,7 +331,12 @@ class ExperimentConfig(BaseModel):
             gym_env=GymEnvConfig(**config_dict["gym_env"]) if config_dict.get("gym_env") else None,
             reward=RewardConfig(**config_dict["reward"]) if config_dict.get("reward") else None,
             agent=AgentConfig(**config_dict["agent"]) if config_dict.get("agent") else None,
-            rb=RandomizedBenchmarkingConfig(**config_dict["rb"]) if config_dict.get("rb") else None
+            rb=RandomizedBenchmarkingConfig(**config_dict["rb"]) if config_dict.get("rb") else None,
+            eval_n_circuits=config_dict.get("eval_n_circuits", 200),
+            eval_depth=config_dict.get("eval_depth", 15),
+            eval_clifford=config_dict.get("eval_clifford", False),
+            total_timesteps=config_dict.get("total_timesteps", 200_000),
+            check_freq=config_dict.get("check_freq", 2_000),
         )
 
     def to_json_file(self, filepath: str) -> None:

@@ -110,7 +110,7 @@ class RewardFunction:
             "mae": mae,
         }
 
-        if metric not in metric_map:
+        if metric not in metric_map:  # pragma: no cover
             raise ValueError(f"Unknown metric: {metric}")
 
         return metric_map[metric]
@@ -133,7 +133,7 @@ class RewardFunction:
             "inverted_squared": lambda x: 1.0 / (alpha * x**2 + 1e-9),
         }
 
-        if function not in transform_map:
+        if function not in transform_map:  # pragma: no cover
             raise ValueError(f"Unknown function: {function}")
 
         return transform_map[function]

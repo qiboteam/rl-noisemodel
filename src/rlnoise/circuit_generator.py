@@ -229,3 +229,103 @@ class CircuitGenerator:
             circuits = [self.generate_random_circuit() for _ in range(n_circuits)]
 
         return circuits
+
+
+# ---------------------------------------------------------------------------
+# Fixed benchmark circuits (3 qubits, RX / RZ / CZ primitive basis)
+# ---------------------------------------------------------------------------
+
+def grover_circuit() -> Circuit:
+    """Return a 3-qubit Grover search circuit targeting the |11x> subspace.
+
+    The circuit is expressed in the RX / RZ / CZ primitive gate basis so that
+    it can be processed by :class:`CircuitEncoder` and fed into the RL agent.
+    The third qubit is an ancilla.
+
+    Returns:
+        Qibo :class:`Circuit` with ``density_matrix=True``.
+    """
+    circ = Circuit(3, density_matrix=True)
+    # Hadamard on qubits 0 and 1  (H = RZ(π/2)·RX(π/2))
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RX(0, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    circ.add(gates.RX(1, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    # Initialise ancilla to |-> via X then H
+    circ.add(gates.RX(2, np.pi, trainable=False))
+    circ.add(gates.RZ(2, np.pi / 2, trainable=False))
+    circ.add(gates.RX(2, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(2, np.pi / 2, trainable=False))
+    # Toffoli (CCX) decomposition via CZ + RX rotations
+    circ.add(gates.CZ(1, 2))
+    circ.add(gates.RX(2, -np.pi / 4, trainable=False))
+    circ.add(gates.CZ(0, 2))
+    circ.add(gates.RX(2, np.pi / 4, trainable=False))
+    circ.add(gates.CZ(1, 2))
+    circ.add(gates.RX(2, -np.pi / 4, trainable=False))
+    circ.add(gates.CZ(0, 2))
+    circ.add(gates.RX(2, np.pi / 4, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 4, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    circ.add(gates.RX(1, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    circ.add(gates.CZ(0, 1))
+    circ.add(gates.RZ(0, np.pi / 4, trainable=False))
+    circ.add(gates.RX(1, -np.pi / 4, trainable=False))
+    circ.add(gates.CZ(0, 1))
+    # Grover diffusion operator
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RX(0, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RX(0, np.pi, trainable=False))
+    circ.add(gates.RX(1, np.pi, trainable=False))
+    circ.add(gates.CZ(0, 1))
+    circ.add(gates.RX(0, np.pi, trainable=False))
+    circ.add(gates.RX(1, np.pi, trainable=False))
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RX(0, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    circ.add(gates.RX(1, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    return circ
+
+
+def qft_circuit() -> Circuit:
+    """Return a 3-qubit Quantum Fourier Transform circuit.
+
+    The circuit is expressed in the RX / RZ / CZ primitive gate basis so that
+    it can be processed by :class:`CircuitEncoder` and fed into the RL agent.
+
+    Returns:
+        Qibo :class:`Circuit` with ``density_matrix=True``.
+    """
+    circ = Circuit(3, density_matrix=True)
+    # Initial Hadamard layer
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(2, np.pi / 2, trainable=False))
+    circ.add(gates.RX(0, np.pi / 2, trainable=False))
+    circ.add(gates.RX(1, np.pi / 2, trainable=False))
+    circ.add(gates.RX(2, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(0, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 2, trainable=False))
+    circ.add(gates.RZ(2, 3 * np.pi / 2, trainable=False))
+    # Controlled phase rotations
+    circ.add(gates.CZ(1, 2))
+    circ.add(gates.RX(1, -np.pi / 4, trainable=False))
+    circ.add(gates.CZ(1, 2))
+    circ.add(gates.RX(1, np.pi / 4, trainable=False))
+    circ.add(gates.RZ(2, np.pi / 8, trainable=False))
+    circ.add(gates.RZ(1, np.pi / 4, trainable=False))
+    circ.add(gates.CZ(0, 2))
+    circ.add(gates.RX(0, -np.pi / 8, trainable=False))
+    circ.add(gates.CZ(0, 2))
+    circ.add(gates.RX(0, np.pi / 8, trainable=False))
+    circ.add(gates.CZ(0, 1))
+    circ.add(gates.RX(0, -np.pi / 4, trainable=False))
+    circ.add(gates.CZ(0, 1))
+    circ.add(gates.RX(0, -np.pi / 4, trainable=False))
+    return circ

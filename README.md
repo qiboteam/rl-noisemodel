@@ -13,7 +13,7 @@ This package accompanies the following publication:
 > *Quantum Science and Technology*, 2025.
 > https://iopscience.iop.org/article/10.1088/2058-9565/ae1e98
 
-The original implementation used to obtain the published results is preserved in the `old/` directory for reproducibility. The current package in `src/rlnoise/` is a refactored, modular version of that codebase.
+The original implementation used to obtain the published results is preserved in the `old/` directory for reproducibility (code not manteined). The current package in `src/rlnoise/` is a refactored, modular version of that codebase.
 
 ## Authors
 
@@ -55,8 +55,27 @@ poetry install
 - Action space covering four noise parameters per qubit (coherent X/Z, reset, depolarizing)
 - Automatic train/validation split
 
+### Benchmarking
+- Randomized Benchmarking (RB): generate RB datasets, fit exponential decay, compare RL vs RB baseline
+- Structured circuit evaluation: measure agent accuracy on fixed circuits (Grover search, QFT)
+- Single-circuit inspection via `evaluate_circuit` to obtain per-model density matrices and metrics
+- `evaluate_on_dataset` for bulk evaluation on a held-out test set
+- Formatted summary tables for all benchmarking results
+
+### Agent Action Analysis
+- `collect_actions`: run the agent over a dataset and record every noise value it assigns
+- `noise_summary`: formatted table of mean/std/min/max per noise channel
+- Seven plotting utilities for deep inspection of agent behaviour:
+  - `plot_noise_distributions` — global histograms per noise channel
+  - `plot_noise_by_gate` — distributions split by gate type (RX / RZ / CZ)
+  - `plot_noise_by_qubit` — distributions split by qubit index
+  - `plot_spatial_noise` — mean noise vs circuit depth (moment position)
+  - `plot_spatial_noise_per_qubit` — per-qubit spatial profile for a chosen channel
+  - `plot_noise_correlation` — pairwise scatter matrix of all noise channels
+  - `plot_mean_noise_per_gate` — bar chart of mean ± std grouped by gate
+
 ### Development
-- 172 unit tests with 84% code coverage
+- 280+ unit tests with ≥ 90% code coverage
 - Pydantic models for configuration validation and type safety
 - Interactive Jupyter notebook examples
 
@@ -131,6 +150,58 @@ while not terminated:
     obs, reward, terminated, truncated, info = env.step(action)
 ```
 
+### Benchmarking Against Structured Circuits
+
+```python
+from rlnoise.benchmarking import evaluate_circuit, summarize_circuit_metrics, evaluate_on_dataset
+from rlnoise.circuit_generator import grover_circuit, qft_circuit
+
+# Fit RB decay from previously generated RB datasets
+from rlnoise.benchmarking import fit_rb_decay
+lambda_fit = fit_rb_decay(rb_datasets, encoder)
+
+# Evaluate agent on a single structured circuit
+result = evaluate_circuit(
+    circuit=grover_circuit(n_qubits=2),
+    encoder=encoder,
+    rl_agent=agent,
+    noise_model=noise_model,
+    lambda_rb=lambda_fit,
+    evaluate_mms=True,
+    evaluate_no_noise=True,
+)
+summarize_circuit_metrics(result)
+
+# Bulk evaluation on a held-out test set
+results = evaluate_on_dataset(agent, circuits_test, labels_test, verbose=True)
+print(f"Mean fidelity: {results['mean_fidelity']:.4f} ± {results['std_fidelity']:.4f}")
+```
+
+### Agent Action Analysis
+
+```python
+from rlnoise.analysis import (
+    collect_actions, noise_summary,
+    plot_noise_distributions, plot_noise_by_gate,
+    plot_noise_by_qubit, plot_spatial_noise,
+    plot_noise_correlation, plot_mean_noise_per_gate,
+)
+
+# Collect noise assignments the agent makes across the full dataset
+data = collect_actions(agent, dataset.circuits, verbose=True)
+
+# Print mean ± std table for every noise channel
+print(noise_summary(data))
+
+# Save all diagnostic plots
+plot_noise_distributions(data, filepath="results/dist.png")
+plot_noise_by_gate(data, filepath="results/by_gate.png")
+plot_noise_by_qubit(data, filepath="results/by_qubit.png")
+plot_spatial_noise(data, filepath="results/spatial.png")
+plot_noise_correlation(data, filepath="results/correlation.png")
+plot_mean_noise_per_gate(data, filepath="results/mean_per_gate.png")
+```
+
 ## Documentation
 
 ### Configuration
@@ -190,12 +261,27 @@ loaded = CircuitDataset.load("path/to/dataset.npz")
 
 ## Examples
 
-Interactive Jupyter notebooks are provided in the `examples/` directory:
+Interactive Jupyter notebooks are provided in the `examples/` directory.
+Run them in order — each notebook depends on outputs produced by the previous one:
 
-- `dataset_generation.ipynb` -- dataset generation, multi-qubit circuits, and I/O
-- `gym_environment.ipynb` -- Gymnasium environment usage and reward configuration
-- `training.ipynb` -- RL agent training with Stable-Baselines3
-- `benchmarking.ipynb` -- randomized benchmarking evaluation
+| Notebook | Description |
+|---|---|
+| `01_dataset_generation.ipynb` | Dataset generation, multi-qubit circuits, and I/O |
+| `02_gym_environment.ipynb` | Gymnasium environment usage and reward configuration |
+| `03_training.ipynb` | RL agent training with Stable-Baselines3 |
+| `04_benchmarking.ipynb` | Randomized benchmarking and structured circuit evaluation |
+| `05_agent_analysis.ipynb` | Explainable AI — decoding the agent's noise decisions |
+
+Datasets, trained agents, and result plots are stored under `examples/`:
+
+```
+examples/
+  datasets/                    # Canonical datasets (generated by 01)
+  agents/1q/ agents/3q/        # Saved model weights (generated by 03)
+  results/training/            # Training history and dashboards
+  results/benchmarking/        # RB decay, comparison, and circuit plots
+  results/analysis/            # Agent action analysis plots
+```
 
 ## Project Structure
 
@@ -212,11 +298,12 @@ rl-noisemodel/
 |   |-- neural_network.py      # CNN feature extractor
 |   |-- callback.py            # Training callback
 |   |-- rl_agent.py            # PPO-based RL agent
-|   |-- benchmarking.py        # Randomized benchmarking
-|   `-- visualization.py       # Plotting utilities
-|-- tests/                     # Unit tests
-|-- examples/                  # Jupyter notebooks
-|-- experiments/               # Experiment scripts
+|   |-- benchmarking.py        # Benchmarking utilities
+|   |-- visualization.py       # Plotting utilities
+|   `-- analysis.py            # Agent action analysis
+|-- tests/                     # Unit tests (280+, ≥97% coverage)
+|-- examples/                  # Jupyter notebooks (01–05)
+|-- experiments/               # Experiment scripts (1qubit, 3qubit_high, 3qubit_low)
 |-- old/                       # Original implementation (archived)
 |-- pyproject.toml
 `-- README.md

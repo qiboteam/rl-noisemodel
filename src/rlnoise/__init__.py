@@ -17,6 +17,8 @@ from rlnoise.dataset import (
 )
 from rlnoise.circuit_generator import (
     CircuitGenerator,
+    grover_circuit,
+    qft_circuit,
 )
 from rlnoise.circuit_encoder import (
     CircuitEncoder,
@@ -44,12 +46,34 @@ from rlnoise.rl_agent import (
 from rlnoise.visualization import (
     plot_training_dashboard,
     plot_benchmarking_results,
+    plot_rb_decay,
+    plot_shots,
+    plot_density_matrix_heatmap,
+    plot_circuit_metrics,
 )
 from rlnoise.benchmarking import (
     generate_rb_circuits,
     fit_rb_decay,
     evaluate_benchmarks,
+    evaluate_circuit,
+    evaluate_on_dataset,
     maximally_mixed_state,
+    summarize_benchmarks,
+    summarize_rb_parameters,
+    summarize_circuit_metrics,
+)
+from rlnoise.analysis import (
+    collect_actions,
+    noise_summary,
+    plot_noise_distributions,
+    plot_noise_by_gate,
+    plot_noise_by_qubit,
+    plot_spatial_noise,
+    plot_spatial_noise_per_qubit,
+    plot_noise_correlation,
+    plot_mean_noise_per_gate,
+    NOISE_CHANNELS,
+    NOISE_LABELS,
 )
 
 __all__ = [
@@ -79,12 +103,36 @@ __all__ = [
     "CNNFeaturesExtractor",
     "TrainingCallback",
     "RLAgent",
+    # Circuit generation
+    "grover_circuit",
+    "qft_circuit",
     # Visualization
     "plot_training_dashboard",
     "plot_benchmarking_results",
+    "plot_rb_decay",
+    "plot_shots",
+    "plot_density_matrix_heatmap",
+    "plot_circuit_metrics",
     # Benchmarking
     "generate_rb_circuits",
     "fit_rb_decay",
     "evaluate_benchmarks",
+    "evaluate_circuit",
+    "evaluate_on_dataset",
     "maximally_mixed_state",
+    "summarize_benchmarks",
+    "summarize_rb_parameters",
+    "summarize_circuit_metrics",
+    # Analysis / Explainability
+    "collect_actions",
+    "noise_summary",
+    "plot_noise_distributions",
+    "plot_noise_by_gate",
+    "plot_noise_by_qubit",
+    "plot_spatial_noise",
+    "plot_spatial_noise_per_qubit",
+    "plot_noise_correlation",
+    "plot_mean_noise_per_gate",
+    "NOISE_CHANNELS",
+    "NOISE_LABELS",
 ]

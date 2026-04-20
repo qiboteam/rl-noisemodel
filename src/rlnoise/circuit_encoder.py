@@ -180,17 +180,21 @@ class CircuitEncoder:
         for moment_idx in range(n_moments):
             moment = array[moment_idx]
 
-            # Handle two-qubit gates
+            # Identify qubits that are part of a two-qubit (CZ) gate
             cz_qubits = []
             for qubit_idx in range(n_qubits):
                 if moment[qubit_idx, self.IDX_CZ] != 0:
                     cz_qubits.append(qubit_idx)
 
             if len(cz_qubits) == 2:
-                # Process two-qubit gate
+                # Process the two-qubit gate for the CZ pair
                 self._add_two_qubit_gate(circuit, moment, cz_qubits)
+                # Also process any single-qubit gates on non-CZ qubits in this moment
+                for qubit_idx in range(n_qubits):
+                    if qubit_idx not in cz_qubits:
+                        self._add_single_qubit_gate(circuit, moment[qubit_idx], qubit_idx)
             else:
-                # Process single-qubit gates
+                # Process single-qubit gates for all qubits
                 for qubit_idx in range(n_qubits):
                     self._add_single_qubit_gate(circuit, moment[qubit_idx], qubit_idx)
 
