@@ -83,6 +83,7 @@ def main() -> None:
 
     # ── Save raw results ──────────────────────────────────────────────────────
     save_path = dirs["results"] / "rb" / "rb_results.npz"
+    save_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez(
         str(save_path),
         depths=np.array(results["depths"]),

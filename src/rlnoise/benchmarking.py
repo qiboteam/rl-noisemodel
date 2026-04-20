@@ -10,6 +10,7 @@ Provides tools to:
 from typing import Any, Dict, List, Optional, Tuple
 
 import json
+from pathlib import Path
 import numpy as np
 from qibo.models import Circuit
 from qibo.noise import DepolarizingError, NoiseModel
@@ -420,7 +421,6 @@ def save_rb_fit(a: float, lambda_rb: float, filepath: str) -> None:
         filepath: Destination path.  The ``.json`` extension is added
             automatically when not present.
     """
-    from pathlib import Path
     if not filepath.endswith(".json"):
         filepath = filepath + ".json"
     Path(filepath).parent.mkdir(parents=True, exist_ok=True)

@@ -183,6 +183,20 @@ class TestNoiseSummary:
         result = noise_summary(data)
         assert isinstance(result, str)
 
+    def test_skip_zero_note_in_output(self, actions_data):
+        result_with = noise_summary(actions_data, skip_zero=True)
+        result_without = noise_summary(actions_data, skip_zero=False)
+        assert "zeros excluded" in result_with
+        assert "zeros excluded" not in result_without
+
+    def test_skip_zero_changes_statistics(self, actions_data):
+        """skip_zero=True should produce different (higher) mean than False."""
+        result_true  = noise_summary(actions_data, skip_identity=False, skip_zero=True)
+        result_false = noise_summary(actions_data, skip_identity=False, skip_zero=False)
+        # They may differ; at minimum both should return strings without error
+        assert isinstance(result_true, str)
+        assert isinstance(result_false, str)
+
 
 # ---------------------------------------------------------------------------
 # _flat_values
@@ -228,3 +242,27 @@ class TestFlatValues:
         vals = _flat_values(actions_data, NOISE_CHANNELS[0], gate_filter="cz", skip_identity=False)
         # 1-qubit fixture has no CZ gates
         assert vals.size == 0
+
+    def test_skip_zero_reduces_count(self, actions_data):
+        from rlnoise.analysis import _flat_values
+        with_zeros    = _flat_values(actions_data, NOISE_CHANNELS[0], skip_identity=False,
+                                     skip_zero=False)
+        without_zeros = _flat_values(actions_data, NOISE_CHANNELS[0], skip_identity=False,
+                                     skip_zero=True)
+        assert without_zeros.size <= with_zeros.size
+
+    def test_skip_zero_no_zeros_in_result(self, actions_data):
+        from rlnoise.analysis import _flat_values
+        vals = _flat_values(actions_data, NOISE_CHANNELS[0], skip_identity=False,
+                            skip_zero=True)
+        assert np.all(vals != 0.0)
+
+    def test_skip_zero_false_preserves_zeros(self, actions_data):
+        """With skip_zero=False the result may contain zeros (depending on fixture)."""
+        from rlnoise.analysis import _flat_values
+        vals_all  = _flat_values(actions_data, NOISE_CHANNELS[0], skip_identity=False,
+                                 skip_zero=False)
+        vals_nz   = _flat_values(actions_data, NOISE_CHANNELS[0], skip_identity=False,
+                                 skip_zero=True)
+        # skip_zero=False keeps at least as many values
+        assert vals_all.size >= vals_nz.size

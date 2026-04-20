@@ -32,7 +32,7 @@ def main() -> None:
     cfg, dirs = load_config(__file__)
 
     # ── Load training dataset ─────────────────────────────────────────────────
-    dataset_path = dirs["results"] / "dataset.npz"
+    dataset_path = dirs["results"] / "dataset" / "dataset.npz"
     if not dataset_path.exists():
         raise FileNotFoundError(
             f"Training dataset not found at {dataset_path}\n"

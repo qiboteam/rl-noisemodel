@@ -175,6 +175,7 @@ def collect_actions(  # pylint: disable=too-many-locals
 def noise_summary(  # pylint: disable=too-many-locals
     actions_data: Dict[str, Any],
     skip_identity: bool = True,
+    skip_zero: bool = True,
 ) -> str:
     """Return a formatted table of mean ± std for each noise channel.
 
@@ -182,21 +183,31 @@ def noise_summary(  # pylint: disable=too-many-locals
         actions_data: Output of :func:`collect_actions`.
         skip_identity: If ``True``, exclude (moment, qubit) positions where
             no gate was applied (gate_type == ``"id"``).
+        skip_zero: If ``True``, exclude positions where the agent output
+            exactly zero for the channel being summarised.
 
     Returns:
         Multi-line string table.
     """
-    mask = np.ones(
+    base_mask = np.ones(
         (actions_data["n_circuits"], actions_data["n_moments"], actions_data["n_qubits"]),
         dtype=bool,
     )
     if skip_identity:
-        mask = actions_data["gate_type"] != "id"
+        base_mask = actions_data["gate_type"] != "id"
 
     rows = []
     for ch in NOISE_CHANNELS:
-        vals = actions_data[ch][mask]
-        rows.append((NOISE_LABELS[ch], vals.mean(), vals.std(), vals.min(), vals.max()))
+        ch_mask = base_mask.copy()
+        if skip_zero:
+            ch_mask &= actions_data[ch] != 0.0
+        vals = actions_data[ch][ch_mask]
+        if vals.size == 0:
+            rows.append((NOISE_LABELS[ch], float("nan"), float("nan"),
+                         float("nan"), float("nan")))
+        else:
+            rows.append((NOISE_LABELS[ch], vals.mean(), vals.std(),
+                         vals.min(), vals.max()))
 
     col_w = 22
     header = (f"{'Channel':<{col_w}} {'Mean':>10} {'Std':>10} "
@@ -208,7 +219,12 @@ def noise_summary(  # pylint: disable=too-many-locals
             f"{label:<{col_w}} {mean:>10.5f} {std:>10.5f} {mn:>10.5f} {mx:>10.5f}"
         )
     lines.append(sep)
-    skip_note = " (identity positions excluded)" if skip_identity else ""
+    skip_parts = []
+    if skip_identity:
+        skip_parts.append("identity excluded")
+    if skip_zero:
+        skip_parts.append("zeros excluded")
+    skip_note = f" ({', '.join(skip_parts)})" if skip_parts else ""
     lines.append(f"Circuits: {actions_data['n_circuits']}  "
                  f"Moments: {actions_data['n_moments']}  "
                  f"Qubits: {actions_data['n_qubits']}{skip_note}")
@@ -226,12 +242,13 @@ def _save_and_return(fig: plt.Figure, filepath: Optional[str]) -> plt.Figure:  #
     return fig
 
 
-def _flat_values(
+def _flat_values(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     actions_data: Dict[str, Any],
     channel: str,
     gate_filter: Optional[str] = None,
     qubit_filter: Optional[int] = None,
     skip_identity: bool = True,
+    skip_zero: bool = True,
 ) -> np.ndarray:
     """Return flat array of noise values with optional filtering."""
     vals = actions_data[channel]      # (n_c, n_m, n_q)
@@ -246,6 +263,8 @@ def _flat_values(
         qubit_mask = np.zeros_like(vals, dtype=bool)
         qubit_mask[:, :, qubit_filter] = True
         mask &= qubit_mask
+    if skip_zero:
+        mask &= vals != 0.0
 
     return vals[mask].ravel()
 
@@ -254,9 +273,10 @@ def _flat_values(
 # Plot 1 — Global noise distributions
 # ---------------------------------------------------------------------------
 
-def plot_noise_distributions(  # pragma: no cover  # pylint: disable=too-many-locals
+def plot_noise_distributions(  # pragma: no cover  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     actions_data: Dict[str, Any],
     skip_identity: bool = True,
+    skip_zero: bool = True,
     bins: int = 40,
     figsize: Optional[tuple] = None,
     filepath: Optional[str] = None,
@@ -266,6 +286,7 @@ def plot_noise_distributions(  # pragma: no cover  # pylint: disable=too-many-lo
     Args:
         actions_data: Output of :func:`collect_actions`.
         skip_identity: Exclude identity-gate positions.
+        skip_zero: Exclude positions where the agent output zero.
         bins: Number of histogram bins.
         figsize: Figure size; defaults to ``(14, 4)``.
         filepath: Save path for the figure (optional).
@@ -279,7 +300,8 @@ def plot_noise_distributions(  # pragma: no cover  # pylint: disable=too-many-lo
     fig, axes = plt.subplots(1, 4, figsize=figsize)
 
     for ax, ch in zip(axes, NOISE_CHANNELS):
-        vals = _flat_values(actions_data, ch, skip_identity=skip_identity)
+        vals = _flat_values(actions_data, ch, skip_identity=skip_identity,
+                            skip_zero=skip_zero)
         mean, std = vals.mean(), vals.std()
         color = NOISE_COLORS[ch]
 
@@ -292,9 +314,14 @@ def plot_noise_distributions(  # pragma: no cover  # pylint: disable=too-many-lo
         ax.set_title(NOISE_LABELS[ch])
         ax.legend(fontsize=9)
 
-    n_id = " (identity excluded)" if skip_identity else ""
+    skip_parts = []
+    if skip_identity:
+        skip_parts.append("identity excluded")
+    if skip_zero:
+        skip_parts.append("zeros excluded")
+    skip_note = f" ({', '.join(skip_parts)})" if skip_parts else ""
     n_c = actions_data["n_circuits"]
-    fig.suptitle(f"Agent noise distributions — {n_c} circuits{n_id}", fontsize=13)
+    fig.suptitle(f"Agent noise distributions — {n_c} circuits{skip_note}", fontsize=13)
     fig.tight_layout()
     return _save_and_return(fig, filepath)
 
@@ -305,6 +332,7 @@ def plot_noise_distributions(  # pragma: no cover  # pylint: disable=too-many-lo
 
 def plot_noise_by_gate(  # pragma: no cover  # pylint: disable=too-many-locals
     actions_data: Dict[str, Any],
+    skip_zero: bool = True,
     bins: int = 30,
     figsize: Optional[tuple] = None,
     filepath: Optional[str] = None,
@@ -316,6 +344,7 @@ def plot_noise_by_gate(  # pragma: no cover  # pylint: disable=too-many-locals
 
     Args:
         actions_data: Output of :func:`collect_actions`.
+        skip_zero: Exclude positions where the agent output zero.
         bins: Number of histogram bins.
         figsize: Figure size; auto-computed if ``None``.
         filepath: Save path for the figure (optional).
@@ -338,7 +367,8 @@ def plot_noise_by_gate(  # pragma: no cover  # pylint: disable=too-many-locals
     for r, ch in enumerate(NOISE_CHANNELS):
         for c, gate in enumerate(present_gates):
             ax = axes[r][c]
-            vals = _flat_values(actions_data, ch, gate_filter=gate, skip_identity=True)
+            vals = _flat_values(actions_data, ch, gate_filter=gate,
+                                skip_identity=True, skip_zero=skip_zero)
             if vals.size == 0:
                 ax.set_visible(False)
                 continue
@@ -361,9 +391,10 @@ def plot_noise_by_gate(  # pragma: no cover  # pylint: disable=too-many-locals
 # Plot 3 — Noise breakdown by qubit
 # ---------------------------------------------------------------------------
 
-def plot_noise_by_qubit(  # pragma: no cover  # pylint: disable=too-many-locals
+def plot_noise_by_qubit(  # pragma: no cover  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     actions_data: Dict[str, Any],
     skip_identity: bool = True,
+    skip_zero: bool = True,
     bins: int = 30,
     figsize: Optional[tuple] = None,
     filepath: Optional[str] = None,
@@ -375,6 +406,7 @@ def plot_noise_by_qubit(  # pragma: no cover  # pylint: disable=too-many-locals
     Args:
         actions_data: Output of :func:`collect_actions`.
         skip_identity: Exclude identity-gate positions.
+        skip_zero: Exclude positions where the agent output zero.
         bins: Number of histogram bins.
         figsize: Figure size; auto-computed if ``None``.
         filepath: Save path for the figure (optional).
@@ -397,7 +429,7 @@ def plot_noise_by_qubit(  # pragma: no cover  # pylint: disable=too-many-locals
         for q in range(n_qubits):
             ax = axes[r][q]
             vals = _flat_values(actions_data, ch, qubit_filter=q,
-                                skip_identity=skip_identity)
+                                skip_identity=skip_identity, skip_zero=skip_zero)
             if vals.size == 0:
                 ax.set_visible(False)
                 continue
@@ -420,9 +452,10 @@ def plot_noise_by_qubit(  # pragma: no cover  # pylint: disable=too-many-locals
 # Plot 4 — Spatial noise profile (noise vs moment position)
 # ---------------------------------------------------------------------------
 
-def plot_spatial_noise(  # pragma: no cover  # pylint: disable=too-many-locals
+def plot_spatial_noise(  # pragma: no cover  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     actions_data: Dict[str, Any],
     skip_identity: bool = True,
+    skip_zero: bool = True,
     figsize: Optional[tuple] = None,
     filepath: Optional[str] = None,
 ) -> plt.Figure:
@@ -434,6 +467,7 @@ def plot_spatial_noise(  # pragma: no cover  # pylint: disable=too-many-locals
     Args:
         actions_data: Output of :func:`collect_actions`.
         skip_identity: Exclude identity positions from statistics.
+        skip_zero: Exclude positions where the agent output zero.
         figsize: Figure size; defaults to ``(14, 4)``.
         filepath: Save path for the figure (optional).
 
@@ -457,12 +491,13 @@ def plot_spatial_noise(  # pragma: no cover  # pylint: disable=too-many-locals
 
         for m in range(n_moments):
             slice_m = vals[:, m, :]        # (n_circuits, n_qubits)
+            mask = np.ones_like(slice_m, dtype=bool)
             if skip_identity:
                 gt_m = gate_type[:, m, :]  # (n_circuits, n_qubits)
-                mask = gt_m != "id"
-                data = slice_m[mask]
-            else:
-                data = slice_m.ravel()
+                mask &= gt_m != "id"
+            if skip_zero:
+                mask &= slice_m != 0.0
+            data = slice_m[mask]
 
             if data.size > 0:
                 means[m] = data.mean()
@@ -486,10 +521,11 @@ def plot_spatial_noise(  # pragma: no cover  # pylint: disable=too-many-locals
 # Plot 5 — Per-qubit spatial noise profile
 # ---------------------------------------------------------------------------
 
-def plot_spatial_noise_per_qubit(  # pragma: no cover  # pylint: disable=too-many-locals
+def plot_spatial_noise_per_qubit(  # pragma: no cover  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     actions_data: Dict[str, Any],
     channel: str = "depol",
     skip_identity: bool = True,
+    skip_zero: bool = True,
     figsize: Optional[tuple] = None,
     filepath: Optional[str] = None,
 ) -> plt.Figure:
@@ -500,6 +536,7 @@ def plot_spatial_noise_per_qubit(  # pragma: no cover  # pylint: disable=too-man
         channel: One of ``"epsilon_x"``, ``"epsilon_z"``, ``"reset"``,
             ``"depol"``.
         skip_identity: Exclude identity positions.
+        skip_zero: Exclude positions where the agent output zero.
         figsize: Figure size; defaults to ``(8, 4)``.
         filepath: Save path for the figure (optional).
 
@@ -527,10 +564,13 @@ def plot_spatial_noise_per_qubit(  # pragma: no cover  # pylint: disable=too-man
         means = np.zeros(n_moments)
         stds  = np.zeros(n_moments)
         for m in range(n_moments):
-            data = vals[:, m, q]
+            data_m = vals[:, m, q]
+            mask = np.ones_like(data_m, dtype=bool)
             if skip_identity:
-                mask = gate_type[:, m, q] != "id"
-                data = data[mask]
+                mask &= gate_type[:, m, q] != "id"
+            if skip_zero:
+                mask &= data_m != 0.0
+            data = data_m[mask]
             if data.size > 0:
                 means[m] = data.mean()
                 stds[m]  = data.std()
@@ -552,9 +592,10 @@ def plot_spatial_noise_per_qubit(  # pragma: no cover  # pylint: disable=too-man
 # Plot 6 — Noise correlation scatter matrix
 # ---------------------------------------------------------------------------
 
-def plot_noise_correlation(  # pragma: no cover  # pylint: disable=too-many-locals
+def plot_noise_correlation(  # pragma: no cover  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     actions_data: Dict[str, Any],
     skip_identity: bool = True,
+    skip_zero: bool = True,
     max_points: int = 3000,
     figsize: Optional[tuple] = None,
     filepath: Optional[str] = None,
@@ -567,6 +608,8 @@ def plot_noise_correlation(  # pragma: no cover  # pylint: disable=too-many-loca
     Args:
         actions_data: Output of :func:`collect_actions`.
         skip_identity: Exclude identity positions.
+        skip_zero: Exclude positions where all channels are zero.  A shared
+            mask is used so all channels remain aligned for scatter plots.
         max_points: Subsample to at most this many scatter points (for speed).
         figsize: Figure size; defaults to ``(12, 12)``.
         filepath: Save path for the figure (optional).
@@ -578,15 +621,23 @@ def plot_noise_correlation(  # pragma: no cover  # pylint: disable=too-many-loca
         figsize = (12, 12)
 
     n = len(NOISE_CHANNELS)
-    mask = actions_data["gate_type"] != "id" if skip_identity else None
+    shape = (
+        actions_data["n_circuits"],
+        actions_data["n_moments"],
+        actions_data["n_qubits"],
+    )
+    combined_mask = np.ones(shape, dtype=bool)
+    if skip_identity:
+        combined_mask &= actions_data["gate_type"] != "id"
+    if skip_zero:
+        any_nonzero = np.zeros(shape, dtype=bool)
+        for _ch in NOISE_CHANNELS:
+            any_nonzero |= actions_data[_ch] != 0.0
+        combined_mask &= any_nonzero
 
     data_flat: Dict[str, np.ndarray] = {}
     for ch in NOISE_CHANNELS:
-        arr = actions_data[ch]
-        if mask is not None:
-            data_flat[ch] = arr[mask].ravel()
-        else:
-            data_flat[ch] = arr.ravel()
+        data_flat[ch] = actions_data[ch][combined_mask].ravel()
 
     # Subsample
     n_pts = len(data_flat[NOISE_CHANNELS[0]])
@@ -624,6 +675,7 @@ def plot_noise_correlation(  # pragma: no cover  # pylint: disable=too-many-loca
 
 def plot_mean_noise_per_gate(  # pragma: no cover  # pylint: disable=too-many-locals
     actions_data: Dict[str, Any],
+    skip_zero: bool = True,
     figsize: Optional[tuple] = None,
     filepath: Optional[str] = None,
 ) -> plt.Figure:
@@ -634,6 +686,7 @@ def plot_mean_noise_per_gate(  # pragma: no cover  # pylint: disable=too-many-lo
 
     Args:
         actions_data: Output of :func:`collect_actions`.
+        skip_zero: Exclude positions where the agent output zero.
         figsize: Figure size; defaults to ``(12, 5)``.
         filepath: Save path for the figure (optional).
 
@@ -653,7 +706,8 @@ def plot_mean_noise_per_gate(  # pragma: no cover  # pylint: disable=too-many-lo
     for ax, ch in zip(axes, NOISE_CHANNELS):
         means, stds = [], []
         for gate in present_gates:
-            v = _flat_values(actions_data, ch, gate_filter=gate, skip_identity=True)
+            v = _flat_values(actions_data, ch, gate_filter=gate,
+                             skip_identity=True, skip_zero=skip_zero)
             means.append(v.mean() if v.size > 0 else 0.0)
             stds.append(v.std()  if v.size > 0 else 0.0)
 
