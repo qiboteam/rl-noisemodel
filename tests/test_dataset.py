@@ -257,3 +257,24 @@ class TestDatasetStrAndVerbose:
         gen = DatasetGenerator.from_config(exp)
         assert gen.dataset_config == config
         assert gen.noise_config == noise
+
+    def test_noise_gate_not_in_primitive_gates_raises(self):
+        """DatasetGenerator raises ValueError when a noise gate is not in primitive_gates."""
+        config = DatasetConfig(
+            n_circuits=1, qubits=1, moments=3, primitive_gates=["rx"]
+        )
+        noise_config = NoiseConfig(noise_list=[
+            GateSpecificNoise(gate="rz", noise_channel="depolarizing", noise_parameter=0.01),
+        ])
+        with pytest.raises(ValueError, match="not in primitive_gates"):
+            DatasetGenerator(config, noise_config)
+
+    def test_generate_rb_dataset_verbose(self):
+        """generate_rb_dataset with verbose=True prints progress without error."""
+        config = DatasetConfig(n_circuits=2, qubits=1, moments=3, clifford=True)
+        noise_config = NoiseConfig(noise_list=[])
+        gen = DatasetGenerator(config, noise_config)
+        rb_datasets = gen.generate_rb_dataset(
+            start=3, stop=6, step=3, n_circuits_per_depth=2, verbose=True
+        )
+        assert len(rb_datasets) == 1

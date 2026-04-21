@@ -243,3 +243,18 @@ class TestCircuitGenerator:
         circuit = generator.generate_random_circuit()
         assert isinstance(circuit, Circuit)
         assert circuit.nqubits == 2
+
+    def test_unknown_gate_type_in_random_generation(self, generator_1q):
+        """_generate_random_gate raises ValueError for unknown gate type."""
+        generator_1q.primitive_gates = ["unknown_xyz"]
+        with pytest.raises(ValueError, match="Unknown gate type"):
+            generator_1q._generate_random_gate()
+
+    def test_decompose_primitive_gate(self, generator_1q):
+        """_decompose_gate passes primitive gates through unchanged."""
+        raw = Circuit(1, density_matrix=True)
+        raw.add(gates.RX(0, theta=np.pi / 4, trainable=False))
+        out = Circuit(1, density_matrix=True)
+        generator_1q._decompose_gate(raw.queue[0], out)
+        assert len(out.queue) == 1
+        assert type(out.queue[0]) == gates.RX

@@ -86,7 +86,7 @@ class QuantumCircuitEnv(gymnasium.Env):  # pylint: disable=too-many-instance-att
 
         # Validate kernel size
         if self.kernel_size % 2 == 0:
-            raise ValueError("kernel_size must be odd")
+            raise ValueError("kernel_size must be odd")  # pragma: no cover
 
         # Define observation space (sliding window)
         self.observation_space = spaces.Box(

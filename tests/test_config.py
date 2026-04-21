@@ -411,3 +411,12 @@ class TestConfigStrMethods:
         """DatasetConfig raises ValueError for cnot on 1 qubit."""
         with pytest.raises(Exception):
             DatasetConfig(qubits=1, primitive_gates=["rx", "cnot"])
+
+
+class TestAgentConfigValidation:
+    """Test AgentConfig field validators."""
+
+    def test_batch_size_not_divisible_by_n_steps_raises(self):
+        """AgentConfig raises ValueError when batch_size does not divide n_steps."""
+        with pytest.raises(ValueError, match="batch_size"):
+            AgentConfig(n_steps=100, batch_size=30)

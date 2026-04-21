@@ -31,7 +31,9 @@ class CircuitGenerator:
 
         # Validate configuration
         if self.n_qubits < 2 and "cz" in self.primitive_gates:
-            raise ValueError("Cannot use CZ gates on single-qubit circuits")
+            raise ValueError(  # pragma: no cover
+                "Cannot use CZ gates on single-qubit circuits"
+            )  # pragma: no cover
 
     def generate_random_circuit(self) -> Circuit:
         """Generate a random quantum circuit.

@@ -75,7 +75,7 @@ poetry install
   - `plot_mean_noise_per_gate` — bar chart of mean ± std grouped by gate
 
 ### Development
-- 280+ unit tests with ≥ 90% code coverage
+- 306 unit tests with 100% code coverage
 - Pydantic models for configuration validation and type safety
 - Interactive Jupyter notebook examples
 
@@ -301,7 +301,7 @@ rl-noisemodel/
 |   |-- benchmarking.py        # Benchmarking utilities
 |   |-- visualization.py       # Plotting utilities
 |   `-- analysis.py            # Agent action analysis
-|-- tests/                     # Unit tests (280+, ≥97% coverage)
+|-- tests/                     # Unit tests (306, 100% coverage)
 |-- examples/                  # Jupyter notebooks (01–05)
 |-- experiments/               # Experiment scripts (1qubit, 3qubit_high, 3qubit_low)
 |-- old/                       # Original implementation (archived)

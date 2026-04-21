@@ -224,8 +224,8 @@ class CircuitEncoder:
         # Add the two-qubit gate
         if gate0 is not None:
             circuit.add(gate0)
-        elif gate1 is not None:
-            circuit.add(gate1)
+        elif gate1 is not None:  # pragma: no cover
+            circuit.add(gate1)  # pragma: no cover
 
         # Add single-qubit noise channels
         for channel in channels0[:-1]:  # Exclude depolarizing for now

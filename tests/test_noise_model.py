@@ -1,5 +1,6 @@
 """Unit tests for noise model."""
 
+import numpy as np
 import pytest
 from qibo import gates
 from qibo.models import Circuit
@@ -218,8 +219,28 @@ class TestQuantumNoiseModel:
         # Should raise error: angle_dependent only for coherent errors
         with pytest.raises(ValueError, match="angle_dependent can only be used"):
             GateSpecificNoise(
-                gate="rx", 
-                noise_channel="depolarizing", 
-                noise_parameter=0.1, 
+                gate="rx",
+                noise_channel="depolarizing",
+                noise_parameter=0.1,
                 angle_dependent=True
             )
+
+    def test_coherent_x_fixed_noise(self):
+        """Coherent X noise with angle_dependent=False uses the fixed parameter (else branch)."""
+        config = NoiseConfig(noise_list=[
+            GateSpecificNoise(
+                gate="rx", noise_channel="coherent_x",
+                noise_parameter=0.05, angle_dependent=False,
+            ),
+        ])
+        model = QuantumNoiseModel(config, qubits=1)
+        circuit = Circuit(1, density_matrix=True)
+        # Use theta=0.5 so angle-dependent would give 0.05*0.5=0.025, not 0.05
+        circuit.add(gates.RX(0, theta=0.5))
+        noisy_circuit = model.apply(circuit)
+        # Two RX gates total: original (theta=0.5) + noise (theta=0.05)
+        rx_gates = [g for g in noisy_circuit.queue if type(g) == gates.RX]
+        assert len(rx_gates) == 2
+        thetas = sorted(g.parameters[0] for g in rx_gates)
+        assert np.isclose(thetas[0], 0.05)  # fixed noise parameter
+        assert np.isclose(thetas[1], 0.5)   # original gate
