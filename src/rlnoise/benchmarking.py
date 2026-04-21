@@ -654,8 +654,10 @@ def evaluate_on_dataset(  # pylint: disable=too-many-locals
         print("  Evaluation Results (non-Clifford test set)")
         print(f"{'='*50}")
         print(f"  Circuits evaluated : {n_circuits}")
-        print(f"  Fidelity           : {results['mean_fidelity']:.4f} ± {results['std_fidelity']:.4f}")
-        print(f"  Trace distance     : {results['mean_trace_distance']:.4f} ± {results['std_trace_distance']:.4f}")
+        fid = f"{results['mean_fidelity']:.4f} ± {results['std_fidelity']:.4f}"
+        trd = f"{results['mean_trace_distance']:.4f} ± {results['std_trace_distance']:.4f}"
+        print(f"  Fidelity           : {fid}")
+        print(f"  Trace distance     : {trd}")
         print(f"  MSE                : {results['mean_mse']:.6f} ± {results['std_mse']:.6f}")
         print(f"{'='*50}")
 

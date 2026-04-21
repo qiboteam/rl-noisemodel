@@ -252,6 +252,8 @@ class RLAgent:
             callback.train_results = [np.array(r) for r in previous_history["train_results"]]
             callback.eval_results = [np.array(r) for r in previous_history["eval_results"]]
             callback.best_mean_reward = float(previous_history["best_mean_reward"])
+            ts = previous_history["timesteps"]
+            callback.timestep_offset = int(ts[-1]) if len(ts) > 0 else 0
 
         # Suppress PPO's own tabular output; the callback handles all printing
         original_verbose = self.model.verbose
@@ -277,7 +279,10 @@ class RLAgent:
                         file=out_stream, flush=True,
                     )
                 else:
-                    print("Loaded best model weights.", file=out_stream, flush=True)  # pragma: no cover
+                    print(  # pragma: no cover
+                        "Loaded best model weights.",
+                        file=out_stream, flush=True,
+                    )
             else:
                 print(  # pragma: no cover
                     "No improvement over previous best — keeping current model weights.",

@@ -77,6 +77,7 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
         self.eval_results = []
         self.train_results = []
         self.timestep_list = []
+        self.timestep_offset = 0  # added to self.num_timesteps for resumed runs
         self._metric_name = env.reward_config.metric
 
         # Rollout accumulators (used only when deterministic_train_eval=False)
@@ -150,13 +151,13 @@ class TrainingCallback(BaseCallback):  # pylint: disable=too-many-instance-attri
             val_metrics = np.zeros(6)
         self.eval_results.append(val_metrics)
 
-        # Store timestep
-        self.timestep_list.append(self.num_timesteps)
+        # Store timestep (offset ensures continuity when resuming)
+        self.timestep_list.append(self.num_timesteps + self.timestep_offset)
 
         # Print single-line summary
         if self.verbose > 0:
             msg = (
-                f"Step {self.num_timesteps:>7d} | "
+                f"Step {self.num_timesteps + self.timestep_offset:>7d} | "
                 f"Train reward: {train_metrics[0]:.4f} \u00b1 {train_metrics[1]:.4f}  "
                 f"trace_dist: {train_metrics[2]:.4f} \u00b1 {train_metrics[3]:.4f}  "
                 f"fidelity: {train_metrics[4]:.4f} \u00b1 {train_metrics[5]:.4f}  |  "
