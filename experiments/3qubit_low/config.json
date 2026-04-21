@@ -1,6 +1,6 @@
 {
   "dataset": {
-    "n_circuits": 800,
+    "n_circuits": 600,
     "moments": 20,
     "qubits": 3,
     "primitive_gates": ["rz", "rx", "cz"],
@@ -11,17 +11,17 @@
   "noise": {
     "noise_list": [
       {"gate": "rz", "noise_channel": "depolarizing", "noise_parameter": 0.015, "angle_dependent": false},
-      {"gate": "cz", "noise_channel": "depolarizing", "noise_parameter": 0.015, "angle_dependent": false},
+      {"gate": "cz", "noise_channel": "depolarizing", "noise_parameter": 0.02,  "angle_dependent": false},
       {"gate": "rx", "noise_channel": "damping",      "noise_parameter": 0.01,  "angle_dependent": false},
       {"gate": "cz", "noise_channel": "damping",      "noise_parameter": 0.01,  "angle_dependent": false},
-      {"gate": "rx", "noise_channel": "coherent_x",   "noise_parameter": 0.015, "angle_dependent": false},
+      {"gate": "rx", "noise_channel": "coherent_x",   "noise_parameter": 0.015, "angle_dependent": true},
       {"gate": "rz", "noise_channel": "coherent_z",   "noise_parameter": 0.02,  "angle_dependent": false}
     ]
   },
   "gym_env": {
     "kernel_size": 3,
     "action_penalty": 0.0,
-    "action_space_max_value": 0.06,
+    "action_space_max_value": 0.03,
     "enable_only_depolarizing": false,
     "val_split": 0.2
   },
@@ -37,9 +37,9 @@
     "n_filters": 32,
     "pi_net_arch": [32, 32],
     "vf_net_arch": [32, 32],
-    "n_steps": 2000,
-    "batch_size": 400,
-    "learning_rate": 1e-4
+    "n_steps": 4000,
+    "batch_size": 500,
+    "learning_rate": 5e-5
   },
   "rb": {
     "start": 5,

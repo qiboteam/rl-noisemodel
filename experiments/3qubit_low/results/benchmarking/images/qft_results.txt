@@ -1,0 +1,8 @@
+QFT circuit evaluation
+----------------------------------------
+  Gates             : 23
+  Qubits            : 3
+  [RL model]  fidelity=0.9896  trace=0.0682  mse=0.000084
+  [rb]  fidelity=0.9779  trace=0.1292  mse=0.000312
+  [No noise]  fidelity=0.7622  trace=0.2406  mse=0.001084
+  [MMS]  fidelity=0.5423  trace=0.6383  mse=0.007323
