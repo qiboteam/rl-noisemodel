@@ -1,0 +1,8 @@
+Grover circuit evaluation
+----------------------------------------
+  Gates             : 40
+  Qubits            : 3
+  [RL model]  fidelity=0.9785  trace=0.1232  mse=0.000232
+  [RB model]  fidelity=0.9754  trace=0.1307  mse=0.000317
+  [No noise]  fidelity=0.4249  trace=0.5801  mse=0.006229
+  [MMS]  fidelity=0.8268  trace=0.3394  mse=0.001929
